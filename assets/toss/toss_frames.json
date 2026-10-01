@@ -1,0 +1,141 @@
+{
+ "character": "Toss",
+ "source": "Nommie from Cut the Rope 2 (ZeptoLab). Redrawn by the studio after an official CTR 2 App Store screenshot used as a shape reference for the generator (D-21); the official image is not part of the product.",
+ "createdBy": "studio (art director), run 2026-09-30-offline-games, D-21 (replaces the D-17 version)",
+ "canvasPx": [
+  512,
+  454
+ ],
+ "pxPerLogical": 6.4024,
+ "heightLogical": 62.0,
+ "pivot": [
+  0.5,
+  0.022
+ ],
+ "pivotNote": "Unity pivot (y up) = feet, centre of the body bottom. Same canvas and pivot for every frame: swap sprites only. Same px-per-unit as Om Nom unity/ frames -> same PPU and scale gives the right height ratio (Toss 62 u vs Om Nom 72 u).",
+ "facing": "left (3/4), like Om Nom; mirror with scaleX -1",
+ "anchorsNote": "logical units, x right, y UP from the feet point, unmirrored (Toss faces the viewer's left). unityLocal = (x, y) * worldPerLogical; mirror x with scaleX -1",
+ "frames": {
+  "neutral": "frames/neutral.png",
+  "side": "frames/side.png",
+  "joy": "frames/joy.png",
+  "wide": "frames/wide.png",
+  "sad": "frames/sad.png",
+  "wave": "frames/wave.png"
+ },
+ "anchorsLogical": {
+  "neutral": {
+   "springTip": [
+    0.23,
+    62.01
+   ],
+   "mouth": [
+    -7.24,
+    21.5
+   ],
+   "bounds": {
+    "left": -29.83,
+    "right": 29.68,
+    "top": 62.01,
+    "bottom": 0.0
+   }
+  },
+  "side": {
+   "springTip": [
+    -1.56,
+    61.07
+   ],
+   "mouth": [
+    -17.76,
+    16.63
+   ],
+   "bounds": {
+    "left": -24.99,
+    "right": 23.74,
+    "top": 61.07,
+    "bottom": 0.0
+   }
+  },
+  "joy": {
+   "springTip": [
+    -0.39,
+    66.69
+   ],
+   "mouth": [
+    -1.44,
+    23.26
+   ],
+   "bounds": {
+    "left": -31.39,
+    "right": 30.77,
+    "top": 66.69,
+    "bottom": 0.0
+   }
+  },
+  "wide": {
+   "springTip": [
+    0.7,
+    63.41
+   ],
+   "mouth": [
+    -0.93,
+    21.55
+   ],
+   "bounds": {
+    "left": -29.83,
+    "right": 30.46,
+    "top": 63.41,
+    "bottom": 0.0
+   }
+  },
+  "sad": {
+   "springTip": [
+    -0.55,
+    55.76
+   ],
+   "mouth": [
+    -7.24,
+    19.33
+   ],
+   "bounds": {
+    "left": -30.3,
+    "right": 30.3,
+    "top": 55.76,
+    "bottom": 0.0
+   }
+  },
+  "wave": {
+   "springTip": [
+    1.25,
+    62.79
+   ],
+   "mouth": [
+    1.18,
+    22.55
+   ],
+   "bounds": {
+    "left": -27.65,
+    "right": 37.8,
+    "top": 62.79,
+    "bottom": 0.0
+   }
+  }
+ },
+ "tapZone": {
+  "center": [
+   -0.1,
+   26.0
+  ],
+  "radii": [
+   29.8,
+   27.9
+  ]
+ },
+ "shadow": "reuse Om Nom unity/shadow.png scaled to ~58 x 11 u",
+ "rules": [
+  "the whole body is the spring: open hollow top rim + 3 thin rings above the face, wider at the bottom; no tail, no separate jelly body",
+  "exactly ONE tooth (upper lip, off-centre)",
+  "no eyelashes, no hat"
+ ],
+ "springTipNote": "springTip = top centre of the open rim (D-21: no tail any more)"
+}
