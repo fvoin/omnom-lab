@@ -21,7 +21,8 @@
     <div id="omnom" data-act="omnom">
       <img id="omShadow" src="./assets/hub/omnom_shadow.png" alt="" style="display:none">
       <img id="omFrame" src="./assets/hub/omnom_neutral.png" alt="">
-      <img id="omPupils" src="./assets/hub/omnom_neutral_pupils.png" alt="">
+      <img id="omPupilsL" src="./assets/hub/omnom_neutral_pupils_l.png" alt="">
+      <img id="omPupilsR" src="./assets/hub/omnom_neutral_pupils_r.png" alt="">
       <div class="tapzone"></div>
     </div>
     <div id="ledge"></div>
@@ -50,7 +51,17 @@ const LONG_PRESS_MS = 450;                   // hold a game -> favourite
 const OM = { w:115, h:111, feetX:61.6, feetY:107.8, ppu:115/82 }; // display px per logical unit ~1.4
 const OM_FEET_FULL = { x:140, y:310 };       // screen, room expanded
 const OM_PEEK = 16;                          // collapsed: feet this far below the room edge
-const PUP = { neutral:{ c:[-6.13,-43.11], l:7.03, r:10.15, u:5.0, d:1.41 }, wide:{ c:[-6.83,-49.51], l:3.9, r:1.72, u:2.66, d:2.66 } };
+const PUP = { // по глазу: rest — центр зрачка в покое, c и r — эллипс хода центра (u от лап, оси кадра). Взгляд d общий, потом зажим в эллипс своего глаза
+  neutral: { l: { rest: [-13.93, -44.86], c: [-16.67, -45.33], r: [3.91, 3.98] }, r: { rest: [-0.81, -42.67], c: [2.23, -42.67], r: [6.22, 6.39] } },
+  wide:    { l: { rest: [-13.39, -51.18], c: [-14.79, -51.42], r: [1.98, 1.54] }, r: { rest: [-1.13, -48.76], c: [0.98, -45.95], r: [5.73, 5.06] } },
+};
+function eyePos(e, dx, dy) { // центр зрачка: покой + d, затем в эллипс хода своего глаза
+  let px = e.rest[0] + dx, py = e.rest[1] + dy;
+  const qx = (px - e.c[0]) / e.r[0], qy = (py - e.c[1]) / e.r[1], ql = Math.hypot(qx, qy);
+  if (ql > 1) { px = e.c[0] + qx / ql * e.r[0]; py = e.c[1] + qy / ql * e.r[1]; }
+  return [px, py];
+}
+const LOOK = 7; // u: полный взгляд, больше любого радиуса хода
 const LS = "lab.hubA.";
 const qs = new URLSearchParams(location.search);
 const SEED = Number(qs.get("seed") || 7) >>> 0;
@@ -166,7 +177,7 @@ st.daily = makeDaily();
 // ================= DOM refs & helpers =================
 const $ = id => document.getElementById(id);
 const stage = $("stage"), content = $("content"), room = $("room"), scene = $("scene"), omEl = $("omnom");
-const omFrame = $("omFrame"), omPupils = $("omPupils"), shade = $("shade"), taskEl = $("task");
+const omFrame = $("omFrame"), omPupilsL = $("omPupilsL"), omPupilsR = $("omPupilsR"), shade = $("shade"), taskEl = $("task");
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const svgSil = (shape) => '<svg class="sil" viewBox="0 0 24 24">' + SHAPES[shape] + '</svg>';
 const HEART = '<svg class="fav" viewBox="0 0 24 24"><path d="M12 21l-1.5-1.3C5 15 2 12 2 8.5A5 5 0 0 1 12 6a5 5 0 0 1 10 2.5c0 3.5-3 6.5-8.5 11.2z"/></svg>';
@@ -296,8 +307,8 @@ function setFrame(f) {
   if (om.frame === f) return; om.frame = f;
   omFrame.src = FRAME_SRC[f];
   const pup = f === "neutral" ? "neutral" : f === "wide" ? "wide" : null;
-  omPupils.style.display = pup ? "" : "none";
-  if (pup) omPupils.src = "assets/hub/omnom_" + pup + "_pupils.png";
+  omPupilsL.style.display = omPupilsR.style.display = pup ? "" : "none";
+  if (pup) { omPupilsL.src = "assets/hub/omnom_" + pup + "_pupils_l.png"; omPupilsR.src = "assets/hub/omnom_" + pup + "_pupils_r.png"; }
 }
 function omMood(f, ms) { om.mood = f; om.moodUntil = now + ms; }
 function updateOmnom(t, dt) {
@@ -308,7 +319,7 @@ function updateOmnom(t, dt) {
   else if (t < om.blinkUntil) f = "blink";
   setFrame(f);
   // gaze target (screen coords): pointer if recent, else glances; scrolling -> look down at shelves
-  const eye = { x: omFeet.x + PUP.neutral.c[0] * OM.ppu, y: omFeet.y + PUP.neutral.c[1] * OM.ppu };
+  const eye = { x: omFeet.x + (PUP.neutral.l.rest[0] + PUP.neutral.r.rest[0]) / 2 * OM.ppu, y: omFeet.y + (PUP.neutral.l.rest[1] + PUP.neutral.r.rest[1]) / 2 * OM.ppu };
   let goal;
   if (om.pointer && t - om.pointerAt < 2500) goal = { x: om.pointer.x - eye.x, y: om.pointer.y - eye.y };
   else if (Math.abs(vel) > 0.15 || dragging) goal = { x: 0, y: 200 };
@@ -319,11 +330,15 @@ function updateOmnom(t, dt) {
     goal = om.lookGoal;
   }
   const len = Math.hypot(goal.x, goal.y) || 1, nx = goal.x / len, ny = goal.y / len, k = Math.min(1, len / 60);
-  const p = om.frame === "wide" ? PUP.wide : PUP.neutral;
-  const tx = (nx < 0 ? p.l : p.r) * nx * k * OM.ppu, ty = (ny < 0 ? p.u : p.d) * ny * k * OM.ppu;
+  const tx = nx * k * LOOK * OM.ppu, ty = ny * k * LOOK * OM.ppu; // общий сдвиг взгляда, px
   const a = 1 - Math.exp(-dt / 70);
   om.look.x += (tx - om.look.x) * a; om.look.y += (ty - om.look.y) * a;
-  omPupils.style.transform = "translate(" + om.look.x.toFixed(2) + "px," + om.look.y.toFixed(2) + "px)";
+  // у каждого глаза свой зажим в эллипс хода: зрачок не выходит из своего белка и не переходит шов
+  const pu = om.frame === "wide" ? PUP.wide : PUP.neutral, dxu = om.look.x / OM.ppu, dyu = om.look.y / OM.ppu;
+  const pl = eyePos(pu.l, dxu, dyu), pr = eyePos(pu.r, dxu, dyu);
+  om.pl = pl; om.pr = pr;
+  omPupilsL.style.transform = "translate(" + ((pl[0] - pu.l.rest[0]) * OM.ppu).toFixed(2) + "px," + ((pl[1] - pu.l.rest[1]) * OM.ppu).toFixed(2) + "px)";
+  omPupilsR.style.transform = "translate(" + ((pr[0] - pu.r.rest[0]) * OM.ppu).toFixed(2) + "px," + ((pr[1] - pu.r.rest[1]) * OM.ppu).toFixed(2) + "px)";
 }
 
 // ================= actions =================

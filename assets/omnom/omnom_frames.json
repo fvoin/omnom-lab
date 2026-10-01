@@ -61,57 +61,697 @@
   "neutral": {
    "layer": "neutral_pupils",
    "center": [
-    -6.13,
-    -43.11
+    -7.3,
+    -43.69
    ],
    "maxOffset": {
-    "left": 7.03,
-    "right": 10.15,
-    "up": 5.0,
-    "down": 1.41
+    "left": 1.93,
+    "right": 0.69,
+    "up": 2.01,
+    "down": 1.44
+   },
+   "legacyNote": "shared layer kept for the old code path: offsets clamped to this box keep each pupil in its own eye (smaller than before)",
+   "previous": {
+    "layer": "neutral_pupils",
+    "center": [
+     -6.13,
+     -43.11
+    ],
+    "maxOffset": {
+     "left": 7.03,
+     "right": 10.15,
+     "up": 5.0,
+     "down": 1.41
+    }
+   },
+   "eyes": {
+    "seam": {
+     "topPx": [
+      237,
+      172
+     ],
+     "bottomPx": [
+      216,
+      253
+     ],
+     "top": [
+      -6.98,
+      -50.17
+     ],
+     "bottom": [
+      -10.26,
+      -37.52
+     ]
+    },
+    "l": {
+     "layer": "neutral_pupils_l",
+     "whiteEllipse": {
+      "centerPx": [
+       179.3,
+       211.4
+      ],
+      "radiiPx": [
+       74.5,
+       75.9
+      ],
+      "center": [
+       -16.0,
+       -44.01
+      ],
+      "radii": [
+       11.64,
+       11.85
+      ]
+     },
+     "pupil": {
+      "shiftFromOldPx": [
+       -15,
+       -7
+      ],
+      "restPx": [
+       192.5,
+       206.0
+      ],
+      "rest": [
+       -13.93,
+       -44.86
+      ],
+      "radiiPx": [
+       25.5,
+       34.0
+      ],
+      "radii": [
+       3.98,
+       5.31
+      ]
+     },
+     "travel": {
+      "centerPx": [
+       175,
+       203
+      ],
+      "radiiPx": [
+       25.0,
+       25.5
+      ],
+      "center": [
+       -16.67,
+       -45.33
+      ],
+      "radii": [
+       3.91,
+       3.98
+      ],
+      "restInside": true,
+      "restNorm": 0.504
+     }
+    },
+    "r": {
+     "layer": "neutral_pupils_r",
+     "whiteEllipse": {
+      "centerPx": [
+       288.0,
+       221.0
+      ],
+      "radiiPx": [
+       80.8,
+       83.0
+      ],
+      "center": [
+       0.98,
+       -42.51
+      ],
+      "radii": [
+       12.62,
+       12.96
+      ]
+     },
+     "pupil": {
+      "shiftFromOldPx": [
+       0,
+       0
+      ],
+      "restPx": [
+       276.5,
+       220.0
+      ],
+      "rest": [
+       -0.81,
+       -42.67
+      ],
+      "radiiPx": [
+       26.5,
+       35.0
+      ],
+      "radii": [
+       4.14,
+       5.47
+      ]
+     },
+     "travel": {
+      "centerPx": [
+       296,
+       220
+      ],
+      "radiiPx": [
+       39.8,
+       40.9
+      ],
+      "center": [
+       2.23,
+       -42.67
+      ],
+      "radii": [
+       6.22,
+       6.39
+      ],
+      "restInside": true,
+      "restNorm": 0.24
+     }
+    }
    }
   },
   "wide": {
    "layer": "wide_pupils",
    "center": [
-    -6.83,
-    -49.51
+    -7.22,
+    -49.86
    ],
    "maxOffset": {
-    "left": 3.9,
-    "right": 1.72,
-    "up": 2.66,
-    "down": 2.66
+    "left": 1.59,
+    "right": 0.33,
+    "up": 0.78,
+    "down": 0.5
+   },
+   "legacyNote": "shared layer kept for the old code path: offsets clamped to this box keep each pupil in its own eye (smaller than before)",
+   "previous": {
+    "layer": "wide_pupils",
+    "center": [
+     -6.83,
+     -49.51
+    ],
+    "maxOffset": {
+     "left": 3.9,
+     "right": 1.72,
+     "up": 2.66,
+     "down": 2.66
+    }
+   },
+   "eyes": {
+    "seam": {
+     "topPx": [
+      237,
+      151
+     ],
+     "bottomPx": [
+      209,
+      215
+     ],
+     "top": [
+      -6.98,
+      -53.45
+     ],
+     "bottom": [
+      -11.36,
+      -43.45
+     ]
+    },
+    "l": {
+     "layer": "wide_pupils_l",
+     "whiteEllipse": {
+      "centerPx": [
+       181.3,
+       180.5
+      ],
+      "radiiPx": [
+       79.1,
+       61.4
+      ],
+      "center": [
+       -15.68,
+       -48.84
+      ],
+      "radii": [
+       12.36,
+       9.59
+      ]
+     },
+     "pupil": {
+      "shiftFromOldPx": [
+       -5,
+       -4
+      ],
+      "restPx": [
+       196.0,
+       165.5
+      ],
+      "rest": [
+       -13.39,
+       -51.18
+      ],
+      "radiiPx": [
+       28.0,
+       31.5
+      ],
+      "radii": [
+       4.37,
+       4.92
+      ]
+     },
+     "travel": {
+      "centerPx": [
+       187,
+       164
+      ],
+      "radiiPx": [
+       12.7,
+       9.8
+      ],
+      "center": [
+       -14.79,
+       -51.42
+      ],
+      "radii": [
+       1.98,
+       1.54
+      ],
+      "restInside": true,
+      "restNorm": 0.527
+     }
+    },
+    "r": {
+     "layer": "wide_pupils_r",
+     "whiteEllipse": {
+      "centerPx": [
+       285.2,
+       198.2
+      ],
+      "radiiPx": [
+       79.3,
+       70.0
+      ],
+      "center": [
+       0.54,
+       -46.08
+      ],
+      "radii": [
+       12.39,
+       10.94
+      ]
+     },
+     "pupil": {
+      "shiftFromOldPx": [
+       0,
+       0
+      ],
+      "restPx": [
+       274.5,
+       181.0
+      ],
+      "rest": [
+       -1.13,
+       -48.76
+      ],
+      "radiiPx": [
+       28.5,
+       33.0
+      ],
+      "radii": [
+       4.45,
+       5.15
+      ]
+     },
+     "travel": {
+      "centerPx": [
+       288,
+       199
+      ],
+      "radiiPx": [
+       36.7,
+       32.4
+      ],
+      "center": [
+       0.98,
+       -45.95
+      ],
+      "radii": [
+       5.73,
+       5.06
+      ],
+      "restInside": true,
+      "restNorm": 0.444
+     }
+    }
    }
   },
   "ajar": {
    "layer": "ajar_pupils",
    "center": [
-    -7.45,
-    -46.39
+    -7.69,
+    -46.5
    ],
    "maxOffset": {
-    "left": 4.22,
-    "right": 2.19,
-    "up": 3.59,
-    "down": 4.69
+    "left": 1.13,
+    "right": 0.47,
+    "up": 1.36,
+    "down": 0.76
+   },
+   "legacyNote": "shared layer kept for the old code path: offsets clamped to this box keep each pupil in its own eye (smaller than before)",
+   "previous": {
+    "layer": "ajar_pupils",
+    "center": [
+     -7.45,
+     -46.39
+    ],
+    "maxOffset": {
+     "left": 4.22,
+     "right": 2.19,
+     "up": 3.59,
+     "down": 4.69
+    }
+   },
+   "eyes": {
+    "seam": {
+     "topPx": [
+      235,
+      170
+     ],
+     "bottomPx": [
+      214,
+      244
+     ],
+     "top": [
+      -7.3,
+      -50.48
+     ],
+     "bottom": [
+      -10.58,
+      -38.92
+     ]
+    },
+    "l": {
+     "layer": "ajar_pupils_l",
+     "whiteEllipse": {
+      "centerPx": [
+       178.6,
+       205.9
+      ],
+      "radiiPx": [
+       74.4,
+       71.6
+      ],
+      "center": [
+       -16.11,
+       -44.87
+      ],
+      "radii": [
+       11.63,
+       11.19
+      ]
+     },
+     "pupil": {
+      "shiftFromOldPx": [
+       -5,
+       -3
+      ],
+      "restPx": [
+       194.0,
+       187.5
+      ],
+      "rest": [
+       -13.7,
+       -47.75
+      ],
+      "radiiPx": [
+       29.0,
+       33.5
+      ],
+      "radii": [
+       4.53,
+       5.23
+      ]
+     },
+     "travel": {
+      "centerPx": [
+       183,
+       184
+      ],
+      "radiiPx": [
+       16.7,
+       16.1
+      ],
+      "center": [
+       -15.42,
+       -48.29
+      ],
+      "radii": [
+       2.61,
+       2.51
+      ],
+      "restInside": true,
+      "restNorm": 0.481
+     }
+    },
+    "r": {
+     "layer": "ajar_pupils_r",
+     "whiteEllipse": {
+      "centerPx": [
+       287.9,
+       216.8
+      ],
+      "radiiPx": [
+       79.8,
+       79.1
+      ],
+      "center": [
+       0.96,
+       -43.17
+      ],
+      "radii": [
+       12.47,
+       12.36
+      ]
+     },
+     "pupil": {
+      "shiftFromOldPx": [
+       2,
+       2
+      ],
+      "restPx": [
+       271.5,
+       203.0
+      ],
+      "rest": [
+       -1.6,
+       -45.33
+      ],
+      "radiiPx": [
+       28.5,
+       34.0
+      ],
+      "radii": [
+       4.45,
+       5.31
+      ]
+     },
+     "travel": {
+      "centerPx": [
+       294,
+       219
+      ],
+      "radiiPx": [
+       38.8,
+       38.5
+      ],
+      "center": [
+       1.92,
+       -42.83
+      ],
+      "radii": [
+       6.06,
+       6.01
+      ],
+      "restInside": true,
+      "restNorm": 0.509
+     }
+    }
    }
   },
   "wide2": {
    "layer": "wide2_pupils",
    "center": [
-    -7.53,
-    -50.53
+    -7.77,
+    -50.87
    ],
    "maxOffset": {
-    "left": 3.44,
-    "right": 1.56,
-    "up": 2.34,
-    "down": 2.5
+    "left": 1.46,
+    "right": 0.32,
+    "up": 0.83,
+    "down": 0.37
+   },
+   "legacyNote": "shared layer kept for the old code path: offsets clamped to this box keep each pupil in its own eye (smaller than before)",
+   "previous": {
+    "layer": "wide2_pupils",
+    "center": [
+     -7.53,
+     -50.53
+    ],
+    "maxOffset": {
+     "left": 3.44,
+     "right": 1.56,
+     "up": 2.34,
+     "down": 2.5
+    }
+   },
+   "eyes": {
+    "seam": {
+     "topPx": [
+      234,
+      147
+     ],
+     "bottomPx": [
+      205,
+      209
+     ],
+     "top": [
+      -7.45,
+      -54.07
+     ],
+     "bottom": [
+      -11.98,
+      -44.39
+     ]
+    },
+    "l": {
+     "layer": "wide2_pupils_l",
+     "whiteEllipse": {
+      "centerPx": [
+       176.4,
+       176.8
+      ],
+      "radiiPx": [
+       78.8,
+       63.1
+      ],
+      "center": [
+       -16.45,
+       -49.42
+      ],
+      "radii": [
+       12.3,
+       9.86
+      ]
+     },
+     "pupil": {
+      "shiftFromOldPx": [
+       -4,
+       -5
+      ],
+      "restPx": [
+       192.5,
+       158.5
+      ],
+      "rest": [
+       -13.93,
+       -52.28
+      ],
+      "radiiPx": [
+       28.5,
+       32.5
+      ],
+      "radii": [
+       4.45,
+       5.08
+      ]
+     },
+     "travel": {
+      "centerPx": [
+       186,
+       156
+      ],
+      "radiiPx": [
+       10.5,
+       8.4
+      ],
+      "center": [
+       -14.95,
+       -52.67
+      ],
+      "radii": [
+       1.64,
+       1.31
+      ],
+      "restInside": true,
+      "restNorm": 0.473
+     }
+    },
+    "r": {
+     "layer": "wide2_pupils_r",
+     "whiteEllipse": {
+      "centerPx": [
+       282.0,
+       194.3
+      ],
+      "radiiPx": [
+       79.5,
+       71.3
+      ],
+      "center": [
+       0.04,
+       -46.69
+      ],
+      "radii": [
+       12.42,
+       11.14
+      ]
+     },
+     "pupil": {
+      "shiftFromOldPx": [
+       1,
+       1
+      ],
+      "restPx": [
+       272.0,
+       176.0
+      ],
+      "rest": [
+       -1.52,
+       -49.54
+      ],
+      "radiiPx": [
+       28.0,
+       33.0
+      ],
+      "radii": [
+       4.37,
+       5.15
+      ]
+     },
+     "travel": {
+      "centerPx": [
+       287,
+       195
+      ],
+      "radiiPx": [
+       37.5,
+       33.6
+      ],
+      "center": [
+       0.83,
+       -46.58
+      ],
+      "radii": [
+       5.85,
+       5.25
+      ],
+      "restInside": true,
+      "restNorm": 0.48
+     }
+    }
    }
   }
  },
- "pupilsNote": "Frames with pupils as a layer: draw <frame> then <frame>_pupils at the same point, offset (dx, dy) toward the candy; clamp dx to [-left, right], dy to [-up, down] (logical, in the frame's own unmirrored axes). Other frames have the pupils baked in.",
+ "pupilsNote": "Frames with pupils as layers (neutral, ajar, wide, wide2): NEW - one layer per eye, <frame>_pupils_l / _pupils_r (viewer's left/right in the unmirrored file). Draw <frame>, then both eye layers at the same point; move each by the same look offset (dx, dy) from its own rest, then clamp the pupil CENTRE into that eye's travel ellipse: p = rest + d; q = (p - c) / radii; if |q| > 1: p = c + (q / |q|) * radii. All values in logical units from the feet (x right, y down, unmirrored; mirror/ceiling flips apply as for the frame) and in px of the 525x506 frame. whiteEllipse = fitted eye white; seam = the line between the eyes (no pupil pixel ever crosses it). The far (left) eye has a smaller travel - the 3/4 view. Left pupils rest moved off the seam (pupil.shiftFromOldPx). Other frames have the pupils baked in.",
  "frames": {
   "neutral": {
    "x6": "omnom_c/x6/neutral.webp",
@@ -428,7 +1068,25 @@
     12
    ]
   },
-  "order": "shadow < frame < frame_pupils (open-eyed frames) < hat"
+  "order": "shadow < frame < frame_pupils (open-eyed frames) < hat",
+  "pupilLayers": {
+   "neutral": [
+    "unity/neutral_pupils_l.png",
+    "unity/neutral_pupils_r.png"
+   ],
+   "ajar": [
+    "unity/ajar_pupils_l.png",
+    "unity/ajar_pupils_r.png"
+   ],
+   "wide": [
+    "unity/wide_pupils_l.png",
+    "unity/wide_pupils_r.png"
+   ],
+   "wide2": [
+    "unity/wide2_pupils_l.png",
+    "unity/wide2_pupils_r.png"
+   ]
+  }
  },
  "head": {
   "note": "Hat anchor per frame, logical units from the feet (x right, y down), in the frame's own unmirrored axes: the centre of the hat cuff bottom goes here. Mirror (scaleX -1) and ceiling flip (scaleY -1) apply to the hat together with the frame (make the hat a child of the frame sprite). Frames with pupils as a layer never have the pupils hidden at rest; wide/wide2 lift the hat ~3 u (reads as a surprised hop). Blink/turn swap frames only: move the hat to the new frame's point in the same tick. Cuff anchors lifted 2.6 u (2026-10-01, M1 iter 3): the cuff now overlaps the top of the eye whites by ~1-2.5 u instead of ~4-5 u, so the eyes read round, not half-shut; same delta on every frame keeps blink/turn swaps steady. headTop unchanged.",
@@ -636,6 +1294,19 @@
    ],
    "card": "hats/hat_propeller_card.png",
    "cardNote": "wardrobe cell 300x340 ref px: card image @1.5x, shown ~230 px wide"
+  }
+ },
+ "palette": {
+  "note": "recoloured to the official measurements (art-director-24, recolor.py)",
+  "body": "#98CC24",
+  "shade": "#82BD21",
+  "deepShade": "#4B891E",
+  "outline": "#0C3C13",
+  "previous": {
+   "body": "#A9DE28",
+   "shade": "#86C425",
+   "deepShade": "#4D8017",
+   "outline": "#0B2608"
   }
  }
 }

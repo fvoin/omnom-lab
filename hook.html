@@ -31,17 +31,25 @@
 "use strict";
 // ---- Ом Ном кадрами приложения (D-40, не рисунок кодом) ---------------------------
 // Кадры лежат в assets/omnom/ — одна папка на все прототипы; новую версию Ома Нома копируем поверх теми же именами.
-// Числа — из assets/omnom/omnom_frames.json: 6,4024 px на u, лапы = pivot, рот (кадр wide), зрачки — отдельным слоем.
+// Числа — из assets/omnom/omnom_frames.json: 6,4024 px на u, лапы = pivot, рот (кадр wide); зрачки — два слоя (левый и правый глаз), каждый ходит в эллипсе своего глаза (pupils.<кадр>.eyes).
 // В файлах Ом Ном смотрит ВЛЕВО от зрителя; flip = смотрит вправо. Кадр: p.mx, p.my — точка рта в игре (u), p.fy — лапы (по умолчанию рот + 20).
 const OMS = (() => {
   const PX = 6.4024, PIV = [0.5366, 0.0253], MOUTH = [-2.08, -19.98];
-  const PUP = { // центр слоя зрачков и предел сдвига (u, оси кадра до зеркала): не больше — иначе глаза вылезают за белки
-    neutral: { c: [-6.13, -43.11], l: 7.03, r: 10.15, u: 5.0, d: 1.41 },
-    wide:    { c: [-6.83, -49.51], l: 3.9,  r: 1.72,  u: 2.66, d: 2.66 },
-    ajar:    { c: [-7.45, -46.39], l: 4.22, r: 2.19,  u: 3.59, d: 4.69 },
-    wide2:   { c: [-7.53, -50.53], l: 3.44, r: 1.56,  u: 2.34, d: 2.5 },
+  // Зрачки — по слою на глаз. Для каждого: rest — центр зрачка в покое, c и r — эллипс хода центра зрачка (u от лап, оси кадра до зеркала).
+  // Сдвиг взгляда d одинаков для обоих глаз, но центр каждого зрачка потом зажимается в эллипс СВОЕГО глаза: зрачок не выходит из белка и не переходит шов.
+  const PUP = {
+    neutral: { l: { rest: [-13.93, -44.86], c: [-16.67, -45.33], r: [3.91, 3.98] },
+             r: { rest: [-0.81, -42.67], c: [2.23, -42.67], r: [6.22, 6.39] } },
+    ajar:   { l: { rest: [-13.7, -47.75], c: [-15.42, -48.29], r: [2.61, 2.51] },
+             r: { rest: [-1.6, -45.33], c: [1.92, -42.83], r: [6.06, 6.01] } },
+    wide:   { l: { rest: [-13.39, -51.18], c: [-14.79, -51.42], r: [1.98, 1.54] },
+             r: { rest: [-1.13, -48.76], c: [0.98, -45.95], r: [5.73, 5.06] } },
+    wide2:  { l: { rest: [-13.93, -52.28], c: [-14.95, -52.67], r: [1.64, 1.31] },
+             r: { rest: [-1.52, -49.54], c: [0.83, -46.58], r: [5.85, 5.25] } },
   };
-  const NAMES = ["neutral", "neutral_pupils", "ajar", "ajar_pupils", "wide", "wide_pupils", "wide2", "wide2_pupils", "chew", "chew2", "sad", "joy", "blink", "half", "shadow"];
+  const LOOK = 7; // u: длина полного взгляда, больше любого радиуса хода — на краю эллипса зрачок упирается в границу
+  const NAMES = ["neutral", "ajar", "wide", "wide2", "chew", "chew2", "sad", "joy", "blink", "half", "shadow"];
+  for (const f in PUP) NAMES.push(f + "_pupils_l", f + "_pupils_r");
   const img = {};
   const waits = [];
   for (const n of NAMES) {
@@ -50,7 +58,15 @@ const OMS = (() => {
     i.src = "assets/omnom/" + n + ".png";
   }
   const ok = (i) => i && i.complete && i.naturalWidth > 0;
+  // центр зрачка: покой + сдвиг (dx, dy), затем в эллипс хода своего глаза: q = (p - c) / r; |q| > 1 -> p = c + q/|q| * r
+  function eyePos(e, dx, dy) {
+    let px = e.rest[0] + dx, py = e.rest[1] + dy;
+    const qx = (px - e.c[0]) / e.r[0], qy = (py - e.c[1]) / e.r[1], ql = Math.hypot(qx, qy);
+    if (ql > 1) { px = e.c[0] + qx / ql * e.r[0]; py = e.c[1] + qy / ql * e.r[1]; }
+    return [px, py];
+  }
   // p: { frame, mx, my, fy?, flip?, tx?, ty?, rot?, piv?, shadow?, alpha? }; st — объект вызывающего: плавный взгляд
+  const last = { frame: null, l: null, r: null, d: null };
   function draw(ctx, p, st) {
     let f = p.frame || "neutral";
     if (f === "neutral" && (performance.now() + (p.blinkOff || 0)) % 3600 < 120) f = "blink";
@@ -64,24 +80,27 @@ const OMS = (() => {
     ctx.translate(fx, p.piv ? fy - p.piv : fy); if (p.rot) ctx.rotate(p.rot); if (p.piv) ctx.translate(0, p.piv);
     ctx.scale(flip * k, k);
     ctx.drawImage(base, -PIV[0] * pw, -(1 - PIV[1]) * ph);
-    const pu = PUP[f];
-    if (pu && ok(img[f + "_pupils"])) {
+    const pu = PUP[f], pl = img[f + "_pupils_l"], pr = img[f + "_pupils_r"];
+    if (pu && ok(pl) && ok(pr)) {
       let gx = 0, gy = 0;
-      if (p.tx != null) { // цель в системе кадра до зеркала; слой двигаем к ней в пределах белков
+      if (p.tx != null) { // цель в системе кадра до зеркала; общий сдвиг взгляда, потом зажим по каждому глазу
         const pv = p.piv || 0;
         let dx = p.tx - fx, dy = p.ty - (fy - pv);
         if (p.rot) { const c = Math.cos(-p.rot), sn = Math.sin(-p.rot), qx = dx * c - dy * sn, qy = dx * sn + dy * c; dx = qx; dy = qy; }
         dy -= pv; dx *= flip;
-        const ex = pu.c[0], ey = pu.c[1], vx = dx - ex, vy = dy - ey, L = Math.hypot(vx, vy) || 1, a = Math.min(1, L / 45);
-        const ux = vx / L * a, uy = vy / L * a;
-        gx = ux > 0 ? ux * pu.r : ux * pu.l; gy = uy > 0 ? uy * pu.d : uy * pu.u;
+        const ex = (pu.l.rest[0] + pu.r.rest[0]) / 2, ey = (pu.l.rest[1] + pu.r.rest[1]) / 2; // между глазами
+        const vx = dx - ex, vy = dy - ey, L = Math.hypot(vx, vy) || 1, a = Math.min(1, L / 45);
+        gx = vx / L * a * LOOK; gy = vy / L * a * LOOK;
       }
       if (st) { st.x = st.x == null ? gx : st.x + (gx - st.x) * 0.35; st.y = st.y == null ? gy : st.y + (gy - st.y) * 0.35; gx = st.x; gy = st.y; }
-      ctx.drawImage(img[f + "_pupils"], -PIV[0] * pw + gx * PX, -(1 - PIV[1]) * ph + gy * PX);
+      const pL = eyePos(pu.l, gx, gy), pR = eyePos(pu.r, gx, gy);
+      ctx.drawImage(pl, -PIV[0] * pw + (pL[0] - pu.l.rest[0]) * PX, -(1 - PIV[1]) * ph + (pL[1] - pu.l.rest[1]) * PX);
+      ctx.drawImage(pr, -PIV[0] * pw + (pR[0] - pu.r.rest[0]) * PX, -(1 - PIV[1]) * ph + (pR[1] - pu.r.rest[1]) * PX);
+      last.frame = f; last.l = pL; last.r = pR; last.d = [gx, gy];
     }
     ctx.restore();
   }
-  return { draw, img, loaded: Promise.all(waits), ready: () => NAMES.every((n) => ok(img[n])) };
+  return { draw, img, PUP, eyePos, last, loaded: Promise.all(waits), ready: () => NAMES.every((n) => ok(img[n])) };
 })();
 // ---- Главные числа: крутить здесь -------------------------------------------
 // Поле 320×480 u (1 u = 3,375 опорн. px при ширине 1080). Размеры объектов — по cut.md §3 и style.md.

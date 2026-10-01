@@ -237,7 +237,7 @@ function buildBuilding() {
   const om = $("#om");
   for (const f of ["neutral", "wide", "blink", "joy", "wave1", "wave2"]) {
     const im = new Image(); im.src = `assets/hub/omnom_${f}.png`; im.dataset.f = f; im.alt = ""; om.appendChild(im);
-    if (f === "neutral" || f === "wide") { const p = new Image(); p.src = `assets/hub/omnom_${f}_pupils.png`; p.dataset.f = f + "_pupils"; p.alt = ""; om.appendChild(p); }
+    if (f === "neutral" || f === "wide") for (const eye of ["l", "r"]) { const p = new Image(); p.src = `assets/hub/omnom_${f}_pupils_${eye}.png`; p.dataset.f = `${f}_pupils_${eye}`; p.alt = ""; om.appendChild(p); }
   }
   renderRoom();
   fitNames(bld);
@@ -422,9 +422,19 @@ function finishTask(el) {
 }
 
 /* ---------- Om Nom: alive (blinks, looks) ---------- */
-const PUP = { neutral: { c: [-6.13, -43.11], l: 7.03, r: 10.15, u: 5.0, d: 1.41 }, wide: { c: [-6.83, -49.51], l: 3.9, r: 1.72, u: 2.66, d: 2.66 } };
+const PUP = { // по глазу: rest — центр зрачка в покое, c и r — эллипс хода центра (u от лап, оси кадра). Взгляд d общий, потом зажим в эллипс своего глаза
+  neutral: { l: { rest: [-13.93, -44.86], c: [-16.67, -45.33], r: [3.91, 3.98] }, r: { rest: [-0.81, -42.67], c: [2.23, -42.67], r: [6.22, 6.39] } },
+  wide:    { l: { rest: [-13.39, -51.18], c: [-14.79, -51.42], r: [1.98, 1.54] }, r: { rest: [-1.13, -48.76], c: [0.98, -45.95], r: [5.73, 5.06] } },
+};
+function eyePos(e, dx, dy) { // центр зрачка: покой + d, затем в эллипс хода своего глаза
+  let px = e.rest[0] + dx, py = e.rest[1] + dy;
+  const qx = (px - e.c[0]) / e.r[0], qy = (py - e.c[1]) / e.r[1], ql = Math.hypot(qx, qy);
+  if (ql > 1) { px = e.c[0] + qx / ql * e.r[0]; py = e.c[1] + qy / ql * e.r[1]; }
+  return [px, py];
+}
+const LOOK = 7; // u: полный взгляд, больше любого радиуса хода
 function eyeScreen() { // eye point in screen-logical coords
-  return { x: PANEL_W + 310 - 43 + 0.5366 * 80 + PUP.neutral.c[0] * OM_K, y: st.lift.y - 18 + PUP.neutral.c[1] * OM_K - st.scroll };
+  return { x: PANEL_W + 310 - 43 + 0.5366 * 80 + (PUP.neutral.l.rest[0] + PUP.neutral.r.rest[0]) / 2 * OM_K, y: st.lift.y - 18 + (PUP.neutral.l.rest[1] + PUP.neutral.r.rest[1]) / 2 * OM_K - st.scroll };
 }
 function lookAtScreen(x, y, ms) { st.om.lookX = x; st.om.lookY = y; st.om.lookUntil = now() + ms; }
 let clock0 = performance.now();
@@ -466,13 +476,13 @@ function frame(t) {
   om.frame = f;
   let tx = 0, ty = 0;
   if (f === "neutral" || f === "wide") {
-    const P = PUP[f], e = eyeScreen();
+    const e = eyeScreen();
     let lx, ly;
     if (f === "wide") { lx = e.x - 30; ly = e.y + Math.sign(L.v) * 200; }
     else if (T < om.lookUntil) { lx = om.lookX; ly = om.lookY; } else { lx = om.glX ?? e.x - 1; ly = om.glY ?? e.y; }
     const vx = lx - e.x, vy = ly - e.y, len = Math.hypot(vx, vy) || 1, near = Math.min(1, len / 60);
     const nx = vx / len * near, ny = vy / len * near;
-    tx = (nx < 0 ? nx * P.l : nx * P.r) * OM_K; ty = (ny < 0 ? ny * P.u : ny * P.d) * OM_K;
+    tx = nx * LOOK * OM_K; ty = ny * LOOK * OM_K; // общий сдвиг взгляда, px
   }
   om.px += (tx - om.px) * Math.min(1, dt * 14); om.py += (ty - om.py) * Math.min(1, dt * 14);
   // render
@@ -483,10 +493,16 @@ function frame(t) {
   $("#om").style.transform = `scale(${bob.toFixed(4)},${(2 - bob).toFixed(4)})`;
   const ropeH = Math.round(L.y - 118 - 52); if (ropeH !== shown.rope) { $("#rope").style.height = Math.max(0, ropeH) + "px"; shown.rope = ropeH; }
   if (f !== shown.frame) {
-    for (const im of $("#om").children) im.classList.toggle("on", im.dataset.f === f || im.dataset.f === f + "_pupils");
+    for (const im of $("#om").children) im.classList.toggle("on", im.dataset.f === f || im.dataset.f === f + "_pupils_l" || im.dataset.f === f + "_pupils_r");
     shown.frame = f;
   }
-  if (f === "neutral" || f === "wide") { const p = $(`#om img[data-f="${f}_pupils"]`); if (p) p.style.transform = `translate(${om.px.toFixed(2)}px,${om.py.toFixed(2)}px)`; }
+  if (f === "neutral" || f === "wide") { // общий взгляд d (u), у каждого глаза свой зажим в эллипс хода: зрачок не выходит из своего белка и не переходит шов
+    const pu = PUP[f], dxu = om.px / OM_K, dyu = om.py / OM_K;
+    for (const eye of ["l", "r"]) {
+      const ps = eyePos(pu[eye], dxu, dyu), im = $(`#om img[data-f="${f}_pupils_${eye}"]`); om["p" + eye] = ps;
+      if (im) im.style.transform = `translate(${((ps[0] - pu[eye].rest[0]) * OM_K).toFixed(2)}px,${((ps[1] - pu[eye].rest[1]) * OM_K).toFixed(2)}px)`;
+    }
+  }
   const bi = btnOfFloor(st.centerFloor);
   if (bi !== shown.btn) { panel.querySelectorAll(".pb").forEach((el, i) => el.classList.toggle("on", i === bi)); shown.btn = bi; }
   // garland twinkle (cheap opacity)
@@ -506,7 +522,7 @@ window.__game = {
       scene: st.modal ? "modal" : "hub", scroll: Math.round(st.scroll), maxScroll: MAX_SCROLL, mode: st.mode,
       centerFloor: st.centerFloor, visibleFloors: vis, activeButton: BUTTONS[btnOfFloor(st.centerFloor)].key,
       lift: { y: Math.round(st.lift.y), floor: st.lift.target, moving: st.lift.moving, parkedAt: st.lift.moving ? null : FLOORS.findIndex(f => Math.abs(parkY(f) - st.lift.y) < 1) },
-      omnom: { frame: st.om.frame, pupils: [+st.om.px.toFixed(2), +st.om.py.toFixed(2)] },
+      omnom: { frame: st.om.frame, pupils: [+st.om.px.toFixed(2), +st.om.py.toFixed(2)], pupilL: st.om.pl && st.om.pl.map((v) => +v.toFixed(2)), pupilR: st.om.pr && st.om.pr.map((v) => +v.toFixed(2)) },
       catalog: { total: GAMES.length, real: GAMES.filter(g => g.real).map(g => g.name), newIds: GAMES.filter(g => g.isNew).map(g => g.id),
         themes: THEMES.map((t, ti) => ({ key: t.key, name: t.name, color: t.color, count: GAMES.filter(g => g.themeIdx === ti).length })) },
       floors: FLOORS.map((f, i) => ({ i, kind: f.kind, theme: f.kind === "theme" ? THEMES[f.themeIdx].key : null, top: f.top, h: f.h, games: f.games.map(id => GAMES[id].name) })),
