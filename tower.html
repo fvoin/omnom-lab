@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<link rel="icon" href="data:,">
+<title>Торт-башня: как сейчас / с физикой</title>
+<style>:root{--card:#c98a4b;--card2:#b8773d;--shade:#8f5427;--cut:#5a2e10;--cream:#fbebd0;--cream2:#e9cfa3;--ink:#4a2512;--act:#e8458a;--act2:#a82060;--actInk:#4f0c2c;--star:#ffd23f;--mint:#8fe3c0;--mint2:#5cc79c}*{box-sizing:border-box}html,body{background:var(--card2);height:100%;color:var(--ink);margin:0;font:700 14px/1.3 Nunito,ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{-webkit-user-select:none;user-select:none;background:radial-gradient(120% 80% at 30% 0%, #d49a5e 0%, var(--card) 45%, var(--card2) 100%);flex-direction:column;height:100dvh;display:flex}header{flex-direction:column;gap:5px;padding:8px 12px 4px;display:flex}.row{justify-content:space-between;align-items:center;gap:8px;display:flex}a.back{color:var(--ink);background:var(--cream);box-shadow:0 2px 0 var(--cream2);white-space:nowrap;border-radius:10px;padding:5px 9px;font-size:13px;text-decoration:none}h1{text-align:center;color:var(--cream);text-shadow:0 2px 0 var(--shade);flex:1;margin:0;font-size:18px;font-weight:900}button{font:inherit;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--cream2);border-radius:999px;padding:5px 12px;font-weight:800}.modes{justify-content:center;gap:0}.modes button{box-shadow:none;background:var(--cream);border-radius:0;margin:0;padding:6px 14px}.modes button:first-child{border-right-width:1px;border-radius:999px 0 0 999px}.modes button:last-child{border-left-width:1px;border-radius:0 999px 999px 0}.modes button.on{background:var(--act);color:#fff;text-shadow:0 1px 0 var(--actInk)}#rule{text-align:center;color:var(--cream);min-height:16px;font-size:12px}#stage{touch-action:none;flex:1;min-height:0;position:relative}canvas{touch-action:none;box-shadow:0 0 0 6px var(--card2), 0 0 0 9px var(--shade), 4px 8px 14px #4a251259;border-radius:14px;display:block;position:absolute}#end{background:#4a251261;justify-content:center;align-items:center;display:none;position:absolute;inset:0}#end .card{background:var(--cream);border:3px solid var(--ink);text-align:center;min-width:230px;box-shadow:0 6px 0 var(--cream2), 0 10px 24px #4a251259;border-radius:22px;padding:14px 26px 20px}#end .omEnd{cursor:pointer;height:96px;margin:-4px auto -2px;display:block}#end .stars{letter-spacing:4px;margin:2px 0 4px;font-size:44px;line-height:1}#end .stars span{color:var(--cut);opacity:.35}#end .stars span.on{color:var(--star);opacity:1;-webkit-text-stroke:2px var(--ink)}#end .big{font-size:46px;font-weight:900;line-height:1.1}#end p{opacity:.9;margin:4px 0}#end small{opacity:.75;font-weight:700}#end button.big{background:var(--act);color:#fff;border-color:var(--actInk);box-shadow:0 5px 0 var(--act2);text-shadow:0 1px 0 var(--actInk), 0 -1px 0 var(--actInk), 1px 0 0 var(--actInk), -1px 0 0 var(--actInk);margin-top:6px;padding:9px 28px;font-size:19px}#end button.big:disabled{cursor:default;background:#d9a0ba;border-color:#9b6a82;box-shadow:0 5px #b78198}</style>
+</head>
+<body>
+<header>
+  <div class="row"><a class="back" href="index.html">← Лаборатория</a><h1>Торт-башня</h1><button id="restart">Заново</button></div>
+  <div class="row modes"><button id="mCur">Как сейчас</button><button id="mPhy">С физикой</button></div>
+  <div id="rule"></div>
+</header>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div id="end"><div class="card">
+    <img class="omEnd" id="endOm" src="./assets/omnom/joy.png" alt="">
+    <div class="stars" id="endStars"></div>
+    <div class="big" id="endScore">0</div>
+    <p id="endLine"></p>
+    <p id="endDetail"></p>
+    <p id="endBest"></p>
+    <button class="big" id="again" disabled>Ещё</button>
+  </div></div>
+</div>
+<script>
+"use strict";
+// ---- Ом Ном кадрами приложения (D-40, не рисунок кодом) ---------------------------
+// Кадры лежат в assets/omnom/ — одна папка на все прототипы; новую версию Ома Нома копируем поверх теми же именами.
+// Числа — из assets/omnom/omnom_frames.json: 6,4024 px на u, лапы = pivot, рот (кадр wide); зрачки — два слоя (левый и правый глаз), каждый ходит в эллипсе своего глаза (pupils.<кадр>.eyes).
+// В файлах Ом Ном смотрит ВЛЕВО от зрителя; flip = смотрит вправо. Кадр: p.mx, p.my — точка рта в игре (u), p.fy — лапы (по умолчанию рот + 20).
+const OMS = (() => {
+  const PX = 6.4024, PIV = [0.5366, 0.0253], MOUTH = [-2.08, -19.98];
+  // Зрачки — по слою на глаз. Для каждого: rest — центр зрачка в покое, c и r — эллипс хода центра зрачка (u от лап, оси кадра до зеркала).
+  // Сдвиг взгляда d одинаков для обоих глаз, но центр каждого зрачка потом зажимается в эллипс СВОЕГО глаза: зрачок не выходит из белка и не переходит шов.
+  const PUP = {
+    neutral: { l: { rest: [-13.93, -44.86], c: [-16.67, -45.33], r: [3.91, 3.98] },
+             r: { rest: [-0.81, -42.67], c: [2.23, -42.67], r: [6.22, 6.39] } },
+    ajar:   { l: { rest: [-13.7, -47.75], c: [-15.42, -48.29], r: [2.61, 2.51] },
+             r: { rest: [-1.6, -45.33], c: [1.92, -42.83], r: [6.06, 6.01] } },
+    wide:   { l: { rest: [-13.39, -51.18], c: [-14.79, -51.42], r: [1.98, 1.54] },
+             r: { rest: [-1.13, -48.76], c: [0.98, -45.95], r: [5.73, 5.06] } },
+    wide2:  { l: { rest: [-13.93, -52.28], c: [-14.95, -52.67], r: [1.64, 1.31] },
+             r: { rest: [-1.52, -49.54], c: [0.83, -46.58], r: [5.85, 5.25] } },
+  };
+  const LOOK = 7; // u: длина полного взгляда, больше любого радиуса хода — на краю эллипса зрачок упирается в границу
+  const NAMES = ["neutral", "ajar", "wide", "wide2", "chew", "chew2", "sad", "joy", "blink", "half", "shadow"];
+  for (const f in PUP) NAMES.push(f + "_pupils_l", f + "_pupils_r");
+  const img = {};
+  const waits = [];
+  for (const n of NAMES) {
+    const i = new Image(); img[n] = i;
+    waits.push(new Promise((res) => { i.onload = i.onerror = res; }));
+    i.src = "assets/omnom/" + n + ".png";
+  }
+  const ok = (i) => i && i.complete && i.naturalWidth > 0;
+  // центр зрачка: покой + сдвиг (dx, dy), затем в эллипс хода своего глаза: q = (p - c) / r; |q| > 1 -> p = c + q/|q| * r
+  function eyePos(e, dx, dy) {
+    let px = e.rest[0] + dx, py = e.rest[1] + dy;
+    const qx = (px - e.c[0]) / e.r[0], qy = (py - e.c[1]) / e.r[1], ql = Math.hypot(qx, qy);
+    if (ql > 1) { px = e.c[0] + qx / ql * e.r[0]; py = e.c[1] + qy / ql * e.r[1]; }
+    return [px, py];
+  }
+  // p: { frame, mx, my, fy?, flip?, tx?, ty?, rot?, piv?, shadow?, alpha? }; st — объект вызывающего: плавный взгляд
+  const last = { frame: null, l: null, r: null, d: null };
+  function draw(ctx, p, st) {
+    let f = p.frame || "neutral";
+    if (f === "neutral" && (performance.now() + (p.blinkOff || 0)) % 3600 < 120) f = "blink";
+    const base = img[f]; if (!ok(base)) return;
+    const flip = p.flip ? -1 : 1, fx = p.mx - flip * MOUTH[0], fy = p.fy != null ? p.fy : p.my - MOUTH[1];
+    const pw = base.naturalWidth, ph = base.naturalHeight, k = 1 / PX;
+    ctx.save();
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+    if (p.alpha != null) ctx.globalAlpha = p.alpha;
+    if (p.shadow && ok(img.shadow)) ctx.drawImage(img.shadow, fx - 32, fy - 6, 64, 12);
+    ctx.translate(fx, p.piv ? fy - p.piv : fy); if (p.rot) ctx.rotate(p.rot); if (p.piv) ctx.translate(0, p.piv);
+    ctx.scale(flip * k, k);
+    ctx.drawImage(base, -PIV[0] * pw, -(1 - PIV[1]) * ph);
+    const pu = PUP[f], pl = img[f + "_pupils_l"], pr = img[f + "_pupils_r"];
+    if (pu && ok(pl) && ok(pr)) {
+      let gx = 0, gy = 0;
+      if (p.tx != null) { // цель в системе кадра до зеркала; общий сдвиг взгляда, потом зажим по каждому глазу
+        const pv = p.piv || 0;
+        let dx = p.tx - fx, dy = p.ty - (fy - pv);
+        if (p.rot) { const c = Math.cos(-p.rot), sn = Math.sin(-p.rot), qx = dx * c - dy * sn, qy = dx * sn + dy * c; dx = qx; dy = qy; }
+        dy -= pv; dx *= flip;
+        const ex = (pu.l.rest[0] + pu.r.rest[0]) / 2, ey = (pu.l.rest[1] + pu.r.rest[1]) / 2; // между глазами
+        const vx = dx - ex, vy = dy - ey, L = Math.hypot(vx, vy) || 1, a = Math.min(1, L / 45);
+        gx = vx / L * a * LOOK; gy = vy / L * a * LOOK;
+      }
+      if (st) { st.x = st.x == null ? gx : st.x + (gx - st.x) * 0.35; st.y = st.y == null ? gy : st.y + (gy - st.y) * 0.35; gx = st.x; gy = st.y; }
+      const pL = eyePos(pu.l, gx, gy), pR = eyePos(pu.r, gx, gy);
+      ctx.drawImage(pl, -PIV[0] * pw + (pL[0] - pu.l.rest[0]) * PX, -(1 - PIV[1]) * ph + (pL[1] - pu.l.rest[1]) * PX);
+      ctx.drawImage(pr, -PIV[0] * pw + (pR[0] - pu.r.rest[0]) * PX, -(1 - PIV[1]) * ph + (pR[1] - pu.r.rest[1]) * PX);
+      last.frame = f; last.l = pL; last.r = pR; last.d = [gx, gy];
+    }
+    ctx.restore();
+  }
+  return { draw, img, PUP, eyePos, last, loaded: Promise.all(waits), ready: () => NAMES.every((n) => ok(img[n])) };
+})();
+// ---- Главные числа. Кадр 1080×1920 опорных px (design/lab-tower-physics.md, tower.md §3–6) ----
+const TUNE = {
+  // режим physics (lab-tower-physics.md §3)
+  layerW: 220,        // ширина каждого слоя; главная ручка сложности (базовый на блюде — 756). Спека: 300; по калибровке бота (счёт = поставленные слои) подобрано 220
+  lives: 3,           // вишенки
+  swayT: 2.4,         // с, период раскачки башни, не кратен маятнику
+  swayPerLayer: 2,    // px раскачки на слой
+  swayLean: 1.0,      // вклад кривизны (|lean| = смещение среднего центра от 540)
+  swayMax: 200,       // px, потолок
+  perfectPx: 14,      // допуск «идеально» (оба режима)
+  perfectCalm: 0.7,   // успокоение башни на серии ≥ 3
+  star2: 20, star3: 35, // physics: взрослый × 0,7 и хороший × 0,85, округлено до 5 (calib)
+  // режим current (tower.md §6)
+  curStar2: 15, curStar3: 30,
+  maxLayers: 50,
+  // общее
+  fallT: 0.42,        // с, падение с 520 px
+  rampT: 0.3,         // с, плавный переход раскачки / высоты к новым значениям
+  bonusFrom: 3,       // серия «идеально» ≥ 3: следующее даёт +24 к ширине (current)
+  bonusPx: 24,
+  collapseCamT: 0.5,  // с, камера после обрушения
+  // бот: модели игроков (σ мс, β — предугадывание сдвига вершины, γ — выпрямление башни) для skill 0 / 0,5 / 1
+  botSigma: [90, 45, 25], botBeta: [0.4, 0.7, 0.95], botGamma: [0, 0.3, 0.6],
+  botFrom: 0.3,       // с после готовности — раньше бот не целится
+};
+const FW = 1080, FH = 1920, DT = 1 / 60;
+const PLATE_Y = 1760, LH = 96, BASE_W = 756, X0 = 540;
+const HOVER_GAP = 520, ROPE_H = 950, CAM_TOP = 1150, OMK = 3.056; // Ом Ном 72 u × 3,056 = 220 px
+const C = { ink: "#4A2512", cream: "#FBEBD0", creamSh: "#E9CFA3", card: "#C98A4B", cardMid: "#B8773D", cardSh: "#8F5427", cut: "#5A2E10",
+  mint: "#8FE3C0", mintHi: "#BFF2DC", mintLo: "#6FCFA8", gold: "#FFD23F", act: "#E8458A", cherry: "#D8213C" };
+const SL = [ // цвета крема по кругу: розовый, шоколад, ваниль, лимонный
+  { b: "#F58FB5", c: "#FFD3E4", s: "#D96A93" }, { b: "#8A4E2C", c: "#CF946A", s: "#5E3019" },
+  { b: "#FFE9A8", c: "#FFF8E1", s: "#E5C970" }, { b: "#F7DC5A", c: "#FFF2A0", s: "#D9BA2E" } ];
+const BASE_COL = { b: "#EFD9AE", c: "#FBEBD0", s: "#C98A4B" };
+
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, u) => a + (b - a) * u;
+const smooth = (u) => u * u * (3 - 2 * u);
+const ramp = (t, t0, dur) => clamp((t - t0) / dur, 0, 1);
+function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function gauss(r) { const u = Math.max(1e-9, r()), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+const periodOf = (k) => Math.max(1.3, 2.6 - 0.1 * Math.floor((k - 1) / 2));
+const ampCurve = (k) => k <= 5 ? 260 : k <= 15 ? 320 : 380;
+function interp3(arr, s) { return s <= 0.5 ? lerp(arr[0], arr[1], s / 0.5) : lerp(arr[1], arr[2], (s - 0.5) / 0.5); }
+
+// ---- Состояние ----
+let MODE = "current";
+try { const m = localStorage.getItem("lab.tower.mode"); if (m === "physics" || m === "current") MODE = m; } catch (e) {}
+const BEST = { current: 0, physics: 0 };
+try { BEST.current = +localStorage.getItem("lab.best.tower-current") || 0; BEST.physics = +localStorage.getItem("lab.best.tower-physics") || 0; } catch (e) {}
+let S;                       // текущий раунд
+let bot = null;              // { skill, naive } — живёт между раундами, пока не выключат или игрок не тронет экран
+let manual = false, acc = 0, loopNow = performance.now(), firstRound = true;
+
+function newRound(seed, mode, silent) {
+  if (mode === "current" || mode === "physics") { MODE = mode; if (!silent) { try { localStorage.setItem("lab.tower.mode", MODE); } catch (e) {} } }
+  if (seed == null) seed = (Math.random() * 0x7fffffff) | 0;
+  const rng = mulberry(seed);
+  S = {
+    seed, mode: MODE, silent: !!silent, scene: "play", phase: "after", tick: 0, t: 0,
+    rng, brng: mulberry(seed ^ 0x9e3779b9), vrng: mulberry(seed ^ 0x5bd1e995),
+    psi: rng() * Math.PI * 2,
+    layers: [{ x: X0, w: BASE_W, ci: -1 }], n: 0, placed: 0,
+    score: 0, lives: TUNE.lives, streak: 0, falls: 0, collapses: 0, perfects: 0,
+    lastResult: null, lastOffset: null, lastEvent: null, lastAct: null,
+    sw: { Lf: 0, Lt: 0, Hf: 1, Ht: 1, t0: 0 }, lean: 0,
+    cam: { f: 0, to: 0, t0: 0, dur: TUNE.rampT },
+    cur: null, fall: null, cutAt: null, hop: null, jump: null, react: null,
+    lowT0: 0, readyTick: 24, readyT: 0.4,
+    crumbs: [], debris: [], rings: [], texts: [], stubs: [],
+    squash: null, overT: 0, endTick: 0, stats: null, flip: false, hintOff: !firstRound,
+  };
+  prepareLayer(24); S.jump = { t0: 3, t1: 24 };
+  S.cam.f = S.cam.to = camTarget(0);
+  botPlanned = false;
+  if (!silent) { updateUi(); hideEnd(); }
+}
+let botPlanned = false;
+
+// ---- Кривая маятника и раскачка ----
+function prepareLayer(readyTick) {
+  const top = S.layers[S.n], k = S.n + 1, c = top.x;
+  const w = S.mode === "current" ? top.w : TUNE.layerW;
+  const fit = Math.min(c, FW - c) - 0.35 * w;
+  const A = S.mode === "current" ? Math.max(150, Math.min(ampCurve(k), fit)) : Math.max(60, Math.min(ampCurve(k), fit));
+  S.cur = { c, w, A, T: periodOf(k), phi0: (k % 2 ? 1 : -1) * Math.PI / 2, k, ci: S.placed % 4 };
+  S.readyTick = readyTick; S.readyT = readyTick * DT;
+}
+function xl(t) { const c = S.cur; return c.c + c.A * Math.sin(2 * Math.PI * (t - S.readyT) / c.T + c.phi0); }
+const Lat = (t) => lerp(S.sw.Lf, S.sw.Lt, smooth(ramp(t, S.sw.t0, TUNE.rampT)));
+const Hat = (t) => Math.max(1, lerp(S.sw.Hf, S.sw.Ht, smooth(ramp(t, S.sw.t0, TUNE.rampT))));
+function swayAt(t) { return S.mode === "physics" ? Lat(t) * Math.sin(2 * Math.PI * t / TUNE.swayT + S.psi) : 0; }
+function tiltAt(t) { return S.mode === "physics" ? Math.atan(swayAt(t) / (Hat(t) * LH)) : 0; }
+// пересчёт силы раскачки после посадки / обрушения / соскальзывания; t0 — момент события
+function retarget(t0) {
+  const n = S.n; let lean = 0;
+  if (n > 0) { let sum = 0; for (let i = 1; i <= n; i++) sum += S.layers[i].x; lean = sum / n - X0; }
+  let L = Math.min(TUNE.swayMax, TUNE.swayPerLayer * n + TUNE.swayLean * Math.abs(lean));
+  if (S.streak >= 3) L *= TUNE.perfectCalm;
+  S.sw = { Lf: Lat(t0), Lt: L, Hf: Hat(t0), Ht: Math.max(1, n), t0 };
+  S.lean = lean;
+}
+function topWorldY(n) { return PLATE_Y - LH * (n + 1); }
+function camTarget(n) { return Math.max(0, CAM_TOP - topWorldY(n)); }
+function camAt(t) { const c = S.cam; const u = ramp(t, c.t0, c.dur); return lerp(c.f, c.to, 1 - (1 - u) * (1 - u)); }
+function moveCam(t0, dur) { S.cam = { f: camAt(t0), to: camTarget(S.n), t0, dur }; }
+
+// поза слоя i башни в момент t (центр, наклон)
+function poseOf(i, t) {
+  const L = S.layers[i];
+  if (i === 0) return { x: L.x, y: PLATE_Y - LH / 2, rot: 0, w: L.w, ci: L.ci };
+  const sw = swayAt(t), H = Hat(t), th = S.mode === "physics" ? Math.atan(sw / (H * LH)) : 0;
+  let x = L.x + sw * i / H;
+  if (L.corr) x += L.corr * (1 - smooth(ramp(t, L.corrT0, TUNE.rampT)));
+  const y = PLATE_Y - (i + 0.5) * LH * Math.cos(th) + (L.x - X0) * Math.sin(th);
+  return { x, y, rot: th, w: L.w, ci: L.ci };
+}
+function topPt(i, t) { const p = poseOf(i, t); return { x: p.x + 48 * Math.sin(p.rot), y: p.y - 48 * Math.cos(p.rot), rot: p.rot }; }
+function hoverY() { return topWorldY(S.n) - HOVER_GAP - LH / 2; }
+function hangPose(t) {
+  const c = S.cur, hv = hoverY();
+  if (t < S.readyT) {
+    const u = clamp((t - S.lowT0 * DT) / (21 * DT), 0, 1), e = 1 - (1 - u) * (1 - u);
+    return { x: xl(S.readyT), y: hv - 60 - 400 * (1 - e) };
+  }
+  const ph = 2 * Math.PI * (t - S.readyT) / c.T + c.phi0;
+  return { x: c.c + c.A * Math.sin(ph), y: hv - 60 * Math.sin(ph) * Math.sin(ph) };
+}
+function yTargetFall(t) { // центр падающего слоя в момент посадки: на вершине башни, с учётом её наклона в момент t
+  const th = tiltAt(t), xn = S.fall.xnew;
+  return PLATE_Y - (S.n + 1.5) * LH * Math.cos(th) + (xn - X0) * Math.sin(th);
+}
+function fallPose(t) {
+  const F = S.fall, tau = clamp((t - F.tcut) / TUNE.fallT, 0, 1);
+  return { x: F.x0, y: F.y0 + (yTargetFall(t) - F.y0) * tau * tau, tau };
+}
+
+// ---- Действия игрока ----
+// tcut — момент среза в секундах игры (дробный: не привязан к тику)
+function doCut(tcut) {
+  if (S.scene !== "play" || S.phase !== "ready") return false;
+  const top = S.layers[S.n];
+  tcut = Math.max(S.readyT, tcut);
+  const x0 = xl(tcut), hp = hangPose(tcut);
+  const phys = S.mode === "physics";
+  const d = phys ? x0 - (top.x + swayAt(tcut + TUNE.fallT)) : x0 - top.x;
+  let xnew;
+  if (phys) xnew = top.x + (Math.abs(d) <= TUNE.perfectPx ? 0 : clamp(d, -TUNE.layerW / 2, TUNE.layerW / 2));
+  else xnew = Math.abs(d) <= TUNE.perfectPx ? top.x : Math.abs(d) < S.cur.w ? (top.x + x0) / 2 : x0;
+  S.fall = { tcut, tland: tcut + TUNE.fallT, x0, y0: hp.y, w: S.cur.w, ci: S.cur.ci, d, xnew };
+  S.phase = "fall"; S.cutAt = null; S.lastAct = "cut";
+  S.stubs.push({ t0: S.tick, x: S.cur.c, y: topWorldY(S.n) - ROPE_H });
+  hintDone();
+  return true;
+}
+function humanTap(ts) {
+  if (bot) { bot = null; S.cutAt = null; }
+  if (S.scene !== "play" || S.phase !== "ready") return false;
+  let tc = manual ? S.t : S.t + acc + ((ts != null ? ts : performance.now()) - loopNow) / 1000;
+  tc = clamp(tc, S.readyT, S.t + 2 * DT);
+  return doCut(tc);
+}
+function hintDone() { firstRound = false; S.hintOff = true; }
+
+// ---- Посадка ----
+function addEffects(x, y, w, ci, n) {
+  if (S.silent) return;
+  const col = ci < 0 ? BASE_COL : SL[ci % 4];
+  for (let i = 0; i < n; i++) {
+    const a = S.vrng() * Math.PI, sp = 200 + S.vrng() * 420;
+    S.crumbs.push({ x: x + (S.vrng() - 0.5) * w, y, vx: Math.cos(a) * sp * (S.vrng() < 0.5 ? -1 : 1), vy: -Math.sin(a) * sp, r: 6 + S.vrng() * 8, col: S.vrng() < 0.5 ? col.b : col.c, t0: S.tick, life: 48 });
+  }
+}
+function addRing(x, y, w, bright) { if (!S.silent) S.rings.push({ x, y, w, t0: S.tick, bright }); }
+function addText(x, y, text, color, size) { if (!S.silent) S.texts.push({ x, y, text, color, size: size || 64, t0: S.tick }); }
+// group debris: pieces [{x,y,w,h,rot,ci}] вращаются вокруг (px,py): θ(e) = dir·(spin·e + spin2·e²), плюс падение
+function addDebris(pieces, px, py, dir, o) {
+  if (S.silent) return;
+  S.debris.push({ pieces, px, py, dir, spin: o.spin, spin2: o.spin2, vx: o.vx || 0, vy: o.vy || 0, g: o.g || 3500, t0: S.tick, life: o.life || 54 });
+}
+
+function scheduleNext(extra) {
+  S.lowT0 = S.tick + 6 + extra;
+  prepareLayer(S.lowT0 + 24);
+  S.jump = { t0: S.lowT0 + 3, t1: S.readyTick };
+}
+function react(seq) { S.react = { t0: S.tick, seq }; }
+function finishRound(ticks, frame) { S.phase = "over"; S.overT = S.t; S.endTick = S.tick + ticks; S.overFrame = frame; S.cutAt = null; }
+
+function land() {
+  const F = S.fall, t = F.tland, top = S.layers[S.n], d = F.d, ad = Math.abs(d), phys = S.mode === "physics";
+  const ySurf = yTargetFall(t); // центр приземлившегося слоя
+  S.lastOffset = d; S.lastEvent = null; S.squash = null;
+  let extra = 0, over = false, overFrame = "sad";
+  S.fall = null;
+  if (!phys) { // ---- как сейчас: tower.md §4 ----
+    if (ad >= F.w) { // промах
+      S.lastResult = "miss"; S.lastEvent = "miss"; S.streak = 0;
+      addDebris([{ x: F.x0, y: ySurf, w: F.w, h: LH, rot: 0, ci: F.ci }], F.x0, ySurf, d < 0 ? -1 : 1, { spin: 0.5, spin2: 0.3, vy: 2300, g: 6000, life: 40 });
+      addEffects(F.x0, ySurf, F.w, F.ci, 8);
+      S.hop = { t0: S.tick, t1: S.tick + 12, from: { x: F.x0, y: ySurf - 48 } };
+      react([[18, "wide"], [600, "sad"]]);
+      over = true; overFrame = "sad";
+    } else {
+      let nx, nw = F.w;
+      if (ad <= TUNE.perfectPx) {
+        S.lastResult = "perfect"; S.perfects++; S.streak++; nx = top.x;
+        if (S.streak > TUNE.bonusFrom) { // серия ≥ 3: следующее «идеально» растит слой, не выходя за края базового (162…918)
+          const l = Math.max(X0 - BASE_W / 2, nx - nw / 2 - TUNE.bonusPx / 2), r = Math.min(X0 + BASE_W / 2, nx + nw / 2 + TUNE.bonusPx / 2);
+          nw = r - l; nx = (l + r) / 2;
+        }
+        addRing(nx, ySurf, nw, S.streak >= 3);
+        addText(nx, ySurf - 120, S.streak >= 3 ? "ИДЕАЛЬНО ×" + S.streak : "ИДЕАЛЬНО!", C.gold, 60);
+        react([[36, "joy"]]);
+      } else {
+        S.lastResult = "trim"; S.streak = 0;
+        nx = (top.x + F.x0) / 2; nw = F.w - ad;
+        const side = d > 0 ? 1 : -1, edgeR = F.x0 + side * F.w / 2, inner = top.x + side * F.w / 2;
+        const ow = Math.abs(edgeR - inner);
+        addDebris([{ x: (edgeR + inner) / 2, y: ySurf, w: ow, h: LH, rot: 0, ci: F.ci }], (edgeR + inner) / 2, ySurf, side, { spin: 1.2, spin2: 1.4, vy: 200, g: 3200, life: 48 });
+        addEffects(inner, ySurf, ow, F.ci, 10);
+      }
+      S.layers.push({ x: nx, w: nw, ci: F.ci });
+      S.n++; S.placed++; S.score++;
+      S.squash = { t0: S.tick };
+      moveCam(t, TUNE.rampT);
+      if (S.score >= TUNE.maxLayers) { over = true; overFrame = "joy"; }
+    }
+    S.sw = { Lf: 0, Lt: 0, Hf: 1, Ht: 1, t0: t };
+  } else { // ---- с физикой: lab-tower-physics.md §2 ----
+    const W = TUNE.layerW;
+    if (ad > W / 2) { // соскальзывает
+      S.lastResult = "slip"; S.lastEvent = "slip"; S.streak = 0; S.lives--; S.falls++; extra = 6;
+      const dir = d < 0 ? -1 : 1, tp = topPt(S.n, t), px = tp.x + dir * W / 2;
+      addDebris([{ x: F.x0, y: ySurf, w: W, h: LH, rot: tp.rot, ci: F.ci }], px, tp.y, dir, { spin: 0.8, spin2: 2.2, vx: dir * 60, vy: 0, g: 3600, life: 48 });
+      addEffects(px, tp.y, 120, F.ci, 12);
+      S.hop = { t0: S.tick, t1: S.tick + 12, from: { x: F.x0, y: ySurf - 48 } };
+      react([[14, "wide"], [600, "sad"]]);
+      retarget(t);
+      if (S.lives <= 0) { over = true; overFrame = "sad"; }
+    } else {
+      let nx;
+      if (ad <= TUNE.perfectPx) {
+        S.lastResult = "perfect"; S.perfects++; S.streak++; nx = top.x;
+        addRing(F.x0, ySurf, W, S.streak >= 3);
+        addText(F.x0, ySurf - 120, S.streak >= 3 ? "ИДЕАЛЬНО ×" + S.streak : "ИДЕАЛЬНО!", C.gold, 60);
+        react([[36, "joy"]]);
+      } else {
+        S.lastResult = "shift"; S.streak = 0; nx = top.x + d;
+        if (ad > W / 4) { S.wobble = { t0: S.tick, i: S.n + 1 }; }
+      }
+      // новый слой: чтобы при посадке не было скачка, добавка corr гасится за rampT
+      const nOld = S.n, swL = swayAt(t), Hold = Hat(t);
+      S.layers.push({ x: nx, w: W, ci: F.ci, corr: swL - swL * (nOld + 1) / Hold, corrT0: t });
+      S.n++; S.placed++; S.score++;
+      S.squash = { t0: S.tick };
+      retarget(t);
+      const ci = checkCollapse();
+      if (ci >= 0) { // обрушение: все слои выше ci съезжают одним куском
+        S.lastResult = "collapse"; S.lastEvent = "collapse"; S.collapses++; S.streak = 0; S.lives--; extra = 24; S.squash = null;
+        const cm = S.layers.slice(ci + 1).reduce((a, l) => a + l.x, 0) / (S.n - ci), dir = cm > S.layers[ci].x ? 1 : -1;
+        const half = ci === 0 ? BASE_W / 2 : W / 2, pi = poseOf(ci, t);
+        const pieces = []; for (let j = ci + 1; j <= S.n; j++) { const p = poseOf(j, t); pieces.push({ x: p.x, y: p.y, w: p.w, h: LH, rot: p.rot, ci: p.ci }); }
+        const px = pi.x + dir * half, py = pi.y - 48;
+        addDebris(pieces, px, py, dir, { spin: 0.5, spin2: 2.0, vx: dir * 40, vy: 0, g: 3500, life: 60 });
+        addEffects(px, py, 160, F.ci, 18);
+        S.layers.length = ci + 1; S.n = ci;
+        S.hop = { t0: S.tick, t1: S.tick + 24, from: { x: F.x0, y: ySurf - 48 } };
+        react([[18, "wide"], [600, "sad"]]);
+        retarget(t);
+        moveCam(t, TUNE.collapseCamT);
+        if (S.lives <= 0) { over = true; overFrame = "sad"; }
+      } else {
+        moveCam(t, TUNE.rampT);
+        if (S.lives <= 0) { over = true; overFrame = "sad"; }
+      }
+      if (S.score >= TUNE.maxLayers) { over = true; overFrame = "joy"; }
+    }
+  }
+  if (over) finishRound(S.score >= TUNE.maxLayers ? 108 : 72, overFrame);
+  else { S.phase = "after"; scheduleNext(extra); }
+}
+// самое нижнее нарушение: центр масс слоёв выше i дальше от xs[i], чем половина ширины слоя i; −1 — башня стоит
+function checkCollapse() {
+  const L = S.layers;
+  for (let i = 0; i < S.n; i++) {
+    let sum = 0; for (let j = i + 1; j <= S.n; j++) sum += L[j].x;
+    const cm = sum / (S.n - i), half = i === 0 ? BASE_W / 2 : TUNE.layerW / 2;
+    if (Math.abs(cm - L[i].x) > half) return i;
+  }
+  return -1;
+}
+
+// ---- Бот: модели игроков (spec §4). Тап в момент t + N(0, σ) ----
+function botModel() {
+  const sk = bot.skill;
+  return { sigma: interp3(TUNE.botSigma, sk), beta: bot.naive ? 0 : interp3(TUNE.botBeta, sk), gamma: interp3(TUNE.botGamma, sk) };
+}
+function botPlan() {
+  const m = botModel(), top = S.layers[S.n], phys = S.mode === "physics";
+  const corr = phys ? -m.gamma * Math.sign(S.lean) * Math.min(Math.abs(S.lean), TUNE.layerW / 4) : 0;
+  const aim = (t) => { const base = top.x + corr; return xl(t) - (phys ? base + swayAt(t + 0 * TUNE.fallT) + m.beta * (swayAt(t + TUNE.fallT) - swayAt(t)) : top.x); };
+  const t0 = S.readyT + TUNE.botFrom, T = S.cur.T;
+  let tt = null, prev = aim(t0);
+  for (let t = t0 + 0.002; t < t0 + 2 * T; t += 0.002) { const v = aim(t); if ((prev <= 0 && v > 0) || (prev >= 0 && v < 0)) { tt = t; break; } prev = v; }
+  if (tt == null) tt = t0 + T / 2;
+  S.cutAt = Math.max(S.readyT + 0.02, tt + gauss(S.brng) * m.sigma / 1000);
+  S.botAim = { tt, sigma: m.sigma, beta: m.beta, gamma: m.gamma };
+}
+
+// ---- Шаг игры ----
+function tick() {
+  S.tick++; S.t = S.tick * DT;
+  if (S.phase === "after" && S.tick >= S.readyTick) { S.phase = "ready"; botPlanned = false; }
+  if (S.phase === "ready") {
+    if (bot && !botPlanned) { botPlan(); botPlanned = true; }
+    if (S.cutAt != null && S.t >= S.cutAt) doCut(S.cutAt);
+  }
+  if (S.phase === "fall" && S.t >= S.fall.tland - 1e-9) land();
+  if (S.phase === "over" && S.tick >= S.endTick) showEnd();
+  if (!S.silent) updateFx();
+}
+function updateFx() {
+  const k = S.tick;
+  for (const c of S.crumbs) { c.vy += 3000 * DT; c.x += c.vx * DT; c.y += c.vy * DT; }
+  S.crumbs = S.crumbs.filter((c) => k - c.t0 < c.life);
+  S.debris = S.debris.filter((d) => k - d.t0 < d.life);
+  S.rings = S.rings.filter((r) => k - r.t0 < 15);
+  S.texts = S.texts.filter((r) => k - r.t0 < 50);
+  S.stubs = S.stubs.filter((r) => k - r.t0 < 30);
+}
+function rating(score) { const m = S.mode === "current"; return 1 + (score >= (m ? TUNE.curStar2 : TUNE.star2) ? 1 : 0) + (score >= (m ? TUNE.curStar3 : TUNE.star3) ? 1 : 0); }
+function showEnd() {
+  S.scene = "end"; S.phase = "done";
+  const sc = S.score, key = S.mode, isBest = sc > BEST[key];
+  if (S.silent) return;
+  if (isBest && !bot) { BEST[key] = sc; try { localStorage.setItem("lab.best.tower-" + key, String(sc)); } catch (e) {} }
+  S.stats = { rating: rating(sc), score: sc, time: +S.overT.toFixed(1), best: BEST[key], newBest: isBest && !bot, falls: S.falls, collapses: S.collapses, perfects: S.perfects, doneT: S.tick };
+  const st = S.stats;
+  $("endStars").innerHTML = [1, 2, 3].map((i) => `<span class="${i <= st.rating ? "on" : ""}">★</span>`).join("");
+  $("endScore").textContent = sc;
+  $("endLine").textContent = (sc >= TUNE.maxLayers ? "Торт готов! " : "") + "слоёв · время " + st.time + " с";
+  $("endDetail").textContent = S.mode === "physics" ? `съехало: ${S.falls}, обрушений: ${S.collapses}` : `идеально: ${S.perfects}`;
+  $("endBest").textContent = st.newBest ? "Новый рекорд!" : "Рекорд: " + BEST[key];
+  $("endOm").src = "assets/omnom/" + (S.overFrame === "joy" ? "joy" : "sad") + ".png";
+  $("end").style.display = "flex";
+  const b = $("again"); b.disabled = true;
+}
+function hideEnd() { const e = document.getElementById("end"); if (e) e.style.display = "none"; }
+function updateUi() {
+  const cur = MODE === "current";
+  $("mCur").classList.toggle("on", cur); $("mPhy").classList.toggle("on", !cur);
+  $("rule").textContent = cur ? "Тап — слой падает вниз на башню. Свес отрезается, промах — конец."
+    : "Тап — слой падает на качающуюся башню. Кривая башня съедет: 3 вишенки.";
+}
+function $(id) { return document.getElementById(id); }
+
+// ---- Рисование ----
+const cv = $("cv"), ctx = cv.getContext("2d"), stage = $("stage");
+let scale = 1, dpr = 1, lastW = 0, lastH = 0;
+function fit() {
+  const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return;
+  const nd = Math.min(2, window.devicePixelRatio || 1);
+  if (w === lastW && h === lastH && nd === dpr) return;
+  lastW = w; lastH = h; dpr = nd;
+  scale = Math.min((w - 28) / FW, (h - 28) / FH);
+  cv.style.width = FW * scale + "px"; cv.style.height = FH * scale + "px";
+  cv.style.left = (w - FW * scale) / 2 + "px"; cv.style.top = (h - FH * scale) / 2 + "px";
+  cv.width = Math.round(FW * scale * dpr); cv.height = Math.round(FH * scale * dpr);
+}
+new ResizeObserver(fit).observe(stage);
+window.addEventListener("resize", fit); window.addEventListener("orientationchange", fit);
+
+function rrect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, Math.min(r, w / 2, h / 2)); }
+function circle(x, y, r, fill, line, lw) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (line) { ctx.lineWidth = lw || 4; ctx.strokeStyle = line; ctx.stroke(); } }
+function label(text, x, y, size, fill, align) {
+  ctx.font = `900 ${size}px Nunito, ui-rounded, "SF Pro Rounded", system-ui, sans-serif`;
+  ctx.textAlign = align || "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(5, size * 0.12); ctx.strokeStyle = C.ink; ctx.strokeText(text, x, y);
+  ctx.fillStyle = fill; ctx.fillText(text, x, y);
+}
+function drawSlab(x, y, w, h, rot, col, sq) {
+  if (sq) { const h2 = h * sq; y += (h - h2) / 2; h = h2; }
+  ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot);
+  const hh = h / 2;
+  ctx.lineJoin = "round";
+  rrect(-w / 2, -hh, w, h, 20); ctx.fillStyle = col.b; ctx.fill();
+  ctx.save(); rrect(-w / 2, -hh, w, h, 20); ctx.clip();
+  ctx.fillStyle = col.s; ctx.fillRect(-w / 2, hh - 16, w, 16);
+  ctx.fillStyle = col.c; ctx.fillRect(-w / 2, -hh, w, 26);
+  const n = Math.max(3, Math.round(w / 34)), r = w / n / 2;
+  for (let i = 0; i < n; i++) { ctx.beginPath(); ctx.arc(-w / 2 + r + i * 2 * r, -hh + 26, r * 0.92, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+  rrect(-w / 2, -hh, w, h, 20); ctx.lineWidth = 5; ctx.strokeStyle = C.ink; ctx.stroke();
+  ctx.restore();
+}
+const colOf = (ci) => ci < 0 ? BASE_COL : SL[ci % 4];
+
+function drawBg(cam) {
+  const g = ctx.createLinearGradient(0, 0, 0, FH);
+  g.addColorStop(0, C.mintHi); g.addColorStop(1, C.mint);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, FW, FH);
+  // кафель кухни, едет с половинной скоростью камеры
+  ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 6;
+  const step = 180, off = (cam * 0.5) % step;
+  ctx.beginPath();
+  for (let y = off - step; y < FH + step; y += step) { ctx.moveTo(0, y); ctx.lineTo(FW, y); }
+  for (let x = 0; x <= FW; x += step) { ctx.moveTo(x, 0); ctx.lineTo(x, FH); }
+  ctx.stroke();
+}
+function drawPlate() {
+  // стол и блюдо (мировые координаты)
+  ctx.fillStyle = C.card; ctx.fillRect(-20, PLATE_Y + 34, FW + 40, 3000);
+  ctx.fillStyle = C.cardSh; ctx.fillRect(-20, PLATE_Y + 34, FW + 40, 14);
+  rrect(X0 - 450, PLATE_Y - 2, 900, 36, 18); ctx.fillStyle = "#FFFFFF"; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = C.ink; ctx.stroke();
+}
+function drawCherry(x, y, r, on) {
+  ctx.lineWidth = 5; ctx.strokeStyle = on ? "#3E7A1C" : "rgba(74,37,18,.45)";
+  ctx.beginPath(); ctx.moveTo(x, y - r * 0.6); ctx.quadraticCurveTo(x + r * 0.3, y - r * 1.5, x + r * 0.9, y - r * 1.6); ctx.stroke();
+  circle(x, y, r, on ? C.cherry : "rgba(120,100,90,.35)", C.ink, 5);
+  if (on) circle(x - r * 0.3, y - r * 0.3, r * 0.22, "rgba(255,255,255,.7)");
+}
+
+// ---- Ом Ном (кадры приложения) ----
+const omGaze = {};
+function omFrameNow() {
+  if (S.phase === "over" || S.phase === "done") {
+    const e = S.tick - (S.endTick - 72);
+    return S.overFrame === "joy" ? (S.tick % 14 < 7 ? "chew" : "chew2") : "sad";
+  }
+  const r = S.react;
+  if (r) { let e = S.tick - r.t0; for (const [d, f] of r.seq) { if (e < d) { if (!(f === "sad" && S.phase === "ready")) return f; break; } e -= d; } }
+  if (S.phase === "fall") return "wide";
+  if (S.mode === "physics" && S.phase === "ready" && Math.abs(swayAt(S.t)) > 0.7 * TUNE.swayMax) return "wide";
+  return "neutral";
+}
+function omPlace(t, tickf) {
+  const top = topPt(S.n, t);
+  let p, rot = 0;
+  if (S.phase === "ready") { const h = hangPose(t); p = { x: h.x, y: h.y - 48 }; }
+  else if (S.phase === "fall") { const f = fallPose(t); p = { x: f.x, y: f.y - 48 }; }
+  else if (S.hop && tickf < S.hop.t1) {
+    const u = ramp(tickf, S.hop.t0, S.hop.t1 - S.hop.t0), e = 1 - (1 - u) * (1 - u);
+    p = { x: lerp(S.hop.from.x, top.x, e), y: lerp(S.hop.from.y, top.y, e) - 80 * 4 * u * (1 - u) };
+  } else if (S.phase === "after" && S.jump && tickf >= S.jump.t0) {
+    const u = ramp(tickf, S.jump.t0, S.jump.t1 - S.jump.t0), e = u * u * (3 - 2 * u), h = hangPose(t);
+    p = { x: lerp(top.x, h.x, e), y: lerp(top.y, h.y - 48, e) - 120 * 4 * u * (1 - u) };
+  } else { p = { x: top.x, y: top.y }; rot = -0.6 * top.rot; }
+  return { x: p.x, y: p.y + 6, rot };
+}
+function drawOm(t, tickf) {
+  const f = omPlace(t, tickf), frame = omFrameNow();
+  // взгляд: на вершину башни (пока едет слой) или на качающийся слой
+  const top = topPt(S.n, t); let look;
+  if (S.phase === "ready" || S.phase === "fall") look = top; else { const h = S.phase === "after" ? hangPose(t) : { x: top.x, y: top.y - 400 }; look = h; }
+  const dx = look.x - f.x;
+  if (S.flip ? dx < -70 : dx > 70) S.flip = !S.flip;
+  const flip = S.flip ? -1 : 1;
+  ctx.save(); ctx.translate(f.x, f.y); ctx.scale(OMK, OMK);
+  OMS.draw(ctx, { frame, mx: -flip * 2.08, my: 0, fy: 0, flip: S.flip, rot: f.rot, tx: (look.x - f.x) / OMK, ty: (look.y - f.y) / OMK }, omGaze);
+  ctx.restore();
+}
+
+function render() {
+  fit();
+  if (!S || !lastW) return;
+  const rt = manual ? S.t : S.t + acc, tickf = manual ? S.tick : S.tick + acc / DT;
+  ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+  ctx.clearRect(0, 0, FW, FH);
+  const cam = camAt(rt);
+  drawBg(cam);
+  ctx.save(); ctx.translate(0, cam);
+  drawPlate();
+  const phys = S.mode === "physics";
+  const hanging = S.phase === "ready" || (S.phase === "after" && S.tick >= S.lowT0);
+  // верёвки (за башней)
+  if (hanging) {
+    const h = hangPose(rt), nx = S.cur.c, ny = topWorldY(S.n) - ROPE_H, hw = S.cur.w / 2 - 22;
+    ctx.strokeStyle = C.cut; ctx.lineWidth = 9; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(nx, ny); ctx.lineTo(h.x - hw, h.y - 48); ctx.moveTo(nx, ny); ctx.lineTo(h.x + hw, h.y - 48); ctx.stroke();
+    circle(nx, ny, 22, C.gold, C.ink, 6);
+  }
+  for (const s of S.stubs) {
+    const u = (S.tick - s.t0) / 30; ctx.globalAlpha = 1 - u; ctx.strokeStyle = C.cut; ctx.lineWidth = 9; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - 50, s.y + 40 + 200 * u * u); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x + 50, s.y + 40 + 200 * u * u); ctx.stroke();
+    ctx.globalAlpha = 1; circle(s.x, s.y, 22, C.gold, C.ink, 6);
+  }
+  // башня
+  const view0 = -cam - 140, view1 = -cam + FH + 140;
+  for (let i = 0; i <= S.n; i++) {
+    const p = poseOf(i, rt);
+    if (p.y < view0 || p.y > view1) continue;
+    let sq = 0;
+    if (i === S.n && S.squash) { const u = (tickf - S.squash.t0) / 9; if (u >= 0 && u < 1) sq = 1 - 0.09 * Math.sin(Math.PI * u); }
+    let wob = 0;
+    if (S.wobble && i === S.wobble.i) { const u = (tickf - S.wobble.t0) / 24; if (u >= 0 && u < 1) wob = 0.09 * Math.sin(u * 3 * Math.PI) * (1 - u); }
+    drawSlab(p.x, p.y, p.w, LH + 6, p.rot + wob, colOf(p.ci), sq);
+  }
+  // пунктирная проекция под качающимся слоем — на текущую вершину (не предсказание)
+  if (hanging && S.phase === "ready") {
+    const h = hangPose(rt), th = tiltAt(rt);
+    ctx.save(); ctx.translate(h.x, PLATE_Y - (S.n + 1.5) * LH * Math.cos(th) + (h.x - X0) * Math.sin(th)); ctx.rotate(th);
+    ctx.setLineDash([16, 12]); ctx.lineWidth = 5; ctx.strokeStyle = "rgba(74,37,18,.55)"; ctx.lineCap = "butt";
+    rrect(-S.cur.w / 2, -LH / 2 + 4, S.cur.w, LH - 8, 16); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+  }
+  // кусочки, падающие / съезжающие
+  for (const d of S.debris) {
+    const e = (tickf - d.t0) * DT, th = d.dir * (d.spin * e + d.spin2 * e * e), c = Math.cos(th), s = Math.sin(th);
+    for (const pc of d.pieces) {
+      const rx = pc.x - d.px, ry = pc.y - d.py;
+      const x = d.px + rx * c - ry * s + d.vx * e, y = d.py + rx * s + ry * c + d.vy * e + 0.5 * d.g * e * e;
+      drawSlab(x, y, pc.w, pc.h, pc.rot + th, colOf(pc.ci));
+    }
+  }
+  // висящий / падающий слой и Ом Ном
+  if (S.phase === "fall") { const f = fallPose(rt); drawSlab(f.x, f.y, S.fall.w, LH, 0, colOf(S.fall.ci)); }
+  else if (hanging) { const h = hangPose(rt); drawSlab(h.x, h.y, S.cur.w, LH, 0, colOf(S.cur.ci)); }
+  drawOm(rt, tickf);
+  // эффекты
+  for (const c of S.crumbs) { const u = (tickf - c.t0) / c.life; ctx.globalAlpha = clamp(1.4 - u * 1.4, 0, 1); circle(c.x, c.y, c.r, c.col, C.ink, 2); }
+  ctx.globalAlpha = 1;
+  for (const r of S.rings) {
+    const u = (tickf - r.t0) / 15; ctx.globalAlpha = 1 - u; ctx.lineWidth = r.bright ? 12 : 8; ctx.strokeStyle = r.bright ? "#FFFFFF" : C.gold;
+    const g = 10 + 50 * u; rrect(r.x - r.w / 2 - g, r.y - LH / 2 - g, r.w + 2 * g, LH + 2 * g, 28 + g * 0.4); ctx.stroke();
+    if (r.bright) for (let k = 0; k < 6; k++) { const a = k * 1.047 + u * 2; circle(r.x + Math.cos(a) * (r.w / 2 + 40 + 80 * u), r.y + Math.sin(a) * (80 + 60 * u), 9 * (1 - u), C.gold, null); }
+    ctx.globalAlpha = 1;
+  }
+  for (const x of S.texts) { const u = (tickf - x.t0) / 50; ctx.globalAlpha = clamp(2 - u * 2, 0, 1); label(x.text, x.x, x.y - 90 * u, x.size, x.color); ctx.globalAlpha = 1; }
+  ctx.restore();
+  // подсказка первого слоя
+  if (!S.hintOff && S.scene === "play" && S.phase === "ready" && S.n === 0) {
+    const pulse = 1 + 0.06 * Math.sin(rt * 7);
+    ctx.save(); ctx.translate(FW / 2, 1560); ctx.scale(pulse, pulse); label("ТАП — ПЕРЕРЕЖЬ ВЕРЁВКУ", 0, 0, 56, C.cream); ctx.restore();
+  }
+  // HUD: вишенки слева, число слоёв справа сверху, рекорд мелко
+  if (phys) for (let i = 0; i < TUNE.lives; i++) drawCherry(70 + i * 96, 100, 34, i < S.lives);
+  if (S.streak >= 2) label("серия ×" + S.streak, phys ? 150 : 100, phys ? 190 : 100, 44, C.gold);
+  label(String(S.score), FW - 48, 106, 120, C.cream, "right");
+  label("рекорд " + BEST[S.mode], FW - 48, 198, 42, C.cream, "right");
+}
+
+// ---- Ввод: тап в любой точке поля (кроме экрана итога) ----
+stage.addEventListener("pointerdown", (e) => {
+  if (e.target.closest("#end")) return;
+  e.preventDefault();
+  humanTap(e.timeStamp);
+});
+window.addEventListener("keydown", (e) => { if (e.code === "Space" || e.code === "Enter") { e.preventDefault(); if (S.scene === "end") { if (againReady()) newRound(); } else humanTap(); } });
+function againReady() { return S.scene === "end" && S.stats && S.tick - S.stats.doneT >= 18; }
+function onButton(id, fn) {
+  const b = $(id);
+  b.addEventListener("pointerdown", (e) => e.stopPropagation());
+  b.addEventListener("pointerup", (e) => { e.stopPropagation(); if (!b.disabled) fn(); });
+}
+onButton("restart", () => newRound());
+onButton("again", () => { if (againReady()) newRound(); });
+$("endOm").addEventListener("pointerup", () => { if (againReady()) newRound(); });
+onButton("mCur", () => { if (MODE !== "current") newRound(S.seed, "current"); });
+onButton("mPhy", () => { if (MODE !== "physics") newRound(S.seed, "physics"); });
+
+// ---- Цикл: фиксированный тик 1/60, рендер по кадрам ----
+const frames = [];
+function loop(now) {
+  const dt = Math.min(0.05, (now - loopNow) / 1000); loopNow = now;
+  frames.push(now); if (frames.length > 120) frames.shift();
+  if (!manual) { acc += dt; let n = 0; while (acc >= DT && n < 3) { tick(); acc -= DT; n++; } if (n === 3) acc = 0; }
+  if (S.scene === "end") { const b = $("again"); if (b.disabled && againReady()) b.disabled = false; }
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ---- Тестовый API ----
+// tapAt: ждёт готовности, находит ближайший момент, когда смещение d (spec §2 п. 5; в current — x_cut − x_top) равно offsetPx, и режет в него
+function tapAt(off) {
+  bot = null; let guard = 0;
+  while (S.phase !== "ready" && S.scene === "play" && guard++ < 3000) tick();
+  if (S.phase !== "ready") { S.lastAct = "notReady"; return false; }
+  const top = S.layers[S.n], phys = S.mode === "physics";
+  const g = (t) => xl(t) - (phys ? top.x + swayAt(t + TUNE.fallT) : top.x) - off;
+  const t0 = Math.max(S.readyT, S.t + 1e-6), t1 = t0 + 2 * S.cur.T + 0.5;
+  let a = t0, ga = g(a), tc = null;
+  for (let t = t0 + 0.0005; t <= t1; t += 0.0005) {
+    const gt = g(t);
+    if ((ga <= 0 && gt > 0) || (ga >= 0 && gt < 0) || gt === 0) {
+      let lo = a, hi = t, glo = ga;
+      for (let k = 0; k < 40; k++) { const mid = (lo + hi) / 2, gm = g(mid); if ((glo <= 0 && gm <= 0) || (glo >= 0 && gm >= 0)) { lo = mid; glo = gm; } else hi = mid; }
+      tc = (lo + hi) / 2; break;
+    }
+    a = t; ga = gt;
+  }
+  if (tc == null) { S.lastAct = "unreachable"; return false; }
+  S.cutAt = tc; guard = 0;
+  while (S.phase === "ready" && guard++ < 3000) tick();
+  guard = 0; while (S.phase === "fall" && guard++ < 200) tick();
+  S.lastAct = "tapAt";
+  return { result: S.lastResult, offset: S.lastOffset };
+}
+const med = (a) => { const s = a.slice().sort((x, y) => x - y); return s[s.length >> 1]; };
+const pct = (a, p) => { const s = a.slice().sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; };
+function calib(n, mode) {
+  const saved = { S, bot, acc, MODE, first: firstRound, planned: botPlanned };
+  const out = { mode: mode || MODE, n, seeds: "k·7919", models: {} };
+  const models = [["kid", 0, false], ["adult", 0.5, false], ["good", 1, false], ["naive", 0.5, true]];
+  for (const [name, sk, naive] of models) {
+    const L = [], T = [], F = [], K = [], P = [];
+    for (let k = 1; k <= n; k++) {
+      newRound(k * 7919, out.mode, true);
+      bot = { skill: sk, naive };
+      let g = 0; while (S.phase !== "over" && S.scene === "play" && g++ < 60000) tick();
+      L.push(S.score); T.push(S.overT); F.push(S.falls); K.push(S.collapses); P.push(S.perfects);
+    }
+    out.models[name] = { layersMed: med(L), layersP10: pct(L, 0.1), layersP90: pct(L, 0.9), layersMean: +(L.reduce((a, b) => a + b, 0) / n).toFixed(1),
+      timeMed: Math.round(med(T)), timeP10: Math.round(pct(T, 0.1)), timeP90: Math.round(pct(T, 0.9)), fallsMed: med(F), collapsesMed: med(K), perfectsMed: med(P) };
+  }
+  S = saved.S; bot = saved.bot; acc = saved.acc; MODE = saved.MODE; firstRound = saved.first; botPlanned = saved.planned;
+  return out;
+}
+function omPos() { const f = omPlace(S.t, S.tick); return { x: f.x, y: f.y, rot: f.rot }; }
+window.__game = {
+  ready: false,
+  getState() {
+    const t = S.t, top = S.layers[S.n], cur = S.cur, r = cv.getBoundingClientRect();
+    return {
+      scene: S.scene, mode: S.mode, phase: S.phase, seed: S.seed, best: BEST[S.mode], tick: S.tick, lastAct: S.lastAct,
+      tower: {
+        state: S.phase === "over" || S.phase === "done" ? "over" : "play", n: S.n, layers: S.layers.map((l) => ({ x: +l.x.toFixed(3), w: +l.w.toFixed(3) })),
+        topX: top.x, topW: top.w, streak: S.streak, lastResult: S.lastResult, lastOffset: S.lastOffset, lastEvent: S.lastEvent,
+        score: S.score, lives: S.lives, falls: S.falls, collapses: S.collapses, perfects: S.perfects,
+        period: cur.T, amp: cur.A, swingX: xl(t), swingReady: S.phase === "ready", readyTick: S.readyTick,
+        sway: { L: Lat(t), target: S.sw.Lt, s: swayAt(t), H: Hat(t), lean: S.lean, tilt: tiltAt(t) },
+        ropeCount: 2, cam: camAt(t), visibleLayers: Math.min(S.n + 1, Math.floor((FH - (CAM_TOP)) / LH) + 6),
+        debris: S.debris.length, crumbs: S.crumbs.length,
+      },
+      result: { rating: S.stats ? S.stats.rating : 0, star2: S.mode === "current" ? TUNE.curStar2 : TUNE.star2, star3: S.mode === "current" ? TUNE.curStar3 : TUNE.star3, stats: S.stats },
+      om: { frame: omFrameNow(), ...omPos() },
+      bot: bot ? { skill: bot.skill, naive: !!bot.naive, plan: S.botAim || null } : null,
+      view: { left: r.left, top: r.top, scale }, tune: TUNE,
+    };
+  },
+  act(a, p) {
+    if (a === "tap") { if (p && p.dtMs != null && S.phase === "ready") return doCut(clamp(S.t + p.dtMs / 1000, S.readyT, S.t + 2 * DT)); return humanTap(); }
+    else if (a === "tapAt") return tapAt(p && p.offsetPx != null ? +p.offsetPx : 0);
+    else if (a === "restart") { newRound(p && p.seed != null ? p.seed : undefined, p && p.mode); S.lastAct = "restart"; }
+    else if (a === "mode") { newRound(S.seed, p && p.mode); S.lastAct = "mode"; }
+    else if (a === "autoplay") { bot = p && p.skill != null ? { skill: clamp(+p.skill, 0, 1), naive: !!p.naive } : null; S.cutAt = null; botPlanned = false; }
+    else if (a === "clock") manual = !!(p && p.manual);
+    else if (a === "step") { for (let i = 0; i < (p == null ? 1 : p); i++) tick(); }
+    else if (a === "calib") return calib(p && p.n || 50, p && p.mode);
+    else if (a === "again") { if (againReady()) newRound(); }
+  },
+  metrics() {
+    const d = []; for (let i = 1; i < frames.length; i++) d.push(frames[i] - frames[i - 1]);
+    const avg = d.length ? d.reduce((s, x) => s + x, 0) / d.length : 16.7; d.sort((a, b) => a - b);
+    return { fps: Math.round(1000 / avg), frameMsP95: d.length ? d[Math.floor(d.length * 0.95)] : 0, drawCalls: -1 };
+  },
+};
+// ?seed=7&bot=0.5&mode=physics — посмотреть бота глазами; naive=1 — бот без чтения раскачки
+const q = new URLSearchParams(location.search);
+newRound(q.has("seed") ? +q.get("seed") : undefined, q.get("mode"));
+if (q.has("bot")) bot = { skill: clamp(+q.get("bot"), 0, 1), naive: q.get("naive") === "1" };
+fit(); render();
+OMS.loaded.then(() => { window.__game.ready = true; });
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

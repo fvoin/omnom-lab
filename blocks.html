@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:,">
+<title>Коробка Ома Нома</title>
+<style>:root{--card:#c98a4b;--card2:#b8773d;--shade:#8f5427;--cut:#5a2e10;--cream:#fbebd0;--cream2:#e9cfa3;--ink:#4a2512;--act:#e8458a;--act2:#a82060;--actInk:#4f0c2c;--star:#ffd23f}*{box-sizing:border-box}html,body{background:var(--card2);height:100%;color:var(--ink);margin:0;font:700 14px/1.3 Nunito,ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{-webkit-user-select:none;user-select:none;flex-direction:column;height:100dvh;display:flex}header{flex-direction:column;gap:4px;padding:6px 12px 4px;display:flex}.row{justify-content:space-between;align-items:center;gap:8px;display:flex}a.back{color:var(--cream);padding:0 4px;font-size:22px;line-height:1;text-decoration:none}h1{color:var(--cream);text-shadow:0 1px 0 var(--cut);flex:1;margin:0;font-size:17px;font-weight:900}.rules{color:var(--cream);opacity:.9;text-align:center;white-space:nowrap;text-overflow:ellipsis;flex:1;min-width:0;font-size:12px;overflow:hidden}button{font:inherit;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--cream2);white-space:nowrap;border-radius:999px;padding:4px 11px;font-weight:800}button.on{background:var(--star);box-shadow:0 3px #c99a00}button:disabled{opacity:.45;cursor:default}.seg{gap:6px;display:inline-flex}.btns{gap:6px;display:flex}button.big{background:var(--act);color:#fff;border-color:var(--actInk);box-shadow:0 5px 0 var(--act2);text-shadow:0 1px 0 var(--actInk), 0 -1px 0 var(--actInk), 1px 0 0 var(--actInk), -1px 0 0 var(--actInk);padding:10px 26px;font-size:19px}button.big:disabled{opacity:1;background:#c9889f;box-shadow:0 5px #a9697f}#stage{touch-action:none;flex:1;min-height:0;margin:0 8px 8px;position:relative}canvas{touch-action:none;-webkit-user-select:none;user-select:none;box-shadow:0 0 0 5px var(--shade), 0 6px 0 5px var(--cut);border-radius:14px;display:block;position:absolute}#end{background:#4a251259;justify-content:center;align-items:center;display:none;position:absolute;inset:0}#end .card{background:var(--cream);border:3px solid var(--ink);text-align:center;min-width:240px;max-width:92%;box-shadow:0 6px 0 var(--cream2), 0 10px 24px #4a251259;border-radius:24px;padding:14px 24px 18px}#end .omEnd{pointer-events:none;height:96px;margin:-4px auto -2px;display:block}#end .stars{letter-spacing:4px;margin:2px 0 4px;font-size:44px;line-height:1}#end .stars span{color:var(--star);-webkit-text-stroke:2px var(--ink)}#end .stars span.off{color:var(--cut);opacity:.35}#end .score{margin:0;font-size:44px;font-weight:900}#end p{margin:3px 0;font-weight:700}#end small{opacity:.7;margin-top:2px;font-weight:700;display:block}</style>
+</head>
+<body>
+<header>
+  <div class="row"><a class="back" href="index.html" title="Лаборатория">←</a><h1>Коробка Ома Нома</h1>
+    <span class="btns"><button id="botBtn">Бот: выкл</button><button id="restart">Заново</button></span></div>
+  <div class="row" style="justify-content:center"><span class="seg"><button id="m21">21 фигура</button><button id="mEnd">До тупика</button><button id="cmb">Серия: выкл</button></span></div>
+  <div class="row"><span class="rules" id="rules"></span></div>
+</header>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div id="end"><div class="card">
+    <img class="omEnd" src="./assets/omnom/joy.png" alt="">
+    <div class="stars" id="endStars"><span>★</span><span>★</span><span>★</span></div>
+    <div id="endTitle">Очки</div>
+    <div class="score" id="endScore">0</div>
+    <p id="endBest">Рекорд: 0</p>
+    <p id="endDetail"></p>
+    <small id="endNext"></small>
+    <p style="margin-top:12px"><button class="big" id="again">Ещё</button></p>
+  </div></div>
+</div>
+<script>
+"use strict";
+// ---- Ом Ном кадрами приложения: тот же блок OMS, что в hook.html ----
+// ---- Ом Ном кадрами приложения (D-40, не рисунок кодом) ---------------------------
+// Кадры лежат в assets/omnom/ — одна папка на все прототипы; новую версию Ома Нома копируем поверх теми же именами.
+// Числа — из assets/omnom/omnom_frames.json: 6,4024 px на u, лапы = pivot, рот (кадр wide); зрачки — два слоя (левый и правый глаз), каждый ходит в эллипсе своего глаза (pupils.<кадр>.eyes).
+// В файлах Ом Ном смотрит ВЛЕВО от зрителя; flip = смотрит вправо. Кадр: p.mx, p.my — точка рта в игре (u), p.fy — лапы (по умолчанию рот + 20).
+const OMS = (() => {
+  const PX = 6.4024, PIV = [0.5366, 0.0253], MOUTH = [-2.08, -19.98];
+  // Зрачки — по слою на глаз. Для каждого: rest — центр зрачка в покое, c и r — эллипс хода центра зрачка (u от лап, оси кадра до зеркала).
+  // Сдвиг взгляда d одинаков для обоих глаз, но центр каждого зрачка потом зажимается в эллипс СВОЕГО глаза: зрачок не выходит из белка и не переходит шов.
+  const PUP = {
+    neutral: { l: { rest: [-13.93, -44.86], c: [-16.67, -45.33], r: [3.91, 3.98] },
+             r: { rest: [-0.81, -42.67], c: [2.23, -42.67], r: [6.22, 6.39] } },
+    ajar:   { l: { rest: [-13.7, -47.75], c: [-15.42, -48.29], r: [2.61, 2.51] },
+             r: { rest: [-1.6, -45.33], c: [1.92, -42.83], r: [6.06, 6.01] } },
+    wide:   { l: { rest: [-13.39, -51.18], c: [-14.79, -51.42], r: [1.98, 1.54] },
+             r: { rest: [-1.13, -48.76], c: [0.98, -45.95], r: [5.73, 5.06] } },
+    wide2:  { l: { rest: [-13.93, -52.28], c: [-14.95, -52.67], r: [1.64, 1.31] },
+             r: { rest: [-1.52, -49.54], c: [0.83, -46.58], r: [5.85, 5.25] } },
+  };
+  const LOOK = 7; // u: длина полного взгляда, больше любого радиуса хода — на краю эллипса зрачок упирается в границу
+  const NAMES = ["neutral", "ajar", "wide", "wide2", "chew", "chew2", "sad", "joy", "blink", "half", "shadow"];
+  for (const f in PUP) NAMES.push(f + "_pupils_l", f + "_pupils_r");
+  const img = {};
+  const waits = [];
+  for (const n of NAMES) {
+    const i = new Image(); img[n] = i;
+    waits.push(new Promise((res) => { i.onload = i.onerror = res; }));
+    i.src = "assets/omnom/" + n + ".png";
+  }
+  const ok = (i) => i && i.complete && i.naturalWidth > 0;
+  // центр зрачка: покой + сдвиг (dx, dy), затем в эллипс хода своего глаза: q = (p - c) / r; |q| > 1 -> p = c + q/|q| * r
+  function eyePos(e, dx, dy) {
+    let px = e.rest[0] + dx, py = e.rest[1] + dy;
+    const qx = (px - e.c[0]) / e.r[0], qy = (py - e.c[1]) / e.r[1], ql = Math.hypot(qx, qy);
+    if (ql > 1) { px = e.c[0] + qx / ql * e.r[0]; py = e.c[1] + qy / ql * e.r[1]; }
+    return [px, py];
+  }
+  // p: { frame, mx, my, fy?, flip?, tx?, ty?, rot?, piv?, shadow?, alpha? }; st — объект вызывающего: плавный взгляд
+  const last = { frame: null, l: null, r: null, d: null };
+  function draw(ctx, p, st) {
+    let f = p.frame || "neutral";
+    if (f === "neutral" && (performance.now() + (p.blinkOff || 0)) % 3600 < 120) f = "blink";
+    const base = img[f]; if (!ok(base)) return;
+    const flip = p.flip ? -1 : 1, fx = p.mx - flip * MOUTH[0], fy = p.fy != null ? p.fy : p.my - MOUTH[1];
+    const pw = base.naturalWidth, ph = base.naturalHeight, k = 1 / PX;
+    ctx.save();
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+    if (p.alpha != null) ctx.globalAlpha = p.alpha;
+    if (p.shadow && ok(img.shadow)) ctx.drawImage(img.shadow, fx - 32, fy - 6, 64, 12);
+    ctx.translate(fx, p.piv ? fy - p.piv : fy); if (p.rot) ctx.rotate(p.rot); if (p.piv) ctx.translate(0, p.piv);
+    ctx.scale(flip * k, k);
+    ctx.drawImage(base, -PIV[0] * pw, -(1 - PIV[1]) * ph);
+    const pu = PUP[f], pl = img[f + "_pupils_l"], pr = img[f + "_pupils_r"];
+    if (pu && ok(pl) && ok(pr)) {
+      let gx = 0, gy = 0;
+      if (p.tx != null) { // цель в системе кадра до зеркала; общий сдвиг взгляда, потом зажим по каждому глазу
+        const pv = p.piv || 0;
+        let dx = p.tx - fx, dy = p.ty - (fy - pv);
+        if (p.rot) { const c = Math.cos(-p.rot), sn = Math.sin(-p.rot), qx = dx * c - dy * sn, qy = dx * sn + dy * c; dx = qx; dy = qy; }
+        dy -= pv; dx *= flip;
+        const ex = (pu.l.rest[0] + pu.r.rest[0]) / 2, ey = (pu.l.rest[1] + pu.r.rest[1]) / 2; // между глазами
+        const vx = dx - ex, vy = dy - ey, L = Math.hypot(vx, vy) || 1, a = Math.min(1, L / 45);
+        gx = vx / L * a * LOOK; gy = vy / L * a * LOOK;
+      }
+      if (st) { st.x = st.x == null ? gx : st.x + (gx - st.x) * 0.35; st.y = st.y == null ? gy : st.y + (gy - st.y) * 0.35; gx = st.x; gy = st.y; }
+      const pL = eyePos(pu.l, gx, gy), pR = eyePos(pu.r, gx, gy);
+      ctx.drawImage(pl, -PIV[0] * pw + (pL[0] - pu.l.rest[0]) * PX, -(1 - PIV[1]) * ph + (pL[1] - pu.l.rest[1]) * PX);
+      ctx.drawImage(pr, -PIV[0] * pw + (pR[0] - pu.r.rest[0]) * PX, -(1 - PIV[1]) * ph + (pR[1] - pu.r.rest[1]) * PX);
+      last.frame = f; last.l = pL; last.r = pR; last.d = [gx, gy];
+    }
+    ctx.restore();
+  }
+  return { draw, img, PUP, eyePos, last, loaded: Promise.all(waits), ready: () => NAMES.every((n) => ok(img[n])) };
+})();
+
+// ---- Главные числа и логика: крутить здесь (TUNE) ----
+// ==== CORE BEGIN (чистая логика: без DOM, одна и для игры, и для бота-калибровки) ====
+const TUNE = {
+  // --- поле и размеры (опорные px кадра 1080×1920, blocks.md §3) ---
+  board: { x: 60, y: 450, cell: 120, n: 8 },
+  slotX: [30, 370, 710], slotY: 1480, slotW: 340, slotH: 360,
+  trayScale: 0.6, trayBox: [310, 330],     // масштаб фигуры в слоте и рамка с запасом 15 px
+  lift: 160,                               // px: нижний край фигуры над пальцем
+  growT: 0.1, snapT: 0.08, retT: 0.2, trayInT: 0.25,
+  total: 21,                               // mode 21: фигур в раунде
+  // --- сложность по номеру подноса: [с какого подноса, доли малые/средние/большие] ---
+  mix: [[1, [0.5, 0.4, 0.1]], [3, [0.3, 0.45, 0.25]], [7, [0.25, 0.45, 0.3]], [13, [0.2, 0.4, 0.4]]],
+  mixRows21: 2,                            // mode 21 — без роста: только первые две строки (blocks.md §4)
+  guaranteeUntil: 10,                      // endless: гарантия подноса до этого номера включительно (999 — навсегда)
+  guaranteeUntil21: 999,                   // mode 21: гарантия всегда
+  rerolls: 20,
+  // --- серия и счёт ---
+  comboGrace: 3,                           // постановок без линии до сброса серии
+  comboMax: 10,
+  softCap: 0,                              // > 0: endless заканчивается «коробка доверху» после этой постановки
+  lineScore: [0, 10, 30, 60, 100],         // за 1/2/3/4+ линий
+  emptyBonus: 50,
+  milestones: [250, 500, 1000, 2000, 4000], // дальше удваиваем
+  // --- звёзды: ключ «режим|серия», [2★, 3★]; по калибровке на 100 seed (правило: 2★ = медиана(0,5)·0,85, 3★ = медиана(0,8)); 21|0 — как в blocks.md ---
+  stars: { "21|0": [90, 140], "21|1": [110, 250], "endless|0": [100, 270], "endless|1": [110, 520] },
+  // --- бот ---
+  botInterval: 0.4,                        // c между постановками бота (видно глазами)
+  planFirst: 6, planSecond: 3,             // сколько лучших мест перебирает планировщик для 1-й и 2-й фигуры
+  secPerPiece: [4, 6],                     // оценка: секунд на фигуру у человека (для «длительности раунда»)
+  // --- время и анимации ---
+  endDelay: 1.0, againDelay: 0.3,
+  eatStep: 0.03, eatFly: 0.35, eatMax: 0.6,
+};
+const KINDS = ["r", "y", "g", "b", "p"];
+function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+// ---- набор фигур (blocks.md §4): клетки (строка, столбец) от левого верхнего угла рамки ----
+const PIECES = {}; const GROUPS = { small: [], mid: [], big: [] };
+(function () {
+  const rect = (w, h) => { const c = []; for (let r = 0; r < h; r++) for (let q = 0; q < w; q++) c.push([r, q]); return c; };
+  const rot = (c) => { const m = c.map(([r, q]) => [q, -r]); const mr = Math.min(...m.map((p) => p[0])), mq = Math.min(...m.map((p) => p[1])); return m.map(([r, q]) => [r - mr, q - mq]); };
+  const add = (g, id, cells) => {
+    const h = Math.max(...cells.map((p) => p[0])) + 1, w = Math.max(...cells.map((p) => p[1])) + 1;
+    PIECES[id] = { id, cells, w, h, group: g }; GROUPS[g].push(PIECES[id]);
+  };
+  const addRots = (g, id, c) => { let cur = c; for (let k = 0; k < 4; k++) { add(g, id + "_" + k, cur); cur = rot(cur); } };
+  add("small", "P1", [[0, 0]]); add("small", "I2h", rect(2, 1)); add("small", "I2v", rect(1, 2));
+  add("small", "I3h", rect(3, 1)); add("small", "I3v", rect(1, 3)); addRots("small", "V3", [[0, 0], [1, 0], [1, 1]]);
+  add("mid", "O4", rect(2, 2)); add("mid", "I4h", rect(4, 1)); add("mid", "I4v", rect(1, 4));
+  addRots("mid", "L4", [[0, 0], [1, 0], [2, 0], [2, 1]]); addRots("mid", "T4", [[0, 0], [0, 1], [0, 2], [1, 1]]);
+  add("mid", "S4", [[0, 1], [0, 2], [1, 0], [1, 1]]); add("mid", "Z4", [[0, 0], [0, 1], [1, 1], [1, 2]]);
+  add("big", "I5h", rect(5, 1)); add("big", "I5v", rect(1, 5)); add("big", "R6h", rect(3, 2)); add("big", "R6v", rect(2, 3));
+  add("big", "O9", rect(3, 3)); addRots("big", "V5", [[0, 0], [1, 0], [2, 0], [2, 1], [2, 2]]);
+})();
+const GROUP_LIST = [GROUPS.small, GROUPS.mid, GROUPS.big];
+
+// ---- поле: массив из 64 чисел, 0 — пусто, 1..5 — вид конфеты ----
+function fits(g, cells, r, c) {
+  for (let i = 0; i < cells.length; i++) { const R = r + cells[i][0], C = c + cells[i][1]; if (R > 7 || C > 7 || R < 0 || C < 0 || g[R * 8 + C]) return false; }
+  return true;
+}
+function anyFit(g, cells) { for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (fits(g, cells, r, c)) return true; return false; }
+// поставить и очистить заполненные линии; возвращает новую сетку, линии и клетки очистки (с видом конфеты)
+function drop(g, cells, r, c, v) {
+  g = g.slice(); for (let i = 0; i < cells.length; i++) g[(r + cells[i][0]) * 8 + c + cells[i][1]] = v;
+  const rows = [], cols = [];
+  for (let i = 0; i < 8; i++) { let fr = 1, fc = 1; for (let j = 0; j < 8; j++) { if (!g[i * 8 + j]) fr = 0; if (!g[j * 8 + i]) fc = 0; } if (fr) rows.push(i); if (fc) cols.push(i); }
+  const cleared = [];
+  for (let i = 0; i < 64; i++) { const R = i >> 3, C = i & 7; if (rows.includes(R) || cols.includes(C)) { cleared.push([R, C, g[i]]); } }
+  for (const [R, C] of cleared) g[R * 8 + C] = 0;
+  return { g, rows, cols, lines: rows.length + cols.length, cleared };
+}
+// линии, которые соберутся, если поставить (для подсветки; сетку не меняет)
+function wouldComplete(g, cells, r, c) { const d = drop(g, cells, r, c, 1); return d; }
+
+// ---- оценка поля (spec §4): 8·линии + 4·[O9] + 4·[I5h] + 4·[I5v] − 2·закрытые + 0,2·пустые ----
+function evalG(g) {
+  const rowM = [], colM = [];
+  for (let i = 0; i < 8; i++) { let a = 0, b = 0; for (let j = 0; j < 8; j++) { if (!g[i * 8 + j]) a |= 1 << j; if (!g[j * 8 + i]) b |= 1 << j; } rowM.push(a); colM.push(b); } // 1 = пусто
+  let s = 0, okO = false, okH = false, okV = false;
+  for (let r = 0; r < 8 && !(okO && okH); r++) {
+    const m = rowM[r]; if (!okH && (m & m >> 1 & m >> 2 & m >> 3 & m >> 4)) okH = true;
+    if (!okO && r < 6) { const x = rowM[r] & rowM[r + 1] & rowM[r + 2]; if (x & x >> 1 & x >> 2) okO = true; }
+  }
+  for (let c = 0; c < 8; c++) { const m = colM[c]; if (m & m >> 1 & m >> 2 & m >> 3 & m >> 4) { okV = true; break; } }
+  if (okO) s += 4; if (okH) s += 4; if (okV) s += 4;
+  let iso = 0, empty = 0;
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (!g[r * 8 + c]) {
+    empty++; let n = 0;
+    if (r === 7 || g[(r + 1) * 8 + c]) n++; if (r === 0 || g[(r - 1) * 8 + c]) n++;
+    if (c === 7 || g[r * 8 + c + 1]) n++; if (c === 0 || g[r * 8 + c - 1]) n++;
+    if (n >= 3) iso++;
+  }
+  return s - iso * 2 + empty * 0.2;
+}
+
+// ---- бот-планировщик по подносу (spec §4) ----
+function cands(g, cells, k) {
+  const o = [];
+  for (let a = 0; a < 8; a++) for (let b = 0; b < 8; b++) if (fits(g, cells, a, b)) { const res = drop(g, cells, a, b, 1); o.push({ a, b, g: res.g, lines: res.lines, v: res.lines * 8 + evalG(res.g) }); }
+  o.sort((x, y) => y.v - x.v); return o.slice(0, k);
+}
+// ps: [{slot, cells}]; возвращает { slot, r, c } первой постановки лучшей цепочки
+function plan(g, ps) {
+  let best = -Infinity, bm = null; const idx = ps.map((_, i) => i);
+  for (const i of idx) {
+    for (const c1 of cands(g, ps[i].cells, TUNE.planFirst)) {
+      const rest = idx.filter((x) => x !== i); let v2 = rest.length ? -Infinity : c1.v;
+      for (const j of rest) {
+        const cs2 = cands(c1.g, ps[j].cells, TUNE.planSecond), k = rest.find((x) => x !== j);
+        if (!cs2.length) { v2 = Math.max(v2, c1.v - 500); continue; } // цепочка оборвана: ход всё равно возможен, но хуже любой целой
+        for (const c2 of cs2) {
+          let v3;
+          if (k === undefined) v3 = c2.v;
+          else { const c3 = cands(c2.g, ps[k].cells, 1); v3 = c3.length ? c3[0].v + c2.lines * 8 : c2.v + c2.lines * 8 - 500; }
+          v3 += c1.lines * 8; if (v3 > v2) v2 = v3;
+        }
+      }
+      if (v2 > best) { best = v2; bm = { slot: ps[i].slot, r: c1.a, c: c1.b }; }
+    }
+  }
+  return bm;
+}
+
+// ---- ядро раунда ----
+function mixFor(tray, mode) {
+  const rows = mode === "21" ? TUNE.mix.slice(0, TUNE.mixRows21) : TUNE.mix; let m = rows[0][1];
+  for (const [from, sh] of rows) if (tray >= from) m = sh; return m;
+}
+function milestoneAt(i) { return i < TUNE.milestones.length ? TUNE.milestones[i] : TUNE.milestones[TUNE.milestones.length - 1] * Math.pow(2, i - TUNE.milestones.length + 1); }
+function makeCore(seed, mode, comboOn) {
+  const c = { seed: seed >>> 0, mode, comboOn: !!comboOn, rng: mulberry(seed >>> 0), kindRng: mulberry((seed ^ 0xC0FFEE) >>> 0),
+    grid: new Array(64).fill(0), tray: [null, null, null], trayNo: 0, placed: 0, score: 0, lines: 0, eaten: 0,
+    combo: 0, since: 0, maxCombo: 0, state: "play", endReason: "", msIdx: 0, bestLines: 0, devTray: false };
+  coreDeal(c); return c;
+}
+function mkPiece(id, kind) { const p = PIECES[id]; return { id, cells: p.cells, w: p.w, h: p.h, kind }; }
+function coreDeal(c) {
+  c.trayNo++;
+  const m = mixFor(c.trayNo, c.mode), guar = c.mode === "21" ? TUNE.guaranteeUntil21 : TUNE.guaranteeUntil;
+  let ps;
+  for (let k = 0; k <= TUNE.rerolls; k++) {
+    ps = [];
+    for (let i = 0; i < 3; i++) { const x = c.rng(); const grp = GROUP_LIST[x < m[0] ? 0 : x < m[0] + m[1] ? 1 : 2]; ps.push(grp[Math.floor(c.rng() * grp.length)]); }
+    if (c.trayNo > guar || ps.some((p) => anyFit(c.grid, p.cells))) break;
+  }
+  c.tray = ps.map((p) => mkPiece(p.id, Math.floor(c.kindRng() * 5)));
+}
+function coreFits(c) { return c.tray.map((p) => !!p && anyFit(c.grid, p.cells)); }
+function coreStuck(c) { return c.tray.every((p) => !p || !anyFit(c.grid, p.cells)); }
+function coreEnd(c, why) { c.state = "over"; c.endReason = why; }
+// сыграть фигуру слота в (r, col). null — нельзя; иначе событие для картинки
+function corePlace(c, slot, r, col) {
+  if (c.state !== "play") return null;
+  const p = c.tray[slot]; if (!p || !fits(c.grid, p.cells, r, col)) return null;
+  const d = drop(c.grid, p.cells, r, col, p.kind + 1); c.grid = d.g;
+  const comboBefore = c.combo; let broke = false;
+  if (d.lines) { c.combo = c.comboOn ? Math.min(TUNE.comboMax, c.combo + 1) : 0; c.since = 0; } else { c.since++; if (c.combo > 0 && c.since >= TUNE.comboGrace) { c.combo = 0; broke = true; } }
+  const mult = c.comboOn ? Math.max(1, c.combo) : 1; if (c.combo > c.maxCombo) c.maxCombo = c.combo;
+  const empty = d.lines > 0 && c.grid.every((x) => !x);
+  const lineGain = TUNE.lineScore[Math.min(4, d.lines)] * mult, emptyGain = empty ? TUNE.emptyBonus * mult : 0, gain = p.cells.length + lineGain + emptyGain;
+  c.score += gain; c.lines += d.lines; c.eaten += d.cleared.length; c.placed++; c.tray[slot] = null;
+  let milestone = 0;
+  if (c.mode === "endless") while (c.score >= milestoneAt(c.msIdx)) { milestone = milestoneAt(c.msIdx); c.msIdx++; }
+  const ev = { slot, piece: p, row: r, col, cleared: d.cleared, lines: d.lines, rows: d.rows, cols: d.cols, gain, lineGain, emptyGain, mult, comboBefore, combo: c.combo, broke, empty, milestone, dealt: false };
+  if (c.mode === "21" && c.placed >= TUNE.total) coreEnd(c, "full");
+  else if (c.mode === "endless" && TUNE.softCap > 0 && c.placed >= TUNE.softCap) coreEnd(c, "full");
+  else {
+    if (c.tray.every((x) => !x)) { coreDeal(c); ev.dealt = true; }
+    if (coreStuck(c)) coreEnd(c, "stuck");
+  }
+  return ev;
+}
+function starsKey(c) { return c.mode + "|" + (c.comboOn ? 1 : 0); }
+function starsFor(key, score) { const t = TUNE.stars[key]; return 1 + (score >= t[0] ? 1 : 0) + (score >= t[1] ? 1 : 0); }
+
+// ---- ход бота: с вероятностью skill — планировщик, иначе случайная допустимая постановка ----
+function botChoose(c, skill, br) {
+  if (br() < skill) {
+    const ps = []; c.tray.forEach((p, i) => { if (p) ps.push({ slot: i, cells: p.cells }); });
+    const m = plan(c.grid, ps); if (m) return m;
+  }
+  const opts = [];
+  c.tray.forEach((p, i) => { if (p) for (let a = 0; a < 8; a++) for (let b = 0; b < 8; b++) if (fits(c.grid, p.cells, a, b)) opts.push({ slot: i, r: a, c: b }); });
+  return opts.length ? opts[Math.floor(br() * opts.length)] : null;
+}
+function simRound(seed, skill, mode, comboOn) {
+  const c = makeCore(seed, mode, comboOn), br = mulberry((seed ^ 0x9e37) >>> 0); let guard = 0;
+  while (c.state === "play" && guard++ < 4000) { const m = botChoose(c, skill, br); if (!m) break; corePlace(c, m.slot, m.r, m.c); }
+  return c;
+}
+function quant(a, p) { a = a.slice().sort((x, y) => x - y); return a[Math.min(a.length - 1, Math.floor(a.length * p))]; }
+// калибровка: n seed × умения → медианы и 10/90 % фигур, очков, лучшей серии; доли раундов на 2★/3★ по текущим порогам;
+// suggest — порог по правилу спецификации: 2★ = медиана(0,5) × 0,85, 3★ = медиана(0,8), округление до 10
+function calibrate(n, mode, comboOn, skills) {
+  const out = { mode, combo: !!comboOn, n, stars: TUNE.stars[mode + "|" + (comboOn ? 1 : 0)], skills: {} };
+  const t = out.stars;
+  for (const s of skills) {
+    const P = [], S = [], M = [];
+    for (let sd = 1; sd <= n; sd++) { const c = simRound(sd * 104729, s, mode, comboOn); P.push(c.placed); S.push(c.score); M.push(c.maxCombo); }
+    out.skills[s] = { placed: [quant(P, .1), quant(P, .5), quant(P, .9)], score: [quant(S, .1), quant(S, .5), quant(S, .9)], maxCombo: [quant(M, .1), quant(M, .5), quant(M, .9)],
+      share2: S.filter((x) => x >= t[0]).length / n, share3: S.filter((x) => x >= t[1]).length / n,
+      estMin: [Math.round(quant(P, .5) * TUNE.secPerPiece[0] / 6) / 10, Math.round(quant(P, .5) * TUNE.secPerPiece[1] / 6) / 10] };
+  }
+  const r10 = (x) => Math.round(x / 10) * 10;
+  if (out.skills[0.5] && out.skills[0.8]) out.suggest = { star2: r10(out.skills[0.5].score[1] * 0.85), star3: r10(out.skills[0.8].score[1]) };
+  return out;
+}
+// ==== CORE END ====
+
+// ---- Приложение: вид, ввод, тестовый API (логика — выше, в CORE) ---------------------------------
+const W = 1080, H = 1920, DT = 1 / 60;
+const OMP = { x: 820, feetY: 470, s: 3.6 };                    // Ом Ном за верхним правым краем коробки, рост ≈ 260
+const MOUTH = [OMP.x - 2.08 * OMP.s, OMP.feetY - 19.98 * OMP.s]; // рот в опорных px — сюда летят конфеты
+const BADGE = { x: 625, y: 292, r: 62 };
+const C = { ink: "#4A2512", cream: "#FBEBD0", creamSh: "#E9CFA3", card: "#C98A4B", cardMid: "#B8773D", cardSh: "#8F5427", cut: "#5A2E10",
+  act: "#E8458A", actLow: "#A82060", actInk: "#4F0C2C", gold: "#FFD23F" };
+const KC = { r: ["#E8412F", "#FF8A74"], y: ["#FFC93C", "#FFE88A"], g: ["#52B848", "#9BE08F"], b: ["#3FA9F5", "#9AD6FF"], p: ["#A855F7", "#D3A6FF"] };
+
+const q = new URLSearchParams(location.search);
+const cfg = { mode: q.get("mode") === "21" ? "21" : "endless", combo: null };
+cfg.combo = q.has("combo") ? q.get("combo") === "1" : cfg.mode === "endless"; // по умолчанию: 21 — серия выкл, endless — вкл
+let bot = null; // { skill }
+const bests = {};
+const recKey = () => cfg.mode + "." + (cfg.combo ? 1 : 0);
+function bestOf() { const k = recKey(); if (bests[k] == null) { try { bests[k] = Number(localStorage.getItem("lab.best.blocks." + k)) || 0; } catch (e) { bests[k] = 0; } } return bests[k]; }
+function saveBest(v) { const k = recKey(); bests[k] = v; try { localStorage.setItem("lab.best.blocks." + k, String(v)); } catch (e) {} }
+
+let S; // раунд (вид поверх ядра)
+const omGaze = {};
+function newRound(seed, mode, combo) {
+  if (mode) cfg.mode = mode; if (combo != null) cfg.combo = !!combo;
+  seed = seed == null ? (Date.now() & 0x7fffffff) : (seed >>> 0);
+  S = { core: makeCore(seed, cfg.mode, cfg.combo), botRng: mulberry((seed ^ 0x9e37) >>> 0), fxRng: mulberry((seed ^ 0xFACE) >>> 0),
+    t: 0, tick: 0, held: null, ret: null, snaps: [], eat: [], rings: [], parts: [], pops: [], omSeq: null, trayT0: 0, botT: 0,
+    ended: false, endAt: 0, cardShown: false, cardAt: 0, newBest: false, badge: { t0: -9, burstT: -9, burstN: 0 }, lastEv: null, startedAt: 0 };
+  document.getElementById("end").style.display = "none";
+  syncButtons();
+}
+function syncButtons() {
+  document.getElementById("m21").classList.toggle("on", cfg.mode === "21");
+  document.getElementById("mEnd").classList.toggle("on", cfg.mode === "endless");
+  const cb = document.getElementById("cmb"); cb.textContent = "Серия: " + (cfg.combo ? "вкл" : "выкл"); cb.classList.toggle("on", cfg.combo);
+  document.getElementById("rules").textContent = cfg.mode === "21"
+    ? "21 фигура: набери очки." + (cfg.combo ? " Линии подряд — серия ×N." : " Линия — Ому Ному в рот.")
+    : cfg.combo ? "Играй до тупика. Линии подряд — серия ×N." : "Играй, пока фигуры влезают (без серии).";
+  const bb = document.getElementById("botBtn"); bb.textContent = "Бот: " + (bot ? String(bot.skill).replace(".", ",") : "выкл");
+}
+
+// ---- геометрия подноса и фигуры в руке ----
+const ease = (x) => 1 - (1 - Math.min(1, Math.max(0, x))) ** 3;
+const lerp = (a, b, t) => a + (b - a) * t;
+function trayCS(p) { return 120 * Math.min(TUNE.trayScale, TUNE.trayBox[0] / (p.w * 120), TUNE.trayBox[1] / (p.h * 120)); }
+function slotPose(i, p) { const cs = trayCS(p), cx = TUNE.slotX[i] + TUNE.slotW / 2, cy = TUNE.slotY + TUNE.slotH / 2; return { left: cx - p.w * cs / 2, top: cy - p.h * cs / 2, cs }; }
+function slotAt(x, y) { for (let i = 0; i < 3; i++) if (x >= TUNE.slotX[i] && x < TUNE.slotX[i] + TUNE.slotW && y >= TUNE.slotY && y < TUNE.slotY + TUNE.slotH) return i; return -1; }
+function heldFull(h) { const p = S.core.tray[h.slot]; return { left: h.x - p.w * 60, top: h.y - TUNE.lift - p.h * 120, cs: 120 }; }
+function heldPose(h) { // рост до клетки 120 за growT и подъём над пальцем
+  const f = heldFull(h), a = ease((S.t - h.t0) / TUNE.growT);
+  return { left: lerp(h.from.left, f.left, a), top: lerp(h.from.top, f.top, a), cs: lerp(h.from.cs, 120, a) };
+}
+function updateTarget(h) { // цель — по положению фигуры, а не пальца (blocks.md §5)
+  const p = S.core.tray[h.slot];
+  h.col = Math.round((h.x - 60 * p.w - 60) / 120); h.row = Math.round((h.y - TUNE.lift - 120 * p.h - 450) / 120);
+  h.valid = fits(S.core.grid, p.cells, h.row, h.col);
+  h.drop = h.valid ? drop(S.core.grid, p.cells, h.row, h.col, p.kind + 1) : null;
+  h.lit = h.drop ? h.drop.lines : 0;
+}
+function holdAt(slot, x, y) {
+  const c = S.core; if (c.state !== "play" || S.held) return false;
+  const p = c.tray[slot]; if (!p) return false;
+  if (S.ret && S.ret.slot === slot) S.ret = null;
+  S.held = { slot, x, y, t0: S.t, from: slotPose(slot, p) }; updateTarget(S.held); return true;
+}
+function moveHeld(x, y) { if (!S.held) return; S.held.x = x; S.held.y = y; updateTarget(S.held); }
+function releaseHeld() {
+  const h = S.held; if (!h) return false; S.held = null;
+  const pose = heldPose(h);
+  if (h.valid && S.core.state === "play") return doPlace(h.slot, h.row, h.col, pose);
+  S.ret = { slot: h.slot, t0: S.t, from: pose }; return false;
+}
+function cancelHeld() { const h = S.held; if (!h) return; S.held = null; S.ret = { slot: h.slot, t0: S.t, from: heldPose(h) }; }
+
+// ---- постановка: ядро + картинка ----
+function omSay(t0, st) { S.omSeq = { t0, st }; }
+function fountain(n, x, y, vy0, spread) {
+  for (let i = 0; i < n && S.parts.length < 80; i++) {
+    const a = S.fxRng(), b = S.fxRng();
+    S.parts.push({ x, y, vx: (a - 0.5) * spread, vy: -vy0 * (0.55 + 0.6 * b), kind: KINDS[Math.floor(S.fxRng() * 5)], size: 46 + S.fxRng() * 24, rot: S.fxRng() * 6, vr: (S.fxRng() - 0.5) * 8, t0: S.t, life: 1.1 });
+  }
+}
+function pop(x, y, text, color) { S.pops.push({ x, y, text, color: color || C.cream, t0: S.t }); }
+function doPlace(slot, row, col, fromPose) {
+  const c = S.core, p = c.tray[slot]; if (!p) return false;
+  const ev = corePlace(c, slot, row, col); if (!ev) return false;
+  S.lastEv = ev;
+  const land = S.t + TUNE.snapT;
+  S.snaps.push({ cells: p.cells.map(([a, b]) => [row + a, col + b]), p, from: fromPose || slotPose(slot, p), to: { left: 60 + 120 * col, top: 450 + 120 * row, cs: 120 }, t0: S.t });
+  const pcx = 60 + 120 * col + 60 * p.w, pcy = 450 + 120 * row + 60 * p.h;
+  if (ev.lines) {
+    const arr = ev.cleared.map(([r, cc, v]) => ({ r, c: cc, v, d: Math.hypot(60 + 120 * cc + 60 - MOUTH[0], 450 + 120 * r + 60 - MOUTH[1]) })).sort((a, b) => a.d - b.d);
+    const step = arr.length > 1 ? Math.min(TUNE.eatStep, (TUNE.eatMax - TUNE.eatFly) / (arr.length - 1)) : 0;
+    arr.forEach((a, i) => { S.eat.push({ r: a.r, c: a.c, kind: KINDS[a.v - 1], start: land + i * step }); S.rings.push({ x: 60 + 120 * a.c + 60, y: 450 + 120 * a.r + 60, start: land }); });
+    const per = ev.mult >= 2 ? 0.07 : 0.12;
+    if (ev.mult >= 4) omSay(land, [["wide", 0.35], ["joy", 0.65]]);
+    else if (ev.lines >= 2) omSay(land, [["wide", 0.25], ["chew", 0.35, per], ["joy", 0.5]]);
+    else omSay(land, [["chew", 0.6, per]]);
+    pop(pcx, pcy - 40, "+" + ev.gain + (ev.mult > 1 ? "  ×" + ev.mult : ""), ev.mult > 1 ? C.gold : C.cream);
+    if (ev.mult >= 4) fountain(8, MOUTH[0], MOUTH[1], 900, 500);
+    if (ev.empty) { pop(540, 900, "Чисто! +" + ev.emptyGain, C.gold); fountain(26, 540, 900, 1500, 1300); }
+  }
+  if (c.comboOn && ev.combo > ev.comboBefore) S.badge.t0 = land;
+  if (ev.broke) { S.badge.burstT = S.t; S.badge.burstN = ev.comboBefore; fountain(6, BADGE.x, BADGE.y, 500, 500); }
+  if (ev.milestone) { omSay(land, [["joy", 0.6]]); fountain(14, MOUTH[0], MOUTH[1], 1300, 900); pop(MOUTH[0], 300, String(ev.milestone) + "!", C.gold); }
+  if (ev.dealt) S.trayT0 = S.t + 0.05;
+  syncEnd();
+  return true;
+}
+function syncEnd() {
+  const c = S.core; if (c.state !== "over" || S.ended) return;
+  S.ended = true; S.endAt = S.t; S.held && cancelHeld();
+  omSay(S.t, [[c.endReason === "full" ? "joy" : "wide", TUNE.endDelay]]);
+  if (c.endReason === "full") fountain(18, MOUTH[0], MOUTH[1], 1300, 1000);
+  S.newBest = c.score > bestOf() && c.score > 0; if (S.newBest) saveBest(c.score);
+}
+function ratingOf(c) { return starsFor(starsKey(c), c.score); }
+function fmtTime(t) { const s = Math.round(t); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+function showCard() {
+  const c = S.core, r = ratingOf(c), key = starsKey(c), t = TUNE.stars[key];
+  S.cardShown = true; S.cardAt = S.t;
+  document.getElementById("endStars").innerHTML = [1, 2, 3].map((i) => `<span class="${i <= r ? "" : "off"}">★</span>`).join("");
+  document.getElementById("endTitle").textContent = c.endReason === "full" ? "Коробка полна!" : "Тупик — ничего не влезает";
+  document.getElementById("endScore").textContent = c.score;
+  document.getElementById("endBest").textContent = S.newBest ? "Новый рекорд!" : "Рекорд: " + bestOf();
+  document.getElementById("endDetail").textContent = `Поставлено: ${c.placed} · время ${fmtTime(S.endAt)}` + (c.comboOn ? ` · лучшая серия ×${c.maxCombo}` : "");
+  document.getElementById("endNext").textContent = r < 3 ? `до ${r + 1}★ — ${r === 1 ? t[0] : t[1]} очков` : "все звёзды!";
+  document.getElementById("again").disabled = true;
+  document.getElementById("end").style.display = "flex";
+}
+
+// ---- такт: фиксированный 1/60; анимации считаются от него (в ручных часах кадры воспроизводимы) ----
+function tick() {
+  S.t += DT; S.tick++; const t = S.t, c = S.core;
+  for (const p of S.parts) { p.vy += 2600 * DT; p.x += p.vx * DT; p.y += p.vy * DT; p.rot += p.vr * DT; }
+  S.parts = S.parts.filter((p) => t - p.t0 < p.life);
+  S.snaps = S.snaps.filter((s) => t < s.t0 + TUNE.snapT);
+  if (S.ret && t >= S.ret.t0 + TUNE.retT) S.ret = null;
+  S.eat = S.eat.filter((e) => t < e.start + TUNE.eatFly);
+  S.rings = S.rings.filter((r) => t < r.start + 0.45);
+  S.pops = S.pops.filter((p) => t - p.t0 < 1.0);
+  if (c.state === "over" && !S.cardShown && t >= S.endAt + TUNE.endDelay) showCard();
+  if (S.cardShown && t >= S.cardAt + TUNE.againDelay) document.getElementById("again").disabled = false;
+  if (bot && c.state === "play" && !S.held) { S.botT += DT; if (S.botT >= TUNE.botInterval) { S.botT = 0; botStep(); } }
+}
+function botStep() {
+  const m = botChoose(S.core, bot ? bot.skill : 1, S.botRng); if (!m) return false;
+  return doPlace(m.slot, m.r, m.c, null);
+}
+
+// ---- рисование ----
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d"), stage = document.getElementById("stage");
+let scale = 1, dpr = 1, lastW = 0, lastH = 0, cache = null;
+function fit() {
+  const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return;
+  const nd = Math.min(2, window.devicePixelRatio || 1);
+  if (w === lastW && h === lastH && nd === dpr) return;
+  lastW = w; lastH = h; dpr = nd;
+  scale = Math.min((w - 16) / W, (h - 16) / H);
+  cv.style.width = W * scale + "px"; cv.style.height = H * scale + "px";
+  cv.style.left = (w - W * scale) / 2 + "px"; cv.style.top = (h - H * scale) / 2 + "px";
+  cv.width = Math.round(W * scale * dpr); cv.height = Math.round(H * scale * dpr);
+  cache = null;
+}
+new ResizeObserver(fit).observe(stage);
+window.addEventListener("resize", fit); window.addEventListener("orientationchange", fit);
+
+function rr(g, x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
+function candyShape(g, kind, gray) {
+  const [fill, hi] = gray ? ["#A7A196", "#CFC9BE"] : KC[kind];
+  g.lineWidth = 5; g.lineJoin = "round"; g.strokeStyle = gray ? "#6E685E" : C.ink; g.fillStyle = fill; g.beginPath();
+  if (kind === "r") g.arc(0, 0, 37, 0, Math.PI * 2);
+  else if (kind === "y") { for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 ? 22 : 47; g[i ? "lineTo" : "moveTo"](Math.cos(a) * rad, Math.sin(a) * rad + 3); } g.closePath(); }
+  else if (kind === "g") g.roundRect(-33, -33, 66, 66, 14);
+  else if (kind === "b") { g.moveTo(0, -46); g.bezierCurveTo(10, -26, 31, -10, 31, 10); g.arc(0, 10, 31, 0, Math.PI); g.bezierCurveTo(-31, -10, -10, -26, 0, -46); g.closePath(); }
+  else { g.moveTo(0, 38); g.bezierCurveTo(-54, 2, -46, -40, -19, -40); g.bezierCurveTo(-8, -40, 0, -32, 0, -24); g.bezierCurveTo(0, -32, 8, -40, 19, -40); g.bezierCurveTo(46, -40, 54, 2, 0, 38); g.closePath(); }
+  g.fill(); g.stroke();
+  g.fillStyle = gray ? "rgba(255,255,255,.35)" : hi; g.globalAlpha *= 0.85; g.beginPath(); g.ellipse(-12, -13, 9, 6, -0.6, 0, Math.PI * 2); g.fill(); g.globalAlpha /= 0.85;
+  if (kind === "r" && !gray) { // спираль леденца
+    g.strokeStyle = "rgba(255,255,255,.85)"; g.lineWidth = 6; g.lineCap = "round"; g.beginPath();
+    for (let a = 0; a < Math.PI * 3.2; a += 0.2) { const rad = 4 + a * 3.1; g[a ? "lineTo" : "moveTo"](Math.cos(a + 1) * rad, Math.sin(a + 1) * rad); } g.stroke();
+  }
+}
+function cupShape(g, gray) {
+  rr(g, -54, -54, 108, 108, 22); g.fillStyle = gray ? "#D5CFC4" : C.cream; g.fill(); g.lineWidth = 4; g.strokeStyle = gray ? "#8C867C" : C.ink; g.stroke();
+  rr(g, -44, -44, 88, 88, 16); g.lineWidth = 5; g.strokeStyle = gray ? "#C2BCB1" : C.creamSh; g.stroke();
+}
+function drawCell(g, kind, cx, cy, sz, gray, alpha) {
+  g.save(); g.translate(cx, cy); g.scale(sz / 120, sz / 120); if (alpha != null) g.globalAlpha = alpha;
+  cupShape(g, gray); candyShape(g, kind, gray); g.restore();
+}
+function drawFlyer(g, kind, cx, cy, sz, rot, alpha) {
+  g.save(); g.translate(cx, cy); g.rotate(rot || 0); g.scale(sz / 120, sz / 120); if (alpha != null) g.globalAlpha = alpha; candyShape(g, kind, false); g.restore();
+}
+function drawPiece(g, p, left, top, cs, gray, alpha) {
+  const kind = KINDS[p.kind];
+  for (const [r, c] of p.cells) drawCell(g, kind, left + (c + 0.5) * cs, top + (r + 0.5) * cs, cs, gray, alpha);
+}
+
+function drawWall(g) {
+  const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, "#FFE79A"); gr.addColorStop(1, "#FFD75E");
+  g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  g.fillStyle = "rgba(255,255,255,.18)"; for (let x = 0; x < W; x += 120) g.fillRect(x, 0, 60, H);
+  // гирлянда под счётом, за Омом Номом
+  g.strokeStyle = C.cut; g.lineWidth = 5; g.beginPath();
+  const sag = (x) => 158 + 48 * Math.sin(Math.PI * (((x % 540) + 540) % 540) / 540);
+  for (let x = -10; x <= W + 10; x += 10) g[x > -10 ? "lineTo" : "moveTo"](x, sag(x)); g.stroke();
+  const cols = ["#E8412F", "#FFC93C", "#52B848", "#3FA9F5", "#A855F7"]; let i = 0;
+  for (let x = 30; x < W; x += 66, i++) {
+    const y = sag(x); g.fillStyle = "rgba(255,230,140,.45)"; g.beginPath(); g.arc(x, y + 24, 28, 0, Math.PI * 2); g.fill();
+    g.fillStyle = cols[i % 5]; g.strokeStyle = C.ink; g.lineWidth = 3.5; g.beginPath(); g.ellipse(x, y + 22, 13, 18, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+    g.fillStyle = C.cut; g.fillRect(x - 6, y + 2, 12, 8);
+  }
+}
+function drawBoxAndTray(g) {
+  rr(g, 42, 436, 1020, 1020, 28); g.fillStyle = "rgba(74,37,18,.28)"; g.fill();
+  rr(g, 30, 420, 1020, 1020, 26); g.fillStyle = C.card; g.fill(); g.lineWidth = 6; g.strokeStyle = C.cut; g.stroke();
+  rr(g, 36, 426, 1008, 30, 14); g.fillStyle = "#DDA062"; g.fill(); // верхняя кромка, светлее
+  g.strokeStyle = "rgba(143,84,39,.55)"; g.lineWidth = 3; for (let y = 1412; y < 1436; y += 8) { g.beginPath(); g.moveTo(40, y); g.lineTo(1040, y); g.stroke(); }
+  rr(g, 52, 442, 976, 976, 12); g.fillStyle = "#7E4A22"; g.fill();
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { rr(g, 60 + 120 * c + 5, 450 + 120 * r + 5, 110, 110, 14); g.fillStyle = "#9A5C2B"; g.fill(); g.strokeStyle = "#86501F"; g.lineWidth = 3; g.stroke(); }
+  rr(g, 10, 1465, 1060, 390, 34); g.fillStyle = C.cardMid; g.fill(); g.lineWidth = 6; g.strokeStyle = C.cut; g.stroke();
+  for (let i = 0; i < 3; i++) { rr(g, TUNE.slotX[i], TUNE.slotY, TUNE.slotW, TUNE.slotH, 26); g.fillStyle = "#9B6232"; g.fill(); g.lineWidth = 4; g.strokeStyle = C.cardSh; g.stroke(); }
+}
+function buildCache() {
+  const mk = (fn) => { const c = document.createElement("canvas"); c.width = cv.width; c.height = cv.height; const x = c.getContext("2d"); x.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0); fn(x); return c; };
+  cache = { wall: mk(drawWall), box: mk(drawBoxAndTray) };
+}
+
+let omFrame = "neutral";
+function omFrameNow() {
+  const q = S.omSeq;
+  if (q) { let t = S.t - q.t0; if (t >= 0) for (const [f, d, per] of q.st) { if (t < d) return f === "chew" ? (Math.floor(t / (per || 0.12)) % 2 ? "chew2" : "chew") : f; t -= d; } }
+  const c = S.core;
+  if (c.state === "over") return c.endReason === "full" ? "joy" : "neutral";
+  if (S.held) return S.held.lit > 0 ? "wide" : "ajar";
+  return "neutral";
+}
+function drawOm(g) {
+  omFrame = omFrameNow();
+  const s = OMP.s; let rot = 0;
+  if (S.core.state === "over" && S.core.endReason === "stuck") { const e = S.t - S.endAt; if (e < TUNE.endDelay) rot = Math.sin(e * 15) * 0.05 * (1 - e / TUNE.endDelay); } // пожимает плечами
+  const tx = S.held ? S.held.x : 540, ty = S.held ? S.held.y : 1000;
+  g.save(); g.scale(s, s);
+  OMS.draw(g, { frame: omFrame, mx: OMP.x / s - 2.08, my: 0, fy: OMP.feetY / s, tx: tx / s, ty: ty / s, rot, shadow: false }, omGaze);
+  g.restore();
+}
+function comboDots() { const c = S.core; return c.combo > 0 ? Math.max(0, TUNE.comboGrace - c.since) : 0; }
+function drawCombo(g) {
+  const c = S.core; if (!c.comboOn) return;
+  const b = S.badge, n = c.combo;
+  if (n >= 2) {
+    const pulse = 1 + 0.4 * Math.max(0, 1 - (S.t - b.t0) / 0.3) * (S.t >= b.t0 ? 1 : 0);
+    g.save(); g.translate(BADGE.x, BADGE.y); g.scale(pulse, pulse);
+    g.beginPath(); g.arc(0, 0, BADGE.r, 0, Math.PI * 2); g.fillStyle = C.act; g.fill(); g.lineWidth = 7; g.strokeStyle = C.actInk; g.stroke();
+    g.beginPath(); g.arc(0, 0, BADGE.r - 11, 0, Math.PI * 2); g.lineWidth = 3; g.strokeStyle = "rgba(255,255,255,.4)"; g.stroke();
+    g.font = "900 " + (n >= 10 ? 56 : 70) + "px Nunito, ui-rounded, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.lineWidth = 9; g.strokeStyle = C.actInk; g.strokeText("×" + n, 0, 4); g.fillStyle = "#fff"; g.fillText("×" + n, 0, 4);
+    g.restore();
+  }
+  const e = S.t - b.burstT;
+  if (e >= 0 && e < 0.45 && n === 0) { // значок лопается
+    const k = e / 0.45; g.save(); g.translate(BADGE.x, BADGE.y); g.scale(1 + k * 0.7, 1 + k * 0.7); g.globalAlpha = 1 - k;
+    g.beginPath(); g.arc(0, 0, BADGE.r, 0, Math.PI * 2); g.lineWidth = 8 * (1 - k) + 2; g.strokeStyle = C.act; g.stroke();
+    g.font = "900 64px Nunito, ui-rounded, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = C.act; g.fillText("×" + b.burstN, 0, 4); g.restore();
+  }
+  if (n >= 1) { const lit = comboDots(); for (let i = 0; i < 3; i++) { const x = BADGE.x + (i - 1) * 38, y = BADGE.y + BADGE.r + 34;
+    g.beginPath(); g.arc(x, y, 12, 0, Math.PI * 2); g.fillStyle = i < lit ? C.gold : "rgba(74,37,18,.35)"; g.fill(); g.lineWidth = 3.5; g.strokeStyle = C.ink; g.stroke(); } }
+}
+function drawHud(g) {
+  const c = S.core, F = "Nunito, ui-rounded, system-ui, sans-serif";
+  g.textBaseline = "alphabetic"; g.textAlign = "right"; g.font = "900 96px " + F; g.fillStyle = C.ink;
+  const sc = String(c.score); g.fillText(sc, 1040, 124); const sw = g.measureText(sc).width;
+  const label = c.mode === "21" ? "осталось" : "поставлено", num = c.mode === "21" ? TUNE.total - c.placed : c.placed;
+  g.font = "900 58px " + F; const cx = 1040 - sw - 40;
+  g.fillText(String(num), cx, 122);
+  g.font = "800 26px " + F; g.fillText(label, cx, 52); const lw = g.measureText(label).width;
+  // иконка фигуры (уголок из трёх конфет) слева от подписи
+  const ix = cx - lw - 66; for (const [r, cc] of [[0, 0], [1, 0], [1, 1]]) drawCell(g, "y", ix + cc * 32, 62 + r * 32, 32);
+  g.textAlign = "left"; g.font = "800 28px " + F; g.fillStyle = "rgba(74,37,18,.8)"; g.fillText("рекорд " + bestOf(), 40, 60);
+  const r = ratingOf(c); // три звезды-рекордные пороги: горят набранные
+  for (let i = 0; i < 3; i++) { g.save(); g.translate(58 + i * 52, 98); g.globalAlpha = i < r ? 1 : 0.28; g.lineWidth = 4; g.lineJoin = "round"; g.strokeStyle = C.ink; g.fillStyle = C.gold; g.beginPath();
+    for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rad = k % 2 ? 11 : 24; g[k ? "lineTo" : "moveTo"](Math.cos(a) * rad, Math.sin(a) * rad); } g.closePath(); g.fill(); g.stroke(); g.restore(); }
+}
+function render() {
+  if (!cv.width) return;
+  if (!cache) buildCache();
+  const g = ctx; g.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0); g.globalAlpha = 1;
+  g.drawImage(cache.wall, 0, 0, W, H);
+  drawOm(g); drawCombo(g);
+  g.drawImage(cache.box, 0, 0, W, H);
+  const c = S.core, t = S.t;
+  // клетки: ещё не съеденные (ждут очереди) → сетка (без тех, что ещё «защёлкиваются»)
+  for (const e of S.eat) if (t < e.start) drawCell(g, e.kind, 60 + 120 * e.c + 60, 450 + 120 * e.r + 60, 120);
+  const hid = new Set(); for (const s of S.snaps) for (const [r, cc] of s.cells) hid.add(r * 8 + cc);
+  for (let i = 0; i < 64; i++) if (c.grid[i] && !hid.has(i)) drawCell(g, KINDS[c.grid[i] - 1], 60 + 120 * (i & 7) + 60, 450 + 120 * (i >> 3) + 60, 120);
+  const h = S.held;
+  if (h && h.valid) { // тень фигуры и подсветка линий, которые соберутся
+    const p = c.tray[h.slot]; if (h.lit) { const a = 0.28 + 0.12 * Math.sin(t * 9); g.fillStyle = `rgba(255,210,63,${a})`;
+      for (const r of h.drop.rows) g.fillRect(60, 450 + 120 * r, 960, 120); for (const cc of h.drop.cols) g.fillRect(60 + 120 * cc, 450, 120, 960); }
+    for (const [r, cc] of p.cells) drawCell(g, KINDS[p.kind], 60 + 120 * (h.col + cc) + 60, 450 + 120 * (h.row + r) + 60, 120, false, 0.38);
+  }
+  for (const r of S.rings) { const k = (t - r.start) / 0.45; if (k < 0) continue; g.globalAlpha = 1 - k; g.strokeStyle = C.gold; g.lineWidth = 10 * (1 - k) + 2; g.beginPath(); g.arc(r.x, r.y, 36 + 40 * k, 0, Math.PI * 2); g.stroke(); g.globalAlpha = 1; }
+  // поднос
+  const dy = (1 - ease((t - S.trayT0) / TUNE.trayInT)) * 420, gray = c.state === "over" && c.endReason === "stuck";
+  for (let i = 0; i < 3; i++) { const p = c.tray[i]; if (!p || (h && h.slot === i) || (S.ret && S.ret.slot === i)) continue; const sp = slotPose(i, p); drawPiece(g, p, sp.left, sp.top + dy, sp.cs, gray, gray ? 0.75 : 1); }
+  for (const s of S.snaps) { const a = ease((t - s.t0) / TUNE.snapT); drawPiece(g, s.p, lerp(s.from.left, s.to.left, a), lerp(s.from.top, s.to.top, a), lerp(s.from.cs, s.to.cs, a)); }
+  if (S.ret) { const p = c.tray[S.ret.slot]; if (p) { const a = ease((t - S.ret.t0) / TUNE.retT), sp = slotPose(S.ret.slot, p); drawPiece(g, p, lerp(S.ret.from.left, sp.left, a), lerp(S.ret.from.top, sp.top, a), lerp(S.ret.from.cs, sp.cs, a)); } }
+  if (h) { const p = c.tray[h.slot], hp = heldPose(h); g.save(); g.shadowColor = "rgba(74,37,18,.35)"; g.shadowBlur = 24; g.shadowOffsetY = 14; drawPiece(g, p, hp.left, hp.top, hp.cs); g.restore(); }
+  // конфеты летят в рот
+  for (const e of S.eat) { const k = (t - e.start) / TUNE.eatFly; if (k < 0) continue; const e2 = k * k * (3 - 2 * k), x0 = 60 + 120 * e.c + 60, y0 = 450 + 120 * e.r + 60;
+    drawFlyer(g, e.kind, lerp(x0, MOUTH[0], e2), lerp(y0, MOUTH[1], e2) - 150 * Math.sin(Math.PI * e2), 100 * (1 - 0.65 * k), k * 7, 1); }
+  for (const p of S.parts) { const k = (t - p.t0) / p.life; drawFlyer(g, p.kind, p.x, p.y, p.size, p.rot, Math.min(1, 2.2 * (1 - k))); }
+  for (const p of S.pops) { const k = (t - p.t0) / 1.0; g.save(); g.globalAlpha = Math.min(1, 2.4 * (1 - k)); g.font = "900 64px Nunito, ui-rounded, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.lineWidth = 11; g.lineJoin = "round"; g.strokeStyle = C.ink; g.strokeText(p.text, p.x, p.y - 90 * ease(k)); g.fillStyle = p.color; g.fillText(p.text, p.x, p.y - 90 * ease(k)); g.restore(); }
+  drawHud(g);
+  if (c.state === "over" && !S.cardShown) { // табличка на коробке, пока Ом Ном реагирует
+    g.save(); rr(g, 170, 830, 740, 180, 40); g.fillStyle = C.cream; g.fill(); g.lineWidth = 7; g.strokeStyle = C.ink; g.stroke();
+    g.font = "900 78px Nunito, ui-rounded, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = C.ink; g.fillText(c.endReason === "full" ? "Коробка полна!" : "Тупик!", 540, 922); g.restore();
+  }
+}
+
+// ---- ввод: Pointer Events; фигура берётся за слот целиком ----
+let ptr = null;
+function toRef(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / scale, (e.clientY - r.top) / scale]; }
+stage.addEventListener("pointerdown", (e) => {
+  if (ptr !== null || e.target.closest("#end")) return;
+  const [x, y] = toRef(e), i = slotAt(x, y); if (i < 0) return;
+  if (bot) { bot = null; syncButtons(); }
+  if (!holdAt(i, x, y)) return;
+  ptr = { id: e.pointerId }; try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  e.preventDefault();
+});
+stage.addEventListener("pointermove", (e) => { if (!ptr || e.pointerId !== ptr.id) return; const [x, y] = toRef(e); moveHeld(x, y); });
+function up(e) { if (!ptr || e.pointerId !== ptr.id) return; ptr = null; if (e.type === "pointercancel") cancelHeld(); else { const [x, y] = toRef(e); moveHeld(x, y); releaseHeld(); } }
+stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+document.addEventListener("visibilitychange", () => { if (document.hidden && ptr) { ptr = null; cancelHeld(); } });
+window.addEventListener("blur", () => { if (ptr) { ptr = null; cancelHeld(); } });
+function onButton(id, fn) {
+  const b = document.getElementById(id);
+  b.addEventListener("pointerdown", (e) => e.stopPropagation());
+  b.addEventListener("pointerup", (e) => { e.stopPropagation(); if (!b.disabled) fn(); });
+}
+const BOTS = [null, 0.5, 0.8, 0.9];
+onButton("restart", () => { ptr = null; newRound(); });
+onButton("again", () => { ptr = null; newRound(); });
+onButton("m21", () => { ptr = null; newRound(S.core.seed, "21", false); });
+onButton("mEnd", () => { ptr = null; newRound(S.core.seed, "endless", true); });
+onButton("cmb", () => { ptr = null; newRound(S.core.seed, cfg.mode, !cfg.combo); });
+onButton("botBtn", () => { const i = BOTS.indexOf(bot ? bot.skill : null); const s = BOTS[(i + 1) % BOTS.length]; bot = s == null ? null : { skill: s }; S.botT = 0; syncButtons(); });
+
+// ---- цикл ----
+let manual = false, acc = 0, last = performance.now();
+const frames = [];
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  frames.push(now); if (frames.length > 120) frames.shift();
+  if (!manual) { acc += dt; let n = 0; while (acc >= DT && n < 3) { tick(); acc -= DT; n++; } if (n === 3) acc = 0; }
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ---- тестовый API (имена как в test-api.md §5, префикс blocks. опущен) ----
+function gridString(c) { return c.grid.map((v) => (v ? KINDS[v - 1] : ".")).join(""); }
+function setGridStr(s) { const c = S.core; for (let i = 0; i < 64; i++) { const k = KINDS.indexOf(s[i]); c.grid[i] = k < 0 ? 0 : k + 1; } if (c.devTray) judgeDev(); }
+function judgeDev() { const c = S.core; if (c.state === "play" && coreStuck(c)) { coreEnd(c, "stuck"); syncEnd(); } }
+function setTrayIds(ids) {
+  const c = S.core; cancelHeld(); S.ret = null;
+  c.tray = [0, 1, 2].map((i) => (ids[i] && PIECES[ids[i]] ? mkPiece(ids[i], Math.floor(c.kindRng() * 5)) : null)); c.devTray = true; judgeDev();
+}
+function bestHint() { const ps = []; S.core.tray.forEach((p, i) => { if (p) ps.push({ slot: i, cells: p.cells }); }); const m = ps.length ? plan(S.core.grid, ps) : null; return m ? { piece: m.slot, row: m.r, col: m.c } : null; }
+function heldPhase() { return S.held ? "held" : S.snaps.length ? "snap" : S.ret ? "return" : "none"; }
+window.__game = {
+  ready: false,
+  getState() {
+    const c = S.core, h = S.held, r = cv.getBoundingClientRect(), key = starsKey(c);
+    return {
+      scene: c.state === "over" ? "over" : "play", mode: cfg.mode, comboOn: cfg.combo, seed: c.seed, tick: S.tick, omFrame, best: bestOf(),
+      blocks: {
+        grid: gridString(c), tray: c.tray.map((p) => (p ? p.id : "")).join(","), kinds: c.tray.map((p) => (p ? KINDS[p.kind] : "")).join(","), fits: coreFits(c),
+        placed: c.placed, left: c.mode === "21" ? TUNE.total - c.placed : null, trayNo: c.trayNo, score: c.score, lines: c.lines, eaten: c.eaten,
+        state: c.state, endReason: c.endReason, stars: starsFor(key, c.score), best: bestOf(),
+        combo: c.combo, mult: c.comboOn ? Math.max(1, c.combo) : 1, since: c.since, dots: comboDots(), maxCombo: c.maxCombo,
+        drag: heldPhase(), held: h ? h.slot : -1, heldCell: h ? h.row + "," + h.col : "", heldValid: h ? h.valid : false,
+        ghostCells: h && h.valid ? c.tray[h.slot].cells.length : 0, linesLit: h ? h.lit : 0, trayGray: c.state === "over" && c.endReason === "stuck",
+        nextMilestone: c.mode === "endless" ? milestoneAt(c.msIdx) : null, resultShown: S.cardShown, roundSec: c.state === "over" ? S.endAt : S.t,
+      },
+      result: { stars: c.state === "over" ? ratingOf(c) : 0, star2: TUNE.stars[key][0], star3: TUNE.stars[key][1], newBest: S.newBest },
+      bot: bot ? { skill: bot.skill } : null, view: { left: r.left, top: r.top, scale }, scale, tune: TUNE,
+    };
+  },
+  act(a, p) {
+    p = p || {};
+    if (a === "place") return doPlace(p.piece, p.row, p.col, null);
+    else if (a === "drag") { // настоящий ввод: касание центра слота → ведение → отпускание
+      const i = p.piece, cc = S.core.tray[i]; if (!cc) return false;
+      if (!holdAt(i, TUNE.slotX[i] + TUNE.slotW / 2, TUNE.slotY + TUNE.slotH / 2)) return false;
+      moveHeld(p.x, p.y); return p.cancel ? (cancelHeld(), false) : releaseHeld();
+    }
+    else if (a === "hold") { return holdAt(p.piece, TUNE.slotX[p.piece] + TUNE.slotW / 2, TUNE.slotY + TUNE.slotH / 2) && (moveHeld(p.x, p.y), true); }
+    else if (a === "move") moveHeld(p.x, p.y);
+    else if (a === "release") return releaseHeld();
+    else if (a === "cancel") cancelHeld();
+    else if (a === "setGrid") setGridStr(p.grid);
+    else if (a === "setTray") setTrayIds(p.pieces || []);
+    else if (a === "hint") return bestHint();
+    else if (a === "solve") { const m = bestHint(); return m ? doPlace(m.piece, m.row, m.col, null) : false; }
+    else if (a === "autoplay") { bot = p.skill != null ? { skill: Math.max(0, Math.min(1, +p.skill)) } : null; S.botT = 0; syncButtons(); }
+    else if (a === "playout") { // мгновенно доиграть раунд ботом (без картинки между ходами); в сумме то же, что simRound
+      const br = S.botRng, c = S.core; let n = 0;
+      while (c.state === "play" && n++ < 4000) { const m = botChoose(c, p.skill == null ? 1 : p.skill, br); if (!m) break; const ev = corePlace(c, m.slot, m.r, m.c); if (ev && ev.dealt) S.trayT0 = S.t; }
+      S.held = null; syncEnd(); return { score: c.score, placed: c.placed, lines: c.lines, maxCombo: c.maxCombo, endReason: c.endReason };
+    }
+    else if (a === "calib") return calibrate(p.n || 30, p.mode || cfg.mode, p.combo != null ? !!p.combo : cfg.combo, p.skills || [0, 0.5, 0.8, 0.9, 1]);
+    else if (a === "restart") { newRound(p.seed != null ? p.seed : undefined, p.mode, p.combo); }
+    else if (a === "mode") { newRound(S.core.seed, p.mode, p.combo != null ? p.combo : p.mode === "endless"); }
+    else if (a === "clock") manual = !!p.manual;
+    else if (a === "step") { for (let i = 0; i < (typeof p === "number" ? p : (p.n || 1)); i++) tick(); }
+    else if (a === "render") render();
+  },
+  metrics() {
+    const d = []; for (let i = 1; i < frames.length; i++) d.push(frames[i] - frames[i - 1]);
+    const avg = d.length ? d.reduce((s, x) => s + x, 0) / d.length : 16.7; d.sort((a, b) => a - b);
+    return { fps: Math.round(1000 / avg), frameMsP95: d.length ? d[Math.floor(d.length * 0.95)] : 0, drawCalls: -1 };
+  },
+};
+// ?seed=7&bot=0.8&mode=endless|21&combo=0|1 — посмотреть бота глазами
+newRound(q.has("seed") ? +q.get("seed") : undefined);
+if (q.has("bot")) { bot = { skill: Math.max(0, Math.min(1, +q.get("bot"))) }; syncButtons(); }
+fit(); render();
+OMS.loaded.then(() => { window.__game.ready = true; });
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
