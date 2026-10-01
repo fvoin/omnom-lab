@@ -186,17 +186,19 @@
      "r": 0
     }
    },
-   "note": "exit of eat / joy / shrug: the front paws come down IN FRONT of the belly almost to their place on the ground (lids still half); next key = neutral with aw 0: the paws drop behind the body outline at the middle of that last 80 ms, already at the ground (smallest visible change)"
+   "note": "exit of eat / joy / shrug / wave: the front paws come down IN FRONT of the belly almost to their place on the ground (arm and forearm already behind the body - they swap mid-arc, out to the side); next key = neutral with aw 0: the paws drop behind the body outline at the middle of that last segment, already at the ground"
   },
   "joyUp": {
    "base": "joy",
    "armsFrom": "fly",
-   "note": "jump of joy: arms raised (fly arms) on the take-off"
+   "front": ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"
+   ],
+   "note": "jump of joy: arms raised (fly arms) on the take-off, in front of the body"
   },
   "joyOut": {
    "base": "half",
-   "armsFrom": "joy",
-   "note": "exit from joy: lids half, mouth closed at the squash peak, arms lowered over the next 90 ms"
+   "armsFrom": "joyF",
+   "note": "exit from joy: lids half, mouth closed at the squash peak, arms (still in front) start down"
   },
   "startle": {
    "base": "ajar",
@@ -249,7 +251,9 @@
      ]
     }
    },
-   "note": "dead end of the box: front paws out to the sides, forearms up (palms up), wide face"
+   "note": "dead end of the box: front paws out to the sides, forearms up (palms up), wide face",
+   "front": ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"
+   ]
   },
   "shrugOut": {
    "base": "half",
@@ -259,6 +263,58 @@
    "base": "wide2",
    "armsFrom": "chew",
    "note": "next candy of a series: the mouth opens for the gulp while the front paws stay at the mouth"
+  },
+  "waveA": {
+   "base": "wave1",
+   "front": ["arm_l", "fore_l", "paw_fl"
+   ],
+   "note": "D-66: the raised front paw is drawn IN FRONT of the body (whole arm chain); the swap with the body happens mid-arc, where the arm is out to the side (smallest visible change)"
+  },
+  "waveB": {
+   "base": "wave2",
+   "front": ["arm_l", "fore_l", "paw_fl"
+   ]
+  },
+  "reachF": {
+   "base": "reach",
+   "front": ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"
+   ]
+  },
+  "joyF": {
+   "base": "joy",
+   "front": ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"
+   ]
+  },
+  "handsMid": {
+   "base": "half",
+   "front": ["paw_fl", "paw_fr"
+   ],
+   "bones": {
+    "arm_l": {
+     "r": 90
+    },
+    "fore_l": {
+     "r": -160
+    },
+    "paw_fl": {
+     "r": 60
+    },
+    "arm_r": {
+     "r": 50
+    },
+    "fore_r": {
+     "r": -90
+    },
+    "paw_fr": {
+     "r": 5
+    }
+   },
+   "note": "polish (D-66): midpoint of the eat exit chosen by search so the paws go from the mouth to the ground almost in a straight line (the left paw used to swing out wide to the side, 78 px off the line; now 1.3 px, the right 33 -> 8)"
+  },
+  "gulpMid": {
+   "base": "wide2",
+   "armsFrom": "handsMid",
+   "note": "polish: the paws go up to the mouth along the same near-straight path as on the exit (not out wide to the side)"
   }
  },
  "clips": {
@@ -480,12 +536,12 @@
    "layer": "react",
    "arms": true,
    "fade": 0.05,
-   "dur": 0.9,
+   "dur": 1.4,
    "rate": 1,
-   "lengths": [0.65, 0.9
+   "lengths": [1, 1.4
    ],
    "replayFrom": null,
-   "note": "D-56 (user: 'eats very fast'): ~0.9 s. Gulp 0.16 s (wide2 -> chew at the squash peak at 0.09, paws to the mouth) -> chew loop (cycle 0.27 = 2 bites, fitted into dur: 0.125 s per switch at 0.9 and at 0.65) -> exit 0.24 s: squash peak = mouth closed + lids half, paws down in front of the belly to the ground, lids open. Series (candies in a row): dur 0.65, every next candy restarts with replayIntro (a full gulp >= 0.15 s, paws stay at the mouth)",
+   "note": "D-66 (user: 'eat even slower'): 1.4 s by default. Gulp 0.22 s (wide2 -> chew at the squash peak at 0.12, paws to the mouth) -> chew loop (cycle 0.4 = 2 bites, fitted into dur: 0.22 s per switch at 1.4) -> exit 0.3 s: squash peak = mouth closed + lids half, paws down in front of the belly to the ground. Series: dur 1.0, every next candy restarts with replayIntro (a full gulp). Option k (lab slider 'eat speed'): all times x k (k = slider / 1.4), so a faster eat stays a whole eat",
    "intro": [
     {
      "t": 0,
@@ -494,29 +550,36 @@
      "lean": -3
     },
     {
-     "t": 0.09,
+     "t": 0.06,
+     "pose": "gulpMid",
+     "sq": -0.04,
+     "lean": -1.5,
+     "ease": "lin"
+    },
+    {
+     "t": 0.12,
      "pose": "chewA",
      "sq": -0.2,
      "lean": 0,
      "ease": "in"
     },
     {
-     "t": 0.16,
+     "t": 0.22,
      "sq": 0.04,
      "ease": "out"
     }
    ],
    "loop": {
-    "cycle": 0.27,
+    "cycle": 0.4,
     "keys": [
      {
-      "t": 0.135,
+      "t": 0.2,
       "pose": "chewB",
       "sq": -0.06,
       "ease": "inout"
      },
      {
-      "t": 0.27,
+      "t": 0.4,
       "pose": "chewA",
       "sq": 0.03,
       "ease": "inout"
@@ -525,19 +588,25 @@
    },
    "outro": [
     {
-     "t": 0.07,
+     "t": 0.09,
      "pose": "eatOut",
      "sq": -0.07,
      "ease": "in"
     },
     {
-     "t": 0.16,
-     "pose": "handsDown",
-     "sq": 0.02,
-     "ease": "inout"
+     "t": 0.15,
+     "pose": "handsMid",
+     "sq": -0.02,
+     "ease": "lin"
     },
     {
-     "t": 0.24,
+     "t": 0.22,
+     "pose": "handsDown",
+     "sq": 0.02,
+     "ease": "out"
+    },
+    {
+     "t": 0.3,
      "pose": "neutral",
      "sq": 0,
      "aw": 0,
@@ -553,14 +622,14 @@
      "lean": -2
     },
     {
-     "t": 0.09,
+     "t": 0.12,
      "pose": "chewA",
      "sq": -0.16,
      "lean": 0,
      "ease": "in"
     },
     {
-     "t": 0.16,
+     "t": 0.22,
      "sq": 0.04,
      "ease": "out"
     }
@@ -584,7 +653,7 @@
     },
     {
      "t": 0.06,
-     "pose": "joy",
+     "pose": "joyF",
      "sq": -0.14,
      "ease": "out"
     },
@@ -611,7 +680,7 @@
      "t": 0.34,
      "pose": {
       "joyUp": 0.55,
-      "joy": 0.45
+      "joyF": 0.45
      },
      "sq": 0.08,
      "lift": 0,
@@ -619,7 +688,7 @@
     },
     {
      "t": 0.38,
-     "pose": "joy",
+     "pose": "joyF",
      "sq": -0.16,
      "ease": "out"
     }
@@ -907,7 +976,7 @@
     },
     {
      "t": 0.28,
-     "pose": "reach",
+     "pose": "reachF",
      "sq": 0.06,
      "lean": -5,
      "ease": "out"
@@ -986,62 +1055,62 @@
     },
     {
      "t": 0.08,
-     "pose": "wave1",
+     "pose": "waveA",
      "sq": -0.06,
      "ease": "out"
     },
     {
      "t": 0.2,
-     "pose": "wave2",
+     "pose": "waveB",
      "sq": 0.04,
      "bones": {
       "arm_l": {
-       "r": -10
+       "r": -16
       },
       "paw_fl": {
-       "r": -8
+       "r": -22
       }
      },
      "ease": "inout"
     },
     {
      "t": 0.33,
-     "pose": "wave1",
+     "pose": "waveA",
      "sq": 0,
      "bones": {
       "arm_l": {
-       "r": 10
+       "r": 14
       },
       "paw_fl": {
-       "r": 10
+       "r": 20
       }
      },
      "ease": "inout"
     },
     {
      "t": 0.46,
-     "pose": "wave2",
+     "pose": "waveB",
      "sq": 0.03,
      "bones": {
       "arm_l": {
-       "r": -10
+       "r": -16
       },
       "paw_fl": {
-       "r": -8
+       "r": -22
       }
      },
      "ease": "inout"
     },
     {
      "t": 0.59,
-     "pose": "wave1",
+     "pose": "waveA",
      "sq": 0,
      "bones": {
       "arm_l": {
-       "r": 8
+       "r": 12
       },
       "paw_fl": {
-       "r": 8
+       "r": 18
       }
      },
      "ease": "inout"
@@ -1057,7 +1126,8 @@
      "sq": 0,
      "ease": "out"
     }
-   ]
+   ],
+   "note": "D-66: hand in front of the body; polish: a wider wave (arm +-16, paw +-22 deg) so it reads as waving, not a raised hand"
   },
   "blink": {
    "layer": "react",

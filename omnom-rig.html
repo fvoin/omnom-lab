@@ -21,6 +21,7 @@
   <label for="sSpeed">скорость</label><input id="sSpeed" type="range" min="0" max="1" step="0.01" value="0"><output id="oSpeed">0</output>
   <label for="sLook">взгляд</label><input id="sLook" type="range" min="-180" max="180" step="1" value="-150">
   <span class="o"><label class="ck"><input type="checkbox" id="cFinger">за пальцем</label></span>
+  <label for="sEat">еда, с</label><input id="sEat" type="range" min="0.6" max="2.5" step="0.05" value="1.4"><output id="oEat">1,40</output>
   <span>рот с, u</span><span class="seg" id="game"><button data-g="sling" class="on">рогатка 110</button><button data-g="slide">горка 140</button></span><span></span>
 </div>
 <div class="clips" id="clips"></div>
@@ -46,8 +47,8 @@ const TUNE = {
   eatDist: 14, magnet: 32,       // u: рот ловит конфету; ближе magnet — подтягивает
   openTau: 0.06,                 // open 0..1 по расстоянию конфета — рот: far — параметр игры (clips.json motion.open.far: рогатка 110, горка 140)
   joyDur: 0.9,                   // радость после конфеты в сценке (окна: 0,6 вехи «Коробки», 0,9 гол / запуск игры)
-  eatDur: 0.9, eatSeries: 0.65,  // D-56: ест ~0,9 с (смена жевания 0,125 с, глоток 0,16 с); конфета серии — 0,65 с, следующая — снова глоток
-  seriesGap: 0.32,               // с между конфетами «ест ×3» в пульте
+  eatDur: 1.4, eatSeries: 1.0,   // D-66: ест 1,4 с (глоток 0,22, смена жевания 0,22, выход 0,3); конфета серии — 1,0 с, следующая — снова глоток. Ползунок «еда, с» (0,6–2,5) — S.eatDur
+  seriesGap: 0.5,                // с между конфетами «ест ×3» в пульте (при еде 1,4 с; масштабируется с ползунком)
   loop: 15,                      // с, сценка
   events: [[0.6, "aim", "hit"], [1.9, "antic"], [2.5, "launch"], [5.7, "reload"], [6.3, "aim", "miss"], [7.4, "antic"], [7.9, "launch"],
     [10.0, "reload"], [10.5, "reach"], [12.4, "wave"], [13.5, "shrug"]],
@@ -217,12 +218,17 @@ function rigBuild(J, CJ) {
     for (const s of R.mouth[g].slots) R.mouth[g].byId[s.id] = s; }
   // позы: json рига + свои (clips.json "poses": base + кости + руки другой позы + замена форм)
   for (const n in J.poses) R.poses[n] = poseFromJson(J.poses[n]);
-  for (const n in CJ.poses) { const c = CJ.poses[n]; const P = clonePose(R.poses[c.base]);
+  // свои позы могут ссылаться друг на друга (joyOut ← joyF) — проходы, пока всё не соберётся; руки другой позы, потом свой front
+  const todo = Object.keys(CJ.poses);
+  for (let pass = 0; todo.length && pass < 10; pass++) for (let i = todo.length - 1; i >= 0; i--) { const n = todo[i], c = CJ.poses[n];
+    if (!R.poses[c.base] || (c.armsFrom && !R.poses[c.armsFrom]) || (c.armsFrom && todo.includes(c.armsFrom)) || todo.includes(c.base)) continue;
+    const P = clonePose(R.poses[c.base]);
     for (const id in c.bones || {}) setBone(P, id, c.bones[id], false);
-    if (c.front) P.front = new Set(c.front);
     if (c.armsFrom) copyArms(P, R.poses[c.armsFrom]);
+    if (c.front) P.front = new Set(c.front);
     for (const f in c.forms || {}) P[f] = oneHot(R.fam[f].members.length, R.fam[f].members.indexOf(c.forms[f]));
-    R.poses[n] = P; }
+    R.poses[n] = P; todo.splice(i, 1); }
+  if (todo.length) throw new Error("позы clips.json не собрались: " + todo.join(", "));
   R.CP = CJ; for (const n in CJ.clips) R.clips[n] = compileClip(CJ.clips[n]);
   // точка верёвки: anchors.hands.grip_l (кулак хвата, ребёнок arm_l) в позе hang — px рига от корня
   GRIP_PT = J.anchors.hands.grip_l.point; const dsH = dsFromPose(R.poses.hang, mT(0, 0), true);
@@ -301,14 +307,15 @@ function compileClip(c) { const o = Object.assign({}, c);
 // more — следующая конфета серии: вступление replayIntro (глоток с лапами у рта), та же длина
 function clipKeys(def, opt, more) {
   if (!def.intro) return { keys: def.keys, dur: def.dur, outroAt: def.dur, n: 0 };
-  const dur = opt && opt.dur != null ? +opt.dur : def.dur, rate = opt && opt.rate != null ? +opt.rate : (def.rate || 1);
+  // k — темп: все времена клипа ×k (ползунок «еда, с»: k = длина / длина по умолчанию), иначе 1
+  const kT = opt && opt.k != null ? +opt.k : 1, dur = opt && opt.dur != null ? +opt.dur : def.dur * kT, rate = opt && opt.rate != null ? +opt.rate : (def.rate || 1);
   const cache = more && def.cacheMore ? def.cacheMore : def.cache, intro = more && def.replayIntro ? def.replayIntro : def.intro;
-  const ck = dur.toFixed(3) + "|" + rate.toFixed(3); if (cache[ck]) return cache[ck];
-  const raw = intro.map((k) => Object.assign({}, k)), iEnd = raw[raw.length - 1].t, oLen = def.outro[def.outro.length - 1].t;
-  const Lp = def.loop, c0 = Lp.cycle / rate, room = Math.max(0, dur - iEnd - oLen);
+  const ck = dur.toFixed(3) + "|" + rate.toFixed(3) + "|" + kT.toFixed(3); if (cache[ck]) return cache[ck];
+  const raw = intro.map((k) => Object.assign({}, k, { t: k.t * kT })), iEnd = raw[raw.length - 1].t, oLen = def.outro[def.outro.length - 1].t * kT;
+  const Lp = def.loop, c0 = Lp.cycle * kT / rate, room = Math.max(0, dur - iEnd - oLen);
   const n = room >= c0 * 0.5 ? Math.max(1, Math.round(room / c0)) : 0, cyc = n ? room / n : 0;
   let t0 = iEnd; for (let i = 0; i < n; i++) { for (const k of Lp.keys) raw.push(Object.assign({}, k, { t: t0 + k.t / Lp.cycle * cyc })); t0 += cyc; }
-  const outroAt = t0; for (const k of def.outro) raw.push(Object.assign({}, k, { t: t0 + k.t }));
+  const outroAt = t0; for (const k of def.outro) raw.push(Object.assign({}, k, { t: t0 + k.t * kT }));
   return (cache[ck] = { keys: compileKeys(raw), dur: t0 + oLen, outroAt, n, cyc, introEnd: iEnd }); }
 function sampleKeys(keys, t) { let i = 0; while (i < keys.length - 2 && t >= keys[i + 1].t - 1e-6) i++;
   const a = keys[i], b = keys[Math.min(i + 1, keys.length - 1)];
@@ -464,7 +471,7 @@ function omStep(om, dt) {
     // ноги (задние доли) при смене состояния: выпускаем — сначала под тело по x, потом вниз; убираем — наоборот (риг 2.1: при общей
     // линейной интерполяции нога на 0,25 перехода выходила сбоку из-под тела)
     for (const k of LEG_K) { const dy = P1.b[k + 1] - F0.b[k + 1]; if (Math.abs(dy) < 1) continue;
-      const early = smooth(clamp(u / 0.55, 0, 1)), late = smooth(clamp((u - 0.25) / 0.75, 0, 1)), ex = dy > 0 ? early : late, ey = dy > 0 ? late : early;
+      const early = smooth(clamp(u / 0.5, 0, 1)), late = smooth(clamp((u - 0.12) / 0.88, 0, 1)), ex = dy > 0 ? early : late, ey = dy > 0 ? late : early;
       P.b[k] = lerp(F0.b[k], P1.b[k], ex); P.b[k + 1] = lerp(F0.b[k + 1], P1.b[k + 1], ey);
       let dr = P1.b[k + 2] - F0.b[k + 2]; dr = ((dr + 540) % 360) - 180; P.b[k + 2] = F0.b[k + 2] + dr * ey;
       P.b[k + 3] = lerp(F0.b[k + 3], P1.b[k + 3], ey); P.b[k + 4] = lerp(F0.b[k + 4], P1.b[k + 4], ey); }
@@ -654,13 +661,15 @@ function drawV2(ctx, V, om) {
 // ==== Сцена ==========================================================================================
 const S = { scene: "scene", view: "rig", game: "sling", t: 0, simT: 0, candy: null, kind: null, aimT0: 0, openS: 0, oopsDone: false, frozen: false,
   finger: null, ptrDown: false, apiLook: undefined, pultLook: null, lookSlider: false, queue: [],
-  P: { open: 0, speed: 0, look: -150 }, staticDS: null, pose: null, cam: { x: 0, y: 0 } };
+  P: { open: 0, speed: 0, look: -150 }, eatDur: 1.4, staticDS: null, pose: null, cam: { x: 0, y: 0 } };
 let om = null, SW = null, SWPLAN = null;
 const RULES = {
   scene: "Сценка 15 с (рогатка): прицел — глаза на конфете, рот приоткрыт → предвкушение с дрожью → ест → радость; промах → «ой»; тянется, машет, пожимает плечами (тупик «Коробки»).",
   swing: "Качели на числах Rope'n'Fly v2: верёвка к крыше под 55°, 350–1000 u/с, Ом Ном ≈ 122 px. Ест на верёвке и в полёте (доедает), «вжух» — широкий рот, в варенье — «ой» в позе полёта. Держит верёвку передней лапой; в воздухе почти не сжимается (≤ 2 %).",
   pult: "Пульт: верхний ряд — состояние тела, нижний — реакции поверх него (ест, радость, «ой»… в воздухе тоже). Ползунки: рот, скорость, взгляд; тап по полю — посмотреть туда.",
 };
+// «ест» с длиной ползунка: темп k = S.eatDur / 1,4 — все времена клипа пропорционально; серия — 1,0 / 1,4 от неё
+function eatOpt(series) { const k = S.eatDur / TUNE.eatDur; return { dur: (series ? TUNE.eatSeries : TUNE.eatDur) * k, k }; }
 function openFar() { return R.mot.open.far[S.game] || 110; }
 function placeGround(pos) { const p = om.place; p.x = pos[0]; p.y = pos[1]; p.piv = FEET; p.rot = 0; p.flip = p.fx = 1;
   om.p.air = 0; om.p.speed = 0; om.p.dir = [0, -1]; computePlace(om); }
@@ -705,7 +714,7 @@ function sceneStep(dt) {
       openRaw = clamp((far - d) / (far - near), 0, 1);
       if (S.kind === "hit") {
         if (d < TUNE.magnet) { c.x += (m[0] - c.x) * 0.35; c.y += (m[1] - c.y) * 0.35; }
-        if (d < TUNE.eatDist) { c.st = "eaten"; c.t = 0; omBase(om, "idle"); omReact(om, "eat", { dur: TUNE.eatDur, then: { clip: "joy", dur: TUNE.joyDur } }); }
+        if (d < TUNE.eatDist) { c.st = "eaten"; c.t = 0; omBase(om, "idle"); omReact(om, "eat", Object.assign(eatOpt(false), { then: { clip: "joy", dur: TUNE.joyDur } })); }
       } else if (!S.oopsDone && c.x > om.place.x + 4) { S.oopsDone = true; omBase(om, "idle"); omReact(om, "oops"); }
       const fy = TUNE.floorY - TUNE.candyR;
       if (c.y > fy) { c.y = fy; c.vy = Math.abs(c.vy) > 60 ? -Math.abs(c.vy) * 0.38 : 0; c.vx *= 0.8; }
@@ -809,7 +818,7 @@ function swingStep(dt) {
   for (const c of sw.candies) { c.rot += dt * 3; if (c.st === "eaten") { c.t += dt; c.x = mw[0]; c.y = mw[1]; if (c.t > 0.08) c.st = "gone"; continue; } if (c.st !== "on") continue;
     const d = Math.hypot(c.x - mw[0], c.y - mw[1]);
     if (d < T.magnet) { c.x += (mw[0] - c.x) * 0.35; c.y += (mw[1] - c.y) * 0.35; }
-    if (d < T.eatDist) { c.st = "eaten"; c.t = 0; sw.eats++; omReact(om, "eat", { dur: c.fast ? TUNE.eatSeries : TUNE.eatDur }); continue; }
+    if (d < T.eatDist) { c.st = "eaten"; c.t = 0; sw.eats++; omReact(om, "eat", eatOpt(c.fast)); continue; }
     if (c.x > m[0] - 30 && d < bd) { bd = d; best = c; } }
   const openRaw = best ? clamp((T.openFar - bd) / (T.openFar - R.mot.open.near), 0, 1) : 0;
   S.openS += (openRaw - S.openS) * (1 - Math.exp(-dt / TUNE.openTau)); om.p.open = S.openS;
@@ -950,9 +959,11 @@ for (const b of document.querySelectorAll("#ab button")) b.addEventListener("cli
 for (const b of document.querySelectorAll("#scn button")) b.addEventListener("click", () => setScene(b.dataset.s));
 for (const b of document.querySelectorAll("#game button")) b.addEventListener("click", () => setGame(b.dataset.g));
 function syncSliders() { $("sOpen").value = S.P.open; $("sSpeed").value = S.P.speed; $("sLook").value = S.P.look;
+  $("sEat").value = S.eatDur; $("oEat").textContent = (+S.eatDur).toFixed(2).replace(".", ",");
   $("oOpen").textContent = (+S.P.open).toFixed(2).replace(".", ","); $("oSpeed").textContent = (+S.P.speed).toFixed(2).replace(".", ","); }
 $("sOpen").addEventListener("input", (e) => { toPult(); S.P.open = +e.target.value; syncSliders(); });
 $("sSpeed").addEventListener("input", (e) => { toPult(); S.P.speed = +e.target.value; syncSliders(); });
+$("sEat").addEventListener("input", (e) => { S.eatDur = +e.target.value; syncSliders(); });   // скорость еды: сценка, качели и пульт
 $("sLook").addEventListener("input", (e) => { toPult(); S.P.look = +e.target.value; S.lookSlider = true; S.pultLook = null; });
 // кнопки пульта: [id, подпись, класс]; base — состояние тела, остальное — реакции поверх него
 const CLIP_BTNS = [["idle", "стоит", "base"], ["aim", "прицел", "base"], ["anticipate", "ждёт", "base"], ["hang", "висит", "base"], ["fly", "летит", "base"], ["|"],
@@ -963,8 +974,8 @@ for (const [id, name, cls] of CLIP_BTNS) { if (id === "|") { const d = document.
   const b = document.createElement("button"); b.textContent = name; b.dataset.clip = id; if (cls) b.className = cls;
   b.addEventListener("click", () => { toPult();
     if (id === "reset") { S.P.open = 0; S.P.speed = 0; S.lookSlider = false; S.pultLook = null; syncSliders(); om.X = null; omBase(om, "idle"); return; }
-    if (id === "eat3") { const o = { dur: TUNE.eatSeries }, g = TUNE.seriesGap; omReact(om, "eat", o); S.queue.push({ at: S.simT + g, clip: "eat", opt: o }, { at: S.simT + 2 * g, clip: "eat", opt: o }); return; }
-    const bp = BTN_PLAY[id]; if (bp) omReact(om, bp[0], bp[1]); else omPlay(om, id); });
+    if (id === "eat3") { const o = eatOpt(true), g = TUNE.seriesGap * S.eatDur / TUNE.eatDur; omReact(om, "eat", o); S.queue.push({ at: S.simT + g, clip: "eat", opt: o }, { at: S.simT + 2 * g, clip: "eat", opt: o }); return; }
+    const bp = BTN_PLAY[id]; if (bp) omReact(om, bp[0], bp[1]); else if (id === "eat") omReact(om, "eat", eatOpt(false)); else omPlay(om, id); });
   $("clips").appendChild(b); }
 new ResizeObserver(() => draw()).observe(stage);
 window.addEventListener("orientationchange", () => draw());
@@ -998,7 +1009,7 @@ function sheet(o) {
   fr.forEach((f, i) => {
     if (f.seek != null) seek(f.scene || "scene", f.seek); else if (f.rigPose) { poseAt(staticClip(f.rigPose), 0); } else poseAt(f.clip, f.t, f);
     const cx = (i % cols) * cw, cy = top + Math.floor(i / cols) * ch;
-    if (o.follow) { const b = map(om.ds.world[BODY], CENTER[0], CENTER[1] - 40); crop[0] = b[0] - crop[2] / 2; crop[1] = b[1] - crop[3] / 2; }  // кадр за Омом Номом
+    if (o.follow) { const b = map(om.ds.world[BODY], CENTER[0], CENTER[1] - 40); crop[0] = b[0] - crop[2] / 2 + (o.followDx || 0); crop[1] = b[1] - crop[3] / 2 + (o.followDy || 0); }  // кадр за Омом Номом
     x.save(); x.beginPath(); x.rect(cx, cy + lab, cw, ch - lab); x.clip();
     drawField(x, [pxu, 0, 0, pxu, cx - crop[0] * pxu, cy + lab - crop[1] * pxu], f.view || o.view || "rig", true, false);
     x.restore(); x.setTransform(1, 0, 0, 1, 0, 0);
@@ -1052,7 +1063,7 @@ window.__game = {
   ready: false,
   getState() {
     const r = cv.getBoundingClientRect(), ds = S.staticDS || (om && om.ds);
-    const st = { scene: S.scene, view: S.view, game: S.game, openFar: R.mot ? (S.scene === "swing" ? TUNE.swing.openFar : openFar()) : null, openGame: +S.openS.toFixed(3), t: +S.t.toFixed(4), frozen: S.frozen, manual, pose: S.pose, canvas: { left: r.left, top: r.top, scale: r.width / W } };
+    const st = { scene: S.scene, view: S.view, game: S.game, eatDur: S.eatDur, openFar: R.mot ? (S.scene === "swing" ? TUNE.swing.openFar : openFar()) : null, openGame: +S.openS.toFixed(3), t: +S.t.toFixed(4), frozen: S.frozen, manual, pose: S.pose, canvas: { left: r.left, top: r.top, scale: r.width / W } };
     if (!om) return st;
     const X = om.X;
     st.om = Object.assign({ clip: X ? X.clip : om.B.clip, base: om.B.clip, state: om.state, react: X ? X.clip : null, reactT: X ? +X.t.toFixed(4) : null,
@@ -1080,6 +1091,7 @@ window.__game = {
       if (p.param === "open" || p.param === "speed") { S.P[p.param] = v; syncSliders(); om.p[p.param] = v; }
       else if (p.param === "look") { S.P.look = v; S.lookSlider = true; }
       else if (p.param === "openFar" || p.param === "game") return setGame(p.param === "game" ? p.v : (+p.v >= 140 ? "slide" : "sling"));
+      else if (p.param === "eatDur") { S.eatDur = clamp(v, 0.6, 2.5); syncSliders(); }
       else if (p.param === "air") om.p.air = v; else if (p.param === "flip") om.place.flip = v < 0 ? -1 : 1; else return false;
       return true; }
     if (a === "omnom.look") { S.apiLook = p && p.x != null ? [+p.x, +p.y] : null; return true; }
