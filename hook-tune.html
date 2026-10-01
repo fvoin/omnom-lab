@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:,">
+<title>Крючки — настройка</title>
+<style>:root{--bg:#1d2333;--fg:#f3f5fa;--muted:#a9b1c6;--card:#2a3148;--card2:#323b57;--line:#3d4766;--acc:#ffd166;--add:#ff9f6b}*{box-sizing:border-box}html,body{background:var(--bg);height:100%;color:var(--fg);margin:0;font:13px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{flex-direction:column;height:100dvh;display:flex}header{flex:none;align-items:center;gap:10px;padding:6px 12px;display:flex}header a{color:var(--muted);font-size:13px;text-decoration:none}header h1{margin:0;font-size:15px;font-weight:700}#app{flex:1;min-height:0;display:flex}#stage{touch-action:none;-webkit-user-select:none;user-select:none;flex:1;min-width:0;min-height:0;position:relative}canvas{touch-action:none;border-radius:8px;display:block;position:absolute}#panel{background:var(--card);border-left:1px solid var(--line);flex-direction:column;flex:none;width:370px;min-height:0;display:flex}.phead{border-bottom:1px solid var(--line);flex-direction:column;flex:none;gap:6px;padding:8px 10px 6px;display:flex}.row{flex-wrap:wrap;align-items:center;gap:5px;display:flex}.pbody{-webkit-overflow-scrolling:touch;flex:1;padding:4px 10px 16px;overflow:auto}button{font:inherit;color:var(--fg);background:var(--card2);border:1px solid var(--line);cursor:pointer;border-radius:8px;padding:5px 9px;font-weight:600}button.on{background:var(--acc);color:#222;border-color:var(--acc)}button.warn{box-shadow:0 0 0 2px var(--add)}#drawerBtn{display:none}.preset-note{color:var(--muted);font-size:12px}details{border-bottom:1px solid var(--line);padding:4px 0}summary{cursor:pointer;color:var(--acc);padding:5px 0;font-size:13px;font-weight:700}.gnote{color:var(--muted);margin:0 0 4px;font-size:11px}.f{grid-template-columns:1fr 74px;align-items:center;gap:2px 6px;padding:3px 0;display:grid}.f label{color:var(--fg);grid-column:1/3;font-size:12px}.f input[type=range]{width:100%;margin:0}.f input[type=number]{width:74px;font:inherit;color:var(--fg);border:1px solid var(--line);background:#141a29;border-radius:6px;padding:3px 4px}.f.dis{opacity:.45}.t{align-items:center;gap:6px;padding:4px 0;font-size:12px;display:flex}.t select{font:inherit;color:var(--fg);border:1px solid var(--line);background:#141a29;border-radius:6px;padding:3px 4px}.add{color:var(--add);border:1px solid var(--add);border-radius:4px;margin-left:4px;padding:0 3px;font-size:10px;font-weight:700}.ch{color:var(--acc)}#copyBox{width:100%;height:140px;color:var(--fg);border:1px solid var(--acc);background:#141a29;border-radius:6px;font:11px/1.25 ui-monospace,Menlo,monospace;display:none}#toast{background:var(--acc);color:#222;z-index:3;pointer-events:none;border-radius:8px;padding:4px 10px;font-weight:700;display:none;position:absolute;top:10px;left:50%;transform:translate(-50%)}@media (width<=760px){header{padding:4px 10px}#app{flex-direction:column}#panel{border-left:0;border-top:1px solid var(--line);width:auto;max-height:48%}#panel.closed{max-height:none}#panel.closed .pbody,#panel.closed .more{display:none}#drawerBtn{display:inline-block}.phead button{padding:4px 7px;font-size:12px}.row{gap:4px}}</style>
+</head>
+<body>
+<header><a href="index.html">← Лаборатория</a><h1>Крючки — настройка</h1></header>
+<div id="app">
+  <div id="stage"><canvas id="cv"></canvas><div id="toast"></div></div>
+  <div id="panel">
+    <div class="phead">
+      <div class="row">
+        <button id="drawerBtn">Настройки ▲</button>
+        <button id="bRestart" title="клавиша R">Рестарт</button>
+        <button id="bPause" title="клавиша P">Пауза</button>
+        <button data-sp="0.25">×0,25</button><button data-sp="0.5">×0,5</button><button data-sp="1">×1</button>
+      </div>
+      <div class="row more">
+        <button data-pr="pull">Подтяжка</button><button data-pr="clean">Чистый</button><button data-pr="v1">v1</button><button data-pr="v2">v2</button>
+        <span class="preset-note" id="prNote"></span>
+      </div>
+      <div class="row more">
+        <button id="bReset">Сбросить</button><button id="bWorld">Новый мир</button><button id="bCopy">Скопировать настройки</button>
+        <label class="t" style="padding:0"><input type="checkbox" id="cDebug"> отладка</label>
+      </div>
+      <textarea id="copyBox" class="more" readonly></textarea>
+    </div>
+    <div class="pbody" id="pbody"></div>
+  </div>
+</div>
+<script>
+"use strict";
+// Примитивный тюнер «Крючков» (D-58). Физика — из hook-rnf.html v2 (прицел углом, зацеп за верх крыши, держишь — висишь,
+// отпустил — летишь), но честная: на верёвке — точный маятник (полярные координаты, симплектический шаг), в полёте — баллистика.
+// Всё, что добавляет энергию (рывок паутины, подъём «вжух», буст отпускания, подтяжка, батут, конфеты), — переключатели, в «Чистом» выкл.
+// Механическая энергия на единицу массы: E = v²/2 + g·(высота центра над землёй) [+ k·растяжение²/2]; в отладке — как высота E/g, u.
+
+// ---- Числа: наборы ------------------------------------------------------------------------------------------
+const CLEAN = {
+  // мир
+  gravity: 1300, airDrag: 0.999, ropeDrag: 1, capOn: true, capVx: 950, capVy: 1400, maxSpeed: 0, ceilOn: false,
+  // верёвка
+  aimMode: "roof", rayAngle: 55, aimCone: 30, liftDy: 60, roofInset: 8, aimHyst: 6, ropeMin: 80, ropeMax: 600,
+  reel: 0, reelMin: 120, elastic: 0,
+  swingOn: false, swingMin: 350, backDragOn: false, backDrag: 0.985,
+  // отпускание
+  boostOn: false, sweetBoost: 1.08, sweetMin: 25, sweetMax: 60, liftOn: false, sweetLift: 160,
+  // дома (применяются при «Новый мир» / «Рестарт»)
+  hMin0: 440, hMinG: 0.6, hMax: 720, wMin: 110, wMax0: 220, wShrink: 0.002, wFloor: 160,
+  gapMin: 140, gapMax0: 220, gapGrow: 0.004, gapCap: 380, reachCheck: true, firstX0: 200, firstW: 180, firstH: 560,
+  // камера
+  zoom: 0.4, camSmooth: 0.35, lookahead: 0.1, camAnchor: 0.35, camTopMargin: 120, camGround: 60,
+  zoomSpeedOn: false, zoomFast: 0.32, zoomV0: 500, zoomV1: 900, zoomLerp: 0.06, rotAlong: true,
+  // конфеты, земля, старт
+  candiesOn: false, kickOn: false, candyKick: 30, eatDist: 40,
+  groundMode: "bounce", restitution: 0.5, groundFric: 0.8, bounceUp: 800, bounceVx: 200, jumpVx: 300, jumpVy: -200, startMode: "box",
+};
+// «Подтяжка» (по умолчанию) — «Чистый» + честный источник энергии: пока держишь, верёвка укорачивается (работа подтяжки идёт в энергию); старт с крыши первого дома
+const PULL = Object.assign({}, CLEAN, { reel: 200, startMode: "roof" });
+// v2 — hook-rnf.html со всеми добавками (камера — эта, плавная; полос, полосатого неба и линий скорости нет)
+const V2 = Object.assign({}, CLEAN, {
+  swingOn: true, backDragOn: true, boostOn: true, liftOn: true,
+  zoom: 0.5, zoomSpeedOn: true, zoomFast: 0.44, zoomV0: 500, zoomV1: 900, zoomLerp: 0.06,
+  camAnchor: 0.18, camSmooth: 0.14, lookahead: 0, camTopMargin: 100, camGround: 18,
+  candiesOn: true, kickOn: true, groundMode: "tramp",
+});
+// v1 — hook-rnf-v1.html (режим «угол»): луч до первой стены/крыши, низкие частые дома, g 784, общий предел 700, потолок
+const V1 = Object.assign({}, CLEAN, {
+  gravity: 784, capOn: false, maxSpeed: 700, ceilOn: true,
+  aimMode: "ray", ropeMin: 40, ropeMax: 360,
+  boostOn: true, sweetBoost: 1.12, sweetMin: 15, sweetMax: 60,
+  hMin0: 243.75, hMinG: 1.43, hMax: 372, wMin: 90, wMax0: 200, wShrink: 0.002, wFloor: 130,
+  gapMin: 25, gapMax0: 50, gapGrow: 0.003, gapCap: 115, reachCheck: false, firstX0: 160, firstW: 160, firstH: 362,
+  zoom: 1, zoomSpeedOn: true, zoomFast: 0.82, zoomV0: 300, zoomV1: 650, zoomLerp: 0.05,
+  camAnchor: 0.25, camSmooth: 0.14, lookahead: 0, camTopMargin: 0, camGround: 18,
+  candiesOn: true, kickOn: true, candyKick: 25, eatDist: 34, groundMode: "tramp", bounceUp: 560, bounceVx: 140, jumpVx: 220, jumpVy: -120,
+});
+const PRESETS = { pull: PULL, clean: CLEAN, v1: V1, v2: V2 };
+const PR_NAME = { pull: "Подтяжка", clean: "Чистый", v1: "v1", v2: "v2" };
+const TUNE = Object.assign({}, PULL);
+
+// Панель: [ключ, подпись, min, max, шаг] | [ключ, подпись, "bool"] | [ключ, подпись, "sel", [[знач, подпись]…]]; ADD — добавляет энергию
+const ADD = new Set(["swingOn", "backDragOn", "boostOn", "liftOn", "reel", "kickOn", "groundMode", "jumpVx"]);
+const SPEC = [
+  ["Мир", "", [
+    ["gravity", "Гравитация, u/с²", 200, 3000, 10],
+    ["airDrag", "Сопротивление в полёте, × скорости за тик", 0.98, 1, 0.0005],
+    ["ropeDrag", "Сопротивление на верёвке, × за тик", 0.98, 1, 0.0005],
+    ["capOn", "Пределы скорости по осям (v2)", "bool"],
+    ["capVx", "Предел |vx|, u/с", 200, 3000, 10],
+    ["capVy", "Предел |vy|, u/с", 200, 3000, 10],
+    ["maxSpeed", "Общий предел скорости (v1 700), u/с; 0 — нет", 0, 3000, 10],
+    ["ceilOn", "Потолок y 0 — удар vy × −0,3 (v1)", "bool"],
+  ]],
+  ["Верёвка", "", [
+    ["aimMode", "Прицел", "sel", [["roof", "к ребру крыши (v2)"], ["ray", "луч до стены/крыши (v1)"]]],
+    ["rayAngle", "Угол луча, ° вверх-вправо", 20, 80, 1],
+    ["aimCone", "Конус прицела ±°", 5, 60, 1],
+    ["liftDy", "Крыша выше центра хотя бы на, u", 0, 200, 1],
+    ["roofInset", "Отступ от углов крыши, u", 0, 40, 1],
+    ["aimHyst", "Гистерезис цели, °", 0, 20, 1],
+    ["ropeMin", "Мин. длина, u", 20, 300, 1],
+    ["ropeMax", "Макс. длина, u", 150, 1200, 5],
+    ["reel", "Подтяжка, пока держишь, u/с (0 — нет)", 0, 800, 5],
+    ["reelMin", "Подтяжка до длины, u", 40, 400, 5],
+    ["elastic", "Упругость k, 1/с² (0 — жёсткая)", 0, 3000, 10],
+    ["swingOn", "Рывок паутины при зацепе (v2)", "bool"],
+    ["swingMin", "…касательная скорость не меньше, u/с", 0, 900, 5],
+    ["backDragOn", "Гашение обратного маха (v2)", "bool"],
+    ["backDrag", "…× за тик при vx < 0", 0.95, 1, 0.0005],
+  ]],
+  ["Отпускание", "Окно «вжух» — угол скорости вправо-вверх в момент отпускания.", [
+    ["boostOn", "Буст «вжух» (v1, v2)", "bool"],
+    ["sweetBoost", "…множитель скорости", 1, 1.6, 0.01],
+    ["sweetMin", "Окно «вжух» от, °", 0, 90, 1],
+    ["sweetMax", "Окно «вжух» до, °", 0, 90, 1],
+    ["liftOn", "Гарантированный подъём «вжух» (v2)", "bool"],
+    ["sweetLift", "…выше точки зацепа на, u", 0, 500, 5],
+  ]],
+  ["Дома", "Применяются по кнопке «Новый мир» (или «Рестарт»). Высота h — над землёй.", [
+    ["hMin0", "Высота мин. (при мин. промежутке), u", 100, 1000, 5],
+    ["hMinG", "…+ на каждый u промежутка сверх мин.", 0, 3, 0.01],
+    ["hMax", "Высота макс., u", 150, 1100, 5],
+    ["wMin", "Ширина мин., u", 40, 400, 5],
+    ["wMax0", "Ширина макс. в начале, u", 60, 500, 5],
+    ["wShrink", "…сужение на u пути", 0, 0.01, 0.0005],
+    ["wFloor", "…не уже, u", 40, 400, 5],
+    ["gapMin", "Промежуток мин., u", 0, 500, 5],
+    ["gapMax0", "Промежуток макс. в начале, u", 0, 700, 5],
+    ["gapGrow", "…рост на u пути", 0, 0.02, 0.0005],
+    ["gapCap", "…не больше, u", 0, 900, 5],
+    ["reachCheck", "Проверка досягаемости при генерации (v2)", "bool"],
+    ["firstX0", "Первый дом: x, u", 120, 600, 5],
+    ["firstW", "Первый дом: ширина, u", 40, 400, 5],
+    ["firstH", "Первый дом: высота, u", 100, 1000, 5],
+  ]],
+  ["Камера", "", [
+    ["zoom", "Зум (меньше — мельче, видно дальше)", 0.15, 1.2, 0.01],
+    ["camSmooth", "Сглаживание, с", 0.02, 1.5, 0.01],
+    ["lookahead", "Упреждение вперёд, с скорости", 0, 1.5, 0.01],
+    ["camAnchor", "Место Ома Нома по ширине кадра", 0.05, 0.6, 0.01],
+    ["camTopMargin", "Над головой не меньше, u", 0, 400, 5],
+    ["camGround", "Видно земли, u", 0, 300, 5],
+    ["zoomSpeedOn", "Зум от скорости (v1, v2)", "bool"],
+    ["zoomFast", "…зум на скорости", 0.15, 1.2, 0.01],
+    ["zoomV0", "…с, u/с", 0, 2000, 10],
+    ["zoomV1", "…по, u/с", 0, 3000, 10],
+    ["zoomLerp", "…сглаживание за тик", 0.005, 0.3, 0.005],
+    ["rotAlong", "Ом Ном поворачивается вдоль верёвки", "bool"],
+  ]],
+  ["Конфеты, земля, старт", "", [
+    ["candiesOn", "Конфеты (v2: 2 на дуге маха у дома, 1 над широким промежутком)", "bool"],
+    ["kickOn", "Конфета толкает вдоль движения", "bool"],
+    ["candyKick", "…на, u/с", 0, 200, 1],
+    ["eatDist", "Съесть ближе, u", 10, 80, 1],
+    ["groundMode", "Земля", "sel", [["bounce", "упругий отскок (честно)"], ["tramp", "батут: бросок вверх (v1, v2)"]]],
+    ["restitution", "Отскок: упругость", 0, 1, 0.01],
+    ["groundFric", "Отскок: vx ×", 0, 1, 0.01],
+    ["bounceUp", "Батут: vy вверх, u/с", 0, 2000, 10],
+    ["bounceVx", "Батут: vx, u/с", 0, 1000, 10],
+    ["jumpVx", "Прыжок с коробки/земли: vx, u/с", 0, 800, 5],
+    ["jumpVy", "Прыжок: vy (минус — вверх), u/с", -800, 0, 5],
+    ["startMode", "Старт", "sel", [["roof", "с крыши первого дома"], ["box", "с коробки (v1, v2)"]]],
+  ]],
+];
+const WORLD_KEYS = new Set(["hMin0", "hMinG", "hMax", "wMin", "wMax0", "wShrink", "wFloor", "gapMin", "gapMax0", "gapGrow", "gapCap", "reachCheck", "firstX0", "firstW", "firstH", "startMode"]);
+const SPEC_KEYS = []; for (const g of SPEC) for (const f of g[2]) SPEC_KEYS.push(f[0]);
+
+// ---- Константы мира ---------------------------------------------------------------------------------------------
+const W = 320, H = 480, DT = 1 / 60, NSUB = 8, FLOOR = 462;
+const SIZE = { omFeet: 30, omTop: 36, mouthDy: 10, candyR: 20 };
+const START = { x: 80, y: 300, boxX0: 40, boxX1: 120, boxTop: 330 };
+const STORE = "lab.hook-tune.v2", BEST_KEY = "lab.best.hook-tune";
+const rad = (d) => d * Math.PI / 180;
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d"), stage = document.getElementById("stage");
+const QS = new URLSearchParams(location.search);
+
+class Prng {
+  constructor(seed) { this.s = seed >>> 0; }
+  next() { let t = (this.s = (this.s + 0x6D2B79F5) >>> 0); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
+}
+
+// ---- Ом Ном: один статичный кадр (neutral + зрачки в покое) из assets/omnom/ ------------------------------
+const OM = { PX: 6.4024, PIV: [0.5366, 0.0253], MOUTH_X: -2.08, img: {} };
+const omWaits = ["neutral", "neutral_pupils_l", "neutral_pupils_r"].map((n) => new Promise((res) => {
+  const i = new Image(); OM.img[n] = i; i.onload = i.onerror = res; i.src = "assets/omnom/" + n + ".png";
+}));
+const imgOk = (i) => i && i.complete && i.naturalWidth > 0;
+
+// ---- Состояние ------------------------------------------------------------------------------------------------------
+let S = null, best = 0;
+try { best = +localStorage.getItem(BEST_KEY) || 0; } catch (e) {}
+
+// ---- Цель: v2 — точка на верхнем ребре крыши; v1 — первое пересечение луча с контуром дома -------------------
+function houseAim(b, x, y, tn) {
+  const ins = TUNE.roofInset;
+  if (!(b.x1 - ins > x) || b.x0 > x + TUNE.ropeMax) return null;
+  const dy = y - b.top; if (dy < TUNE.liftDy) return null;
+  const lo = Math.max(b.x0 + ins, x + 1), hi = b.x1 - ins;
+  if (hi < lo) return null;
+  const px = Math.min(hi, Math.max(lo, x + dy / tn)), dx = px - x;
+  const dev = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI - TUNE.rayAngle), L = Math.hypot(dx, dy);
+  if (dev > TUNE.aimCone || L < TUNE.ropeMin || L > TUNE.ropeMax) return null;
+  return { x: px, y: b.top, dev, L, house: b.id };
+}
+function aimIn(list, i0, x, y, prevId) {
+  const tn = Math.tan(rad(TUNE.rayAngle));
+  let bestC = null, bestR = 1e9, prev = null;
+  for (let i = i0; i < list.length; i++) {
+    const b = list[i]; if (b.x0 > x + TUNE.ropeMax) break;
+    const c = houseAim(b, x, y, tn); if (!c) continue;
+    if (c.house === prevId) prev = c;
+    const r = Math.round(c.dev);
+    if (r < bestR || (r === bestR && c.L < bestC.L)) { bestC = c; bestR = r; }
+  }
+  if (prev && prev !== bestC && prev.dev <= bestC.dev + TUNE.aimHyst) return prev;
+  return bestC;
+}
+function firstIdx(bl, x) { let lo = 0, hi = bl.length; while (lo < hi) { const m = (lo + hi) >> 1; if (bl[m].x1 <= x) lo = m + 1; else hi = m; } return lo; }
+function castRay(ox, oy, dx, dy, maxT) { // v1: вход в стену/крышу; перед домиком — выход через крышу или правую стену; ближе ropeMin — следующее
+  if (dy > 1e-9) return null;
+  const bl = S.WD.bld, xe = ox + dx * maxT, xa = Math.min(ox, xe), xb = Math.max(ox, xe), ymax = FLOOR + 40;
+  let bestT = 1e9, bb = null;
+  for (let i = firstIdx(bl, xa); i < bl.length; i++) {
+    const b = bl[i]; if (b.x0 > xb) break;
+    let tin = -1e9, tout = 1e9;
+    if (Math.abs(dx) > 1e-9) { let a = (b.x0 - ox) / dx, c = (b.x1 - ox) / dx; if (a > c) { const q = a; a = c; c = q; } tin = Math.max(tin, a); tout = Math.min(tout, c); }
+    else if (ox < b.x0 || ox > b.x1) continue;
+    if (dy < -1e-9) { let a = (b.top - oy) / dy, c = (ymax - oy) / dy; if (a > c) { const q = a; a = c; c = q; } tin = Math.max(tin, a); tout = Math.min(tout, c); }
+    else if (oy < b.top || oy > ymax) continue;
+    if (tout < tin || tout < TUNE.ropeMin) continue;
+    const t = tin >= TUNE.ropeMin ? tin : tout;
+    if (t > maxT || t >= bestT || oy + dy * t > FLOOR - 4) continue;
+    bestT = t; bb = b;
+  }
+  return bb ? { x: ox + dx * bestT, y: oy + dy * bestT, L: bestT, dev: 0, house: bb.id } : null;
+}
+function aimAt(x, y, prevId) {
+  if (TUNE.aimMode === "ray") { const a = rad(TUNE.rayAngle); return castRay(x, y, Math.cos(a), -Math.sin(a), TUNE.ropeMax); }
+  const bl = S.WD.bld; return aimIn(bl, firstIdx(bl, x + TUNE.roofInset), x, y, prevId);
+}
+function updateTarget() {
+  if (S.rope) { S.tgt = null; return; }
+  const o = S.om, prev = S.tgt;
+  S.tgt = aimAt(o.x, o.y, prev ? prev.house : -1);
+}
+
+// ---- Мир: дома (генератор v2; формулы общие, числа — из панели) ---------------------------------------------------
+const gapMaxAt = (d) => Math.max(TUNE.gapMin, Math.min(TUNE.gapCap, TUNE.gapMax0 + TUNE.gapGrow * d));
+const wMaxAt = (d) => Math.max(TUNE.wMin, Math.max(TUNE.wFloor, TUNE.wMax0 - TUNE.wShrink * d));
+const hMinAt = (g) => Math.min(TUNE.hMax, TUNE.hMin0 + TUNE.hMinG * (g - TUNE.gapMin));
+function mkHouse(id, x0, w, h, g) { return { id, x0, x1: x0 + w, top: FLOOR - h, h, g }; }
+function newWorld(seed) {
+  const WD = { seed, rng: new Prng((Math.imul(seed >>> 0, 2654435761) ^ 0x9E3779B9) >>> 0), bld: [], cand: [], auto: true, rerolls: 0, fails: 0 };
+  const b = mkHouse(0, TUNE.firstX0, TUNE.firstW, TUNE.firstH, 0);
+  WD.bld.push(b); houseCandies(WD, null, b);
+  return WD;
+}
+function reachOK(A, B) {
+  if (!TUNE.reachCheck || TUNE.aimMode !== "roof") return true;
+  const list = [A, B];
+  for (let x = Math.floor(A.x0 / 5) * 5; x <= B.x0 + 5; x += 5)
+    for (const hs of [200, 380]) if (!aimIn(list, 0, x, FLOOR - hs, -1)) return false;
+  return true;
+}
+function genMore(WD, xTo) {
+  if (!WD.auto) return;
+  while (WD.bld[WD.bld.length - 1].x1 < xTo) {
+    const A = WD.bld[WD.bld.length - 1], r = WD.rng, d0 = A.x1 + TUNE.gapMin;
+    let g = 0, w = 0, h = 0, ok = false, B = null;
+    for (let k = 0; k <= 6 && !ok; k++) {
+      g = lerp(TUNE.gapMin, gapMaxAt(d0), r.next());
+      w = lerp(TUNE.wMin, wMaxAt(A.x1 + g), r.next());
+      h = lerp(Math.max(40, hMinAt(g)), Math.max(40, TUNE.hMax), r.next());
+      B = mkHouse(A.id + 1, A.x1 + g, w, h, g);
+      ok = reachOK(A, B); if (k > 0) WD.rerolls++;
+    }
+    for (let k = 0; k < 12 && !ok; k++) {
+      g = (g + TUNE.gapMin) / 2; if (k === 11) g = TUNE.gapMin;
+      B = mkHouse(A.id + 1, A.x1 + g, w, h, g); ok = reachOK(A, B);
+    }
+    if (!ok) WD.fails++;
+    WD.bld.push(B); houseCandies(WD, A, B);
+  }
+}
+function houseCandies(WD, A, B) {
+  if (A && B.g >= 160) addCand(WD, A.x1 + B.g / 2, Math.min(A.top, B.top) - 120);
+  const cx = (B.x0 + B.x1) / 2, R = Math.max(40, Math.min(380, B.h - 140));
+  for (const th of [0, 35]) { const t = rad(th); addCand(WD, cx + R * Math.sin(t), B.top + R * Math.cos(t)); }
+}
+function addCand(WD, x, y) {
+  y = Math.min(y, FLOOR - 120);
+  const L = WD.cand;
+  for (let i = L.length - 1; i >= 0 && i >= L.length - 14; i--) if (Math.hypot(L[i].x - x, L[i].y - y) < 50) return;
+  L.push({ x, y });
+}
+function setStreet(houses) { // dev: улица вместо генератора, [{x0, w, h}]
+  const WD = S.WD; WD.auto = false;
+  WD.bld = houses.map((q, i) => mkHouse(i, q.x0, q.w, q.h != null ? q.h : FLOOR - q.top, 0));
+  WD.cand = []; S.cand = []; S.ci = 0; S.tgt = null;
+}
+
+// ---- Раунд ----------------------------------------------------------------------------------------------------------
+function newRound(seed) {
+  if (seed == null) seed = (Date.now() ^ (Math.random() * 1e9)) >>> 0;
+  S = {
+    seed: seed >>> 0, WD: newWorld(seed >>> 0), steps: 0, time: 0, held: false, paused: S ? S.paused : false,
+    om: { x: START.x, y: START.y, vx: 0, vy: 0, grounded: true, rot: 0 }, x0: START.x, pendCatch: false,
+    rope: null, tgt: null, cand: [], ci: 0, maxX: START.x, noPressUntil: 0, shotT: 0,
+    catches: 0, misses: 0, sweet: 0, bounces: 0, candies: 0, tension: 0,
+    log: [], trail: [], lastCatch: null, lastRelease: null, flash: [],
+    cam: { x: 0, y: 0, vx: 0, vy: 0, vxs: 0, vys: 0, zoom: TUNE.zoom, spS: 0 },
+  };
+  if (TUNE.startMode === "roof") { // стоит на крыше первого дома у правого края; первое нажатие — прыжок
+    const b = S.WD.bld[0]; S.om.x = Math.max(b.x0 + 20, b.x1 - 40); S.om.y = b.top - SIZE.omFeet; S.x0 = S.maxX = S.om.x;
+  }
+  S.prev = null;
+  ensureWorld(); camStep(true); updateTarget(); snapPrev();
+}
+function ensureWorld() {
+  const o = S.om;
+  genMore(S.WD, o.x + 2600);
+  const L = S.WD.cand;
+  while (S.ci < L.length && L[S.ci].x < o.x + 2000) { const c = L[S.ci++]; if (c.x > o.x - 800) S.cand.push({ x: c.x, y: c.y }); }
+  if (S.steps % 30 === 0 && S.cand.length) { let j = 0; for (const c of S.cand) if (c.x > o.x - 1200) S.cand[j++] = c; S.cand.length = j; }
+}
+const distM = () => Math.max(0, (S.maxX - S.x0) / 40);
+function energy() { // на единицу массы, u²/с²
+  const o = S.om, r = S.rope;
+  let e = 0.5 * (o.vx * o.vx + o.vy * o.vy) + TUNE.gravity * (FLOOR - o.y);
+  if (r && TUNE.elastic > 0) { const s = Math.hypot(o.x - r.ax, o.y - r.ay) - r.L; if (s > 0) e += 0.5 * TUNE.elastic * s * s; }
+  return e;
+}
+const speed = () => Math.hypot(S.om.vx, S.om.vy);
+function logEv(e) { e.t = +S.time.toFixed(3); e.step = S.steps; S.log.push(e); if (S.log.length > 200) S.log.shift(); }
+
+// ---- Верёвка: натянута — маятник в полярных координатах; провисла — баллистика до натяжения ------------------
+// φ — от вертикали вниз: x = ax + L·sin φ, y = ay + L·cos φ; ω = dφ/dt; радиальная скорость = rd (−подтяжка или 0)
+function toPolar(r) {
+  const o = S.om, dx = o.x - r.ax, dy = o.y - r.ay;
+  r.phi = Math.atan2(dx, dy);
+  r.w = (o.vx * Math.cos(r.phi) - o.vy * Math.sin(r.phi)) / r.L;
+}
+function fromPolar(r) {
+  const o = S.om, s = Math.sin(r.phi), c = Math.cos(r.phi);
+  o.x = r.ax + r.L * s; o.y = r.ay + r.L * c;
+  o.vx = r.L * r.w * c + r.rd * s; o.vy = -r.L * r.w * s + r.rd * c;
+}
+// провисшая верёвка дотянулась: радиальная скорость наружу гасится (верёвка не тянется) — энергия только теряется
+function tautCheck(r, why) {
+  const o = S.om, dx = o.x - r.ax, dy = o.y - r.ay, d = Math.hypot(dx, dy);
+  if (d < r.L) return false;
+  const nx = dx / d, ny = dy / d, vr = o.vx * nx + o.vy * ny;
+  o.x = r.ax + nx * r.L; o.y = r.ay + ny * r.L;
+  if (vr < r.rd) return false; // летит к точке быстрее подтяжки — верёвка провисает
+  const v0 = Math.hypot(o.vx, o.vy);
+  o.vx -= (vr - r.rd) * nx; o.vy -= (vr - r.rd) * ny;
+  r.taut = true; toPolar(r);
+  const v1 = Math.hypot(o.vx, o.vy);
+  if (why === "slack" && Math.abs(v1 - v0) > 1) logEv({ type: "taut", vBefore: +v0.toFixed(1), vAfter: +v1.toFixed(1) });
+  return true;
+}
+function substep(h, k) {
+  const o = S.om, r = S.rope, g = TUNE.gravity;
+  if (r) r.rd = (S.held && TUNE.reel > 0 && r.L > TUNE.reelMin + 1e-6) ? -TUNE.reel : 0;
+  if (r && r.taut && TUNE.elastic <= 0) {
+    const L0 = r.L;
+    if (r.rd === 0) { // leapfrog: симплектический, энергия не уползает
+      r.w += -(g / L0) * Math.sin(r.phi) * h * 0.5; r.phi += r.w * h; r.w += -(g / L0) * Math.sin(r.phi) * h * 0.5;
+    } else { // подтяжка: φ'' = −(g/L)·sin φ − 2·L'·φ'/L (момент импульса сохраняется, работа подтяжки — в энергию)
+      r.w += (-(g / L0) * Math.sin(r.phi) - 2 * r.rd * r.w / L0) * h;
+      r.L = Math.max(TUNE.reelMin, L0 + r.rd * h); r.phi += r.w * h;
+    }
+    r.w *= k.rope; if (k.back !== 1 && r.w * Math.cos(r.phi) < 0) r.w *= k.back;
+    fromPolar(r);
+    const ten = r.L * r.w * r.w + g * Math.cos(r.phi);
+    S.tension += ten;
+    if (ten < 0) r.taut = false; // верёвка не толкает: провисает
+  } else {
+    if (r && TUNE.elastic > 0) { // упругая: пружина только на растяжение, симплектический Эйлер
+      if (r.rd !== 0) r.L = Math.max(TUNE.reelMin, r.L + r.rd * h);
+      const dx = o.x - r.ax, dy = o.y - r.ay, d = Math.hypot(dx, dy);
+      let ax = 0, ay = g;
+      if (d > r.L) { const f = TUNE.elastic * (d - r.L); ax -= f * dx / d; ay -= f * dy / d; S.tension += f; }
+      o.vx += ax * h; o.vy += ay * h;
+      const kk = k.rope * (k.back !== 1 && o.vx < 0 ? k.back : 1); o.vx *= kk; o.vy *= kk;
+      o.x += o.vx * h; o.y += o.vy * h;
+    } else { // баллистика: точно для постоянной g
+      o.x += o.vx * h; o.y += o.vy * h + 0.5 * g * h * h; o.vy += g * h;
+      const kk = r ? k.rope * (k.back !== 1 && o.vx < 0 ? k.back : 1) : k.air; o.vx *= kk; o.vy *= kk;
+      if (r) { if (r.rd !== 0) r.L = Math.max(TUNE.reelMin, Math.min(r.L, Math.hypot(o.x - r.ax, o.y - r.ay)) + r.rd * h); tautCheck(r, "slack"); }
+    }
+  }
+  if (TUNE.ceilOn && o.y - SIZE.omTop < 0) { o.y = SIZE.omTop; if (o.vy < 0) o.vy *= -0.3; if (r && r.taut) r.taut = false; }
+  if (o.y + SIZE.omFeet >= FLOOR) ground();
+}
+function ground() {
+  const o = S.om, vIn = o.vy;
+  o.y = FLOOR - SIZE.omFeet;
+  if (S.rope) { endRope("ground"); }
+  if (TUNE.groundMode === "tramp") { o.vx = TUNE.bounceVx; o.vy = -TUNE.bounceUp; }
+  else { o.vy = -Math.abs(o.vy) * TUNE.restitution; o.vx *= TUNE.groundFric; if (Math.abs(o.vy) < 60) { o.vy = 0; o.vx = 0; o.grounded = true; } }
+  S.bounces++;
+  logEv({ type: "ground", mode: TUNE.groundMode, vyIn: +vIn.toFixed(1), vAfter: +speed().toFixed(1) });
+  flash(o.x, FLOOR, "#7a5a2a");
+}
+function endRope(why) {
+  const r = S.rope; if (!r) return;
+  const e = { type: "ropeEnd", why, E0: +r.E0.toFixed(0), Emax: +r.Emax.toFixed(0), Emin: +r.Emin.toFixed(0),
+    growth: +(r.Emax / r.E0 - 1).toFixed(5), swings: r.swings, reelUsed: r.reelUsed, extra: r.extra };
+  logEv(e); S.rope = null;
+}
+
+// ---- Действия игрока ---------------------------------------------------------------------------------------------
+function hold() {
+  if (S.held) return;
+  S.held = true;
+  if (S.rope || S.steps < S.noPressUntil) return;
+  const o = S.om;
+  let jumped = false;
+  if (o.grounded) { o.vx = TUNE.jumpVx; o.vy = TUNE.jumpVy; o.grounded = false; jumped = true; }
+  updateTarget();
+  const t = S.tgt;
+  if (!t && jumped) { S.pendCatch = true; return; } // прыжок без цели: верёвка выстрелит, как только цель появится, пока палец держит
+  catchAt(t);
+}
+function catchAt(t) {
+  const o = S.om; S.pendCatch = false;
+  if (!t) { S.misses++; S.noPressUntil = S.steps + 7; S.shotT = 0.22; logEv({ type: "miss" }); return; }
+  const v0 = speed(), E0 = energy();
+  const L = Math.hypot(t.x - o.x, t.y - o.y);
+  let extra = 0;
+  if (TUNE.swingOn) { // рывок паутины v2: касательная скорость вперёд не меньше swingMin
+    const tx = -(t.y - o.y) / L, ty = (t.x - o.x) / L, vt = o.vx * tx + o.vy * ty;
+    if (vt < TUNE.swingMin) { o.vx += (TUNE.swingMin - vt) * tx; o.vy += (TUNE.swingMin - vt) * ty; extra = 1; }
+  }
+  const vK = speed();
+  const r = S.rope = { ax: t.x, ay: t.y, L, L0: L, house: t.house, taut: false, phi: 0, w: 0, rd: 0, E0: 0, Emax: 0, Emin: 0, swings: 0, wSign: 0, reelUsed: false, extra };
+  if (TUNE.elastic <= 0) tautCheck(r, "catch");
+  r.E0 = r.Emax = r.Emin = energy();
+  S.catches++; S.tgt = null;
+  const v1 = speed();
+  S.lastCatch = { vBefore: v0, vKick: vK, vAfter: v1, EBefore: E0, EAfter: r.E0, L, taut: r.taut };
+  logEv({ type: "catch", vBefore: +v0.toFixed(1), vKick: +vK.toFixed(1), vAfter: +v1.toFixed(1), jump: +((v1 / Math.max(1, v0) - 1) * 100).toFixed(2),
+    EBefore: +E0.toFixed(0), EAfter: +r.E0.toFixed(0), L: +L.toFixed(1), taut: r.taut, swingKick: !!extra });
+  flash(t.x, t.y, "#2f9e5b");
+}
+function release() {
+  if (!S.held) return;
+  S.held = false; S.pendCatch = false;
+  const r = S.rope; if (!r) return;
+  const o = S.om, v0 = speed();
+  const ang = Math.atan2(-o.vy, o.vx) * 180 / Math.PI;
+  const sweet = o.vx > 0 && ang >= TUNE.sweetMin && ang <= TUNE.sweetMax;
+  let boosted = false, lifted = false;
+  if (sweet && TUNE.boostOn) { o.vx *= TUNE.sweetBoost; o.vy *= TUNE.sweetBoost; boosted = true; }
+  if (sweet && TUNE.liftOn) { const depth = Math.max(0, o.y - r.ay), up = Math.sqrt(2 * TUNE.gravity * (depth + TUNE.sweetLift)); if (o.vy > -up) { o.vy = -up; lifted = true; } }
+  if (sweet) S.sweet++;
+  endRope("release");
+  applyCaps();
+  const v1 = speed();
+  S.lastRelease = { vBefore: v0, vAfter: v1, ang, sweet, boosted, lifted };
+  logEv({ type: "release", vBefore: +v0.toFixed(1), vAfter: +v1.toFixed(1), ang: +ang.toFixed(1), sweet, boosted, lifted });
+  flash(o.x, o.y, sweet ? "#e0a100" : "#c0603a");
+}
+function applyCaps() {
+  const o = S.om; let hit = false;
+  if (TUNE.capOn) {
+    if (Math.abs(o.vx) > TUNE.capVx) { o.vx = Math.sign(o.vx) * TUNE.capVx; hit = true; }
+    if (Math.abs(o.vy) > TUNE.capVy) { o.vy = Math.sign(o.vy) * TUNE.capVy; hit = true; }
+  }
+  if (TUNE.maxSpeed > 0) { const sp = speed(); if (sp > TUNE.maxSpeed) { o.vx *= TUNE.maxSpeed / sp; o.vy *= TUNE.maxSpeed / sp; hit = true; } }
+  if (hit && S.rope && S.rope.taut && TUNE.elastic <= 0) { toPolar(S.rope); fromPolar(S.rope); }
+  return hit;
+}
+function flash(x, y, col) { S.flash.push({ x, y, col, life: 0.4 }); }
+
+// ---- Шаг 1/60 с -----------------------------------------------------------------------------------------------------
+function snapPrev() { const o = S.om, c = S.cam; S.prev = { x: o.x, y: o.y, rot: o.rot, cx: c.x, cy: c.y, z: c.zoom }; }
+function step() {
+  snapPrev();
+  S.steps++; S.time += DT;
+  const o = S.om;
+  S.tension = 0;
+  if (!o.grounded) {
+    const k = { air: Math.pow(TUNE.airDrag, 1 / NSUB), rope: Math.pow(TUNE.ropeDrag, 1 / NSUB), back: TUNE.backDragOn ? Math.pow(TUNE.backDrag, 1 / NSUB) : 1 };
+    for (let i = 0; i < NSUB && !o.grounded; i++) substep(DT / NSUB, k);
+    applyCaps();
+  }
+  S.tension /= NSUB;
+  const r = S.rope;
+  if (r) {
+    const e = energy(); r.Emax = Math.max(r.Emax, e); r.Emin = Math.min(r.Emin, e);
+    if (r.rd !== 0) r.reelUsed = true;
+    const sg = Math.sign(o.vx); if (sg && r.wSign && sg !== r.wSign) r.swings += 0.5; if (sg) r.wSign = sg;
+  }
+  if (S.maxX < o.x) S.maxX = o.x;
+  const dm = distM(); if (dm > best) { best = dm; if (S.steps % 30 === 0) saveBest(); }
+  if (TUNE.candiesOn) eatCandies();
+  // поворот вдоль верёвки (плавно, без скачка при зацепе и отпускании)
+  const rt = (TUNE.rotAlong && r) ? Math.atan2(r.ax - o.x, o.y - r.ay) : 0;
+  o.rot += (rt - o.rot) * 0.2;
+  // след ~3 с
+  { const sp = speed(), q = S.trail.length ? S.trail[S.trail.length - 1] : null, dv = q ? sp - q.v : 0; // j — скачок: изменение скорости за тик резко не такое, как за прошлый тик
+    S.trail.push({ x: o.x, y: o.y, v: sp, dv, j: !!q && Math.abs(dv - q.dv) > TUNE.gravity * DT * 0.6 + 0.01 * sp }); if (S.trail.length > 181) S.trail.shift(); }
+  if (S.shotT > 0) S.shotT -= DT;
+  for (const f of S.flash) f.life -= DT; S.flash = S.flash.filter((f) => f.life > 0);
+  camStep(false);
+  ensureWorld();
+  updateTarget();
+  if (S.pendCatch && S.held && !S.rope && S.tgt) catchAt(S.tgt);
+}
+function eatCandies() {
+  const o = S.om, mx = o.x, my = o.y + SIZE.mouthDy, e2 = TUNE.eatDist * TUNE.eatDist, L = S.cand;
+  for (let i = L.length - 1; i >= 0; i--) {
+    const c = L[i], dx = mx - c.x, dy = my - c.y; if (dx * dx + dy * dy >= e2) continue;
+    L[i] = L[L.length - 1]; L.pop(); S.candies++;
+    if (TUNE.kickOn) {
+      const sp = speed(), ux = sp > 1 ? o.vx / sp : 1, uy = sp > 1 ? o.vy / sp : 0;
+      o.vx += ux * TUNE.candyKick; o.vy += uy * TUNE.candyKick;
+      if (S.rope && S.rope.taut && TUNE.elastic <= 0) { toPolar(S.rope); fromPolar(S.rope); }
+      if (S.rope) S.rope.extra = 1;
+      logEv({ type: "candyKick", vBefore: +sp.toFixed(1), vAfter: +speed().toFixed(1) });
+    }
+  }
+}
+
+// ---- Камера: критически демпфированная пружина (без рывков), упреждение по сглаженной скорости ----------------
+function smoothDamp(cur, target, vel, T, dt) { // как SmoothDamp в Unity: позиция и скорость камеры непрерывны
+  const om = 2 / Math.max(1e-4, T), x = om * dt, ex = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+  const ch = cur - target, tmp = (vel + om * ch) * dt;
+  return [target + (ch + tmp) * ex, (vel - om * tmp) * ex];
+}
+function camStep(snap) {
+  const c = S.cam, o = S.om;
+  const a = snap ? 1 : 1 - Math.exp(-DT / 0.25);
+  c.vxs += (o.vx - c.vxs) * a; c.vys += (o.vy - c.vys) * a; c.spS += (speed() - c.spS) * a;
+  if (TUNE.zoomSpeedOn) {
+    const zt = lerp(TUNE.zoom, TUNE.zoomFast, clamp((c.spS - TUNE.zoomV0) / Math.max(1, TUNE.zoomV1 - TUNE.zoomV0), 0, 1));
+    c.zoom = snap ? zt : c.zoom + (zt - c.zoom) * TUNE.zoomLerp;
+  } else c.zoom = TUNE.zoom;
+  const Wv = W / c.zoom, Hv = H / c.zoom, T = TUNE.camSmooth;
+  const tx = o.x + c.vxs * (TUNE.lookahead + T) - TUNE.camAnchor * Wv; // + v·T — компенсация отставания пружины
+  const ty = Math.min(FLOOR + TUNE.camGround - Hv, o.y - SIZE.omTop - TUNE.camTopMargin + Math.min(0, c.vys) * T);
+  if (snap) { c.x = tx; c.y = ty; c.vx = c.vy = 0; return; }
+  [c.x, c.vx] = smoothDamp(c.x, tx, c.vx, T, DT);
+  [c.y, c.vy] = smoothDamp(c.y, ty, c.vy, T, DT);
+}
+
+// ---- Рисование ----------------------------------------------------------------------------------------------------
+const COL = { sky: "#cfe6f2", h1: "#8d9cc0", h2: "#7686ae", roof: "#3f4c74", roofLit: "#f0b400", ground: "#6f8f45", groundTop: "#4c6a2c",
+  crate: "#b98a52", rope: "#3a2a1a", ink: "#1f2433", candy: "#e8412f" };
+let scale = 1, dpr = 1, ip = 1;
+function fit() {
+  const r = stage.getBoundingClientRect();
+  if (r.width < 2 || r.height < 2) return false;
+  const s = Math.min((r.width - 8) / W, (r.height - 8) / H);
+  dpr = Math.min(2, window.devicePixelRatio || 1);
+  const cw = Math.floor(W * s), ch = Math.floor(H * s);
+  if (cv.width !== Math.round(cw * dpr) || cv.height !== Math.round(ch * dpr)) { cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr); }
+  cv.style.width = cw + "px"; cv.style.height = ch + "px";
+  cv.style.left = Math.floor((r.width - cw) / 2) + "px"; cv.style.top = Math.floor((r.height - ch) / 2) + "px";
+  scale = s; return true;
+}
+function view() { // интерполяция между тиками: на 120 Гц и при замедлении движение остаётся ровным
+  const p = S.prev, o = S.om, c = S.cam, t = ip;
+  if (!p) return { x: o.x, y: o.y, rot: o.rot, cx: c.x, cy: c.y, z: c.zoom };
+  return { x: lerp(p.x, o.x, t), y: lerp(p.y, o.y, t), rot: lerp(p.rot, o.rot, t), cx: lerp(p.cx, c.x, t), cy: lerp(p.cy, c.y, t), z: lerp(p.z, c.zoom, t) };
+}
+function drawOm(x, y, rot) {
+  const b = OM.img.neutral;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+  if (!imgOk(b)) { ctx.fillStyle = "#98CC24"; ctx.beginPath(); ctx.arc(0, 0, 30, 0, 7); ctx.fill(); ctx.restore(); return; }
+  ctx.translate(OM.MOUTH_X, SIZE.omFeet); ctx.scale(-1 / OM.PX, 1 / OM.PX); // кадр смотрит влево — зеркалим, смотрит вправо
+  const pw = b.naturalWidth, ph = b.naturalHeight, x0 = -OM.PIV[0] * pw, y0 = -(1 - OM.PIV[1]) * ph;
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(b, x0, y0);
+  for (const n of ["neutral_pupils_l", "neutral_pupils_r"]) if (imgOk(OM.img[n])) ctx.drawImage(OM.img[n], x0, y0);
+  ctx.restore();
+}
+function arrow(x0, y0, x1, y1, col, w) {
+  const a = Math.atan2(y1 - y0, x1 - x0), L = Math.hypot(x1 - x0, y1 - y0); if (L < 2) return;
+  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = w; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  const hs = Math.min(L * 0.4, w * 5);
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1 - hs * Math.cos(a - 0.45), y1 - hs * Math.sin(a - 0.45)); ctx.lineTo(x1 - hs * Math.cos(a + 0.45), y1 - hs * Math.sin(a + 0.45)); ctx.closePath(); ctx.fill();
+}
+const fmt = (v, d = 0) => (Math.round(v * 10 ** d) / 10 ** d).toFixed(d).replace(".", ",").replace("-", "−");
+function draw() {
+  if (!fit()) return;
+  const v = view(), z = v.z, k = scale * dpr, u = 1 / z; // u — 1 единица окна в мировых
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+  ctx.fillStyle = COL.sky; ctx.fillRect(0, 0, W, H);
+  ctx.setTransform(k * z, 0, 0, k * z, -v.cx * z * k, -v.cy * z * k);
+  const xa = v.cx - 20, xb = v.cx + W / z + 20, bl = S.WD.bld, r = S.rope;
+  const litId = !r && S.tgt ? S.tgt.house : -1;
+  for (let i = firstIdx(bl, xa); i < bl.length; i++) {
+    const b = bl[i]; if (b.x0 > xb) break;
+    ctx.fillStyle = b.id % 2 ? COL.h2 : COL.h1; ctx.fillRect(b.x0, b.top, b.x1 - b.x0, FLOOR - b.top + 1);
+    ctx.fillStyle = b.id === litId ? COL.roofLit : COL.roof; ctx.fillRect(b.x0, b.top - 2.5 * u, b.x1 - b.x0, 5 * u);
+  }
+  // земля и коробка
+  ctx.fillStyle = COL.ground; ctx.fillRect(xa, FLOOR, xb - xa, H / z + 400);
+  ctx.fillStyle = COL.groundTop; ctx.fillRect(xa, FLOOR, xb - xa, 3 * u);
+  if (TUNE.startMode === "box" && START.boxX1 > xa) { ctx.fillStyle = COL.crate; ctx.fillRect(START.boxX0, START.boxTop, START.boxX1 - START.boxX0, FLOOR - START.boxTop); }
+  if (TUNE.candiesOn) { ctx.fillStyle = COL.candy; for (const c of S.cand) if (c.x > xa - 30 && c.x < xb + 30) { ctx.beginPath(); ctx.arc(c.x, c.y, SIZE.candyR, 0, 7); ctx.fill(); } }
+  // цель до нажатия: пунктир к точке; цели нет — короткий серый луч
+  if (!r) {
+    ctx.lineWidth = 1.5 * u; ctx.setLineDash([5 * u, 5 * u]);
+    if (S.tgt) { ctx.strokeStyle = "rgba(200,140,0,.8)"; ctx.beginPath(); ctx.moveTo(v.x, v.y); ctx.lineTo(S.tgt.x, S.tgt.y); ctx.stroke(); }
+    else { const a = rad(TUNE.rayAngle), L = S.shotT > 0 ? 160 : 90; ctx.strokeStyle = S.shotT > 0 ? "rgba(180,40,40,.8)" : "rgba(40,40,60,.35)";
+      ctx.beginPath(); ctx.moveTo(v.x, v.y); ctx.lineTo(v.x + Math.cos(a) * L, v.y - Math.sin(a) * L); ctx.stroke(); }
+    ctx.setLineDash([]);
+    if (S.tgt) { ctx.fillStyle = COL.roofLit; ctx.beginPath(); ctx.arc(S.tgt.x, S.tgt.y, 4.5 * u, 0, 7); ctx.fill(); }
+  }
+  // след ~3 с: точки каждые 0,1 с; красная — в этой 0,1 с был скачок скорости (рывок: изменение за тик резко другое)
+  if (DEBUG && S.trail.length > 1) {
+    const tr = S.trail, n = tr.length;
+    ctx.strokeStyle = "rgba(31,36,51,.35)"; ctx.lineWidth = 1.2 * u; ctx.beginPath(); ctx.moveTo(tr[0].x, tr[0].y);
+    for (let i = 1; i < n; i++) ctx.lineTo(tr[i].x, tr[i].y); ctx.stroke();
+    for (let i = n - 1; i >= 0; i -= 6) {
+      let jump = false; for (let q = Math.max(0, i - 5); q <= i; q++) if (tr[q].j) jump = true;
+      ctx.fillStyle = jump ? "#e0302a" : "#1f2433"; ctx.beginPath(); ctx.arc(tr[i].x, tr[i].y, (jump ? 3 : 2) * u, 0, 7); ctx.fill();
+    }
+  }
+  for (const f of S.flash) { ctx.strokeStyle = f.col; ctx.globalAlpha = f.life / 0.4; ctx.lineWidth = 2 * u; ctx.beginPath(); ctx.arc(f.x, f.y, (8 + (0.4 - f.life) * 40) * u, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+  // верёвка — линия (провисла — с прогибом)
+  if (r) {
+    const d = Math.hypot(v.x - r.ax, v.y - r.ay), sag = d < r.L - 1 && TUNE.elastic <= 0 ? Math.sqrt(r.L * r.L - d * d) * 0.5 : 0;
+    ctx.strokeStyle = COL.rope; ctx.lineWidth = 2.2 * u; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(r.ax, r.ay); ctx.quadraticCurveTo((r.ax + v.x) / 2, (r.ay + v.y) / 2 + sag, v.x, v.y); ctx.stroke();
+    ctx.fillStyle = COL.rope; ctx.beginPath(); ctx.arc(r.ax, r.ay, 3 * u, 0, 7); ctx.fill();
+  }
+  drawOm(v.x, v.y, v.rot);
+  if (DEBUG) {
+    const o = S.om;
+    arrow(v.x, v.y, v.x + o.vx * 0.25, v.y + o.vy * 0.25, "#d0206a", 2 * u);
+    if (r) { ctx.strokeStyle = "#2f9e5b"; ctx.lineWidth = 2 * u; ctx.beginPath(); ctx.arc(r.ax, r.ay, 7 * u, 0, 7); ctx.stroke(); }
+  }
+  // окно: дистанция, отладка
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+  ctx.textBaseline = "top"; ctx.font = "700 13px system-ui,sans-serif"; ctx.textAlign = "right";
+  ctx.fillStyle = COL.ink; ctx.fillText(fmt(distM()) + " м · рекорд " + fmt(best) + " м", W - 6, 6);
+  if (S.paused) { ctx.textAlign = "center"; ctx.font = "700 16px system-ui,sans-serif"; ctx.fillText("пауза", W / 2, 40); }
+  if (DEBUG) drawDebug();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+function drawDebug() {
+  const o = S.om, r = S.rope, g = TUNE.gravity, e = energy(), lc = S.lastCatch, lr = S.lastRelease;
+  const lines = [
+    "v " + fmt(speed()) + " u/с (vx " + fmt(o.vx) + ", vy " + fmt(o.vy) + ")",
+    "E " + fmt(e / g) + " u высоты" + (r ? " · на верёвке " + (r.E0 ? (e >= r.E0 ? "+" : "") + fmt((e / r.E0 - 1) * 100, 2) + " %" : "") : ""),
+    r ? "T " + fmt(S.tension / g, 2) + " g · L " + fmt(r.L) + " u · " + (TUNE.elastic > 0 ? "упругая" : r.taut ? "натянута" : "провисла") : "в полёте" + (o.grounded ? " (стоит)" : ""),
+    "зацеп " + (lc ? fmt(lc.vBefore) + "→" + fmt(lc.vAfter) + " u/с (" + (lc.vAfter >= lc.vBefore ? "+" : "") + fmt((lc.vAfter / Math.max(1, lc.vBefore) - 1) * 100, 1) + " %)" : "—"),
+    "отпуск " + (lr ? fmt(lr.vBefore) + "→" + fmt(lr.vAfter) + " u/с, " + fmt(lr.ang) + "°" + (lr.sweet ? " вжух" : "") : "—"),
+    "зацепов " + S.catches + " · промахов " + S.misses + " · земля " + S.bounces + " · seed " + S.seed,
+  ];
+  ctx.textAlign = "left"; ctx.font = "600 8px ui-monospace,Menlo,monospace";
+  let wMax = 0; for (const s of lines) wMax = Math.max(wMax, ctx.measureText(s).width);
+  ctx.fillStyle = "rgba(255,255,255,.72)"; ctx.fillRect(4, 24, wMax + 8, lines.length * 10 + 5);
+  ctx.fillStyle = COL.ink; lines.forEach((s, i) => ctx.fillText(s, 8, 27 + i * 10));
+}
+
+// ---- Цикл -----------------------------------------------------------------------------------------------------------
+let manual = false, acc = 0, lastT = 0, DEBUG = true, SPEED = 1;
+const frameTimes = [];
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (lastT) {
+    frameTimes.push(now - lastT); if (frameTimes.length > 120) frameTimes.shift();
+    if (!manual && !S.paused) {
+      acc += Math.min(0.05, (now - lastT) / 1000) * SPEED;
+      let n = 0;
+      while (acc >= DT && n < 4) { step(); acc -= DT; n++; }
+      if (n === 4) acc = 0;
+    }
+  }
+  lastT = now;
+  ip = manual || S.paused ? 1 : clamp(acc / DT, 0, 1);
+  draw();
+}
+function saveBest() { try { localStorage.setItem(BEST_KEY, String(Math.floor(best))); } catch (e) {} }
+function restart(seed) { saveBest(); newRound(seed == null ? S.seed : seed); acc = 0; worldDirty = false; syncUi(); }
+function newWorldBtn() { restart((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+// ---- Настройки: панель, наборы, localStorage ------------------------------------------------------------------------
+let PRESET = "pull", worldDirty = false, drawerOpen = false;
+const ctl = {};
+function save() {
+  try { localStorage.setItem(STORE, JSON.stringify({ preset: PRESET, tune: TUNE, ui: { debug: DEBUG, speed: SPEED, drawer: drawerOpen } })); } catch (e) {}
+}
+function load() {
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(STORE) || "null"); } catch (e) { d = null; }
+  if (!d || typeof d !== "object") return;
+  if (PRESETS[d.preset]) { PRESET = d.preset; Object.assign(TUNE, PRESETS[PRESET]); }
+  if (d.tune) for (const k of SPEC_KEYS) if (k in d.tune && typeof d.tune[k] === typeof CLEAN[k]) TUNE[k] = d.tune[k];
+  if (d.ui) { DEBUG = d.ui.debug !== false; if ([0.25, 0.5, 1].includes(d.ui.speed)) SPEED = d.ui.speed; drawerOpen = !!d.ui.drawer; }
+}
+function diffFromPreset() { const p = PRESETS[PRESET], o = {}; for (const k of SPEC_KEYS) if (TUNE[k] !== p[k]) o[k] = TUNE[k]; return o; }
+function tuneJSON() {
+  const tune = {}; for (const k of SPEC_KEYS) tune[k] = TUNE[k];
+  return JSON.stringify({ page: "hook-tune", preset: PRESET, changed: diffFromPreset(), tune }, null, 1);
+}
+function setTune(key, val, noRestart) {
+  if (!(key in CLEAN)) return false;
+  const t = typeof CLEAN[key];
+  if (t === "number") { val = +val; if (!isFinite(val)) return false; }
+  else if (t === "boolean") val = val === true || val === "true" || val === 1;
+  else val = String(val);
+  TUNE[key] = val;
+  if (WORLD_KEYS.has(key)) worldDirty = true;
+  if (S && S.rope && key === "elastic" && TUNE.elastic <= 0) { S.rope.taut = false; tautCheck(S.rope, "slack"); }
+  if (S && !S.rope) updateTarget();
+  save(); syncUi();
+  return true;
+}
+function applyPreset(name) {
+  if (!PRESETS[name]) { const m = { "чистый": "clean" }; name = m[String(name).toLowerCase()] || String(name).toLowerCase(); }
+  if (!PRESETS[name]) return false;
+  PRESET = name; Object.assign(TUNE, PRESETS[name]); save(); restart(); return true;
+}
+function numStr(v) { return String(+(+v).toFixed(5)); }
+function buildPanel() {
+  const body = document.getElementById("pbody");
+  for (const [title, note, fields] of SPEC) {
+    const det = document.createElement("details"); det.open = true;
+    const sum = document.createElement("summary"); sum.textContent = title; det.appendChild(sum);
+    if (note) { const p = document.createElement("p"); p.className = "gnote"; p.textContent = note; det.appendChild(p); }
+    for (const f of fields) {
+      const [key, label] = f;
+      const tag = ADD.has(key) ? '<span class="add" title="добавляет энергию">+E</span>' : "";
+      if (f[2] === "bool") {
+        const w = document.createElement("label"); w.className = "t";
+        w.innerHTML = '<input type="checkbox"><span></span>' + tag; w.querySelector("span").textContent = label;
+        const inp = w.querySelector("input"); inp.addEventListener("change", () => setTune(key, inp.checked));
+        ctl[key] = { el: w, set: (v) => { inp.checked = !!v; } }; det.appendChild(w);
+      } else if (f[2] === "sel") {
+        const w = document.createElement("label"); w.className = "t";
+        w.innerHTML = '<span></span><select></select>' + tag; w.querySelector("span").textContent = label;
+        const sel = w.querySelector("select");
+        for (const [val, txt] of f[3]) { const o = document.createElement("option"); o.value = val; o.textContent = txt; sel.appendChild(o); }
+        sel.addEventListener("change", () => setTune(key, sel.value));
+        ctl[key] = { el: w, set: (v) => { sel.value = v; } }; det.appendChild(w);
+      } else {
+        const [, , mn, mx, st] = f;
+        const w = document.createElement("div"); w.className = "f";
+        w.innerHTML = '<label></label><input type="range"><input type="number">';
+        w.querySelector("label").innerHTML = ""; w.querySelector("label").append(label); if (tag) w.querySelector("label").insertAdjacentHTML("beforeend", tag);
+        const rg = w.querySelectorAll("input")[0], nb = w.querySelectorAll("input")[1];
+        for (const el of [rg, nb]) { el.min = mn; el.max = mx; el.step = st; }
+        rg.addEventListener("input", () => { nb.value = numStr(rg.value); setTune(key, rg.value); });
+        nb.addEventListener("change", () => { if (nb.value !== "" && isFinite(+nb.value)) setTune(key, nb.value); else syncUi(); });
+        ctl[key] = { el: w, set: (v) => { rg.value = v; if (document.activeElement !== nb) nb.value = numStr(v); } }; det.appendChild(w);
+      }
+    }
+    body.appendChild(det);
+  }
+}
+const DEP = { capVx: "capOn", capVy: "capOn", swingMin: "swingOn", backDrag: "backDragOn", sweetBoost: "boostOn", sweetLift: "liftOn",
+  zoomFast: "zoomSpeedOn", zoomV0: "zoomSpeedOn", zoomV1: "zoomSpeedOn", zoomLerp: "zoomSpeedOn", candyKick: "kickOn", reelMin: "reel" };
+function syncUi() {
+  const p = PRESETS[PRESET];
+  for (const k of SPEC_KEYS) {
+    const c = ctl[k]; if (!c) continue; c.set(TUNE[k]);
+    c.el.classList.toggle("ch", TUNE[k] !== p[k]);
+    const d = DEP[k]; if (d) c.el.classList.toggle("dis", !TUNE[d]);
+  }
+  for (const k of ["restitution", "groundFric"]) ctl[k].el.classList.toggle("dis", TUNE.groundMode !== "bounce");
+  for (const k of ["bounceUp", "bounceVx"]) ctl[k].el.classList.toggle("dis", TUNE.groundMode !== "tramp");
+  for (const k of ["aimCone", "liftDy", "roofInset", "aimHyst", "reachCheck"]) ctl[k].el.classList.toggle("dis", TUNE.aimMode !== "roof");
+  const nCh = Object.keys(diffFromPreset()).length;
+  document.getElementById("prNote").textContent = "набор: " + PR_NAME[PRESET] + (nCh ? " + " + nCh + " изм." : "");
+  document.querySelectorAll("[data-pr]").forEach((b) => b.classList.toggle("on", b.dataset.pr === PRESET));
+  document.querySelectorAll("[data-sp]").forEach((b) => b.classList.toggle("on", +b.dataset.sp === SPEED));
+  document.getElementById("bPause").classList.toggle("on", !!(S && S.paused));
+  document.getElementById("bWorld").classList.toggle("warn", worldDirty);
+  document.getElementById("cDebug").checked = DEBUG;
+  document.getElementById("panel").classList.toggle("closed", !drawerOpen);
+  document.getElementById("drawerBtn").textContent = drawerOpen ? "Настройки ▼" : "Настройки ▲";
+}
+function toast(s) { const t = document.getElementById("toast"); t.textContent = s; t.style.display = "block"; clearTimeout(toast.h); toast.h = setTimeout(() => { t.style.display = "none"; }, 1400); }
+function copyTune() {
+  const txt = tuneJSON(), box = document.getElementById("copyBox");
+  const fallback = () => {
+    box.value = txt; box.style.display = "block"; if (!drawerOpen) { drawerOpen = true; syncUi(); }
+    box.focus(); box.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    toast(ok ? "Скопировано (и показано в поле)" : "Буфер недоступен — выдели и скопируй из поля");
+  };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(() => { box.style.display = "none"; toast("Настройки скопированы"); }, fallback);
+    else fallback();
+  } catch (e) { fallback(); }
+  return txt;
+}
+function setPause(v) { S.paused = v == null ? !S.paused : !!v; acc = 0; syncUi(); }
+function setSpeed(v) { if ([0.25, 0.5, 1].includes(+v)) SPEED = +v; save(); syncUi(); }
+
+// ---- Ввод ---------------------------------------------------------------------------------------------------------------
+const downs = new Set();
+stage.addEventListener("pointerdown", (e) => { e.preventDefault(); downs.add(e.pointerId); try { stage.setPointerCapture(e.pointerId); } catch (_) {} if (!S.paused) hold(); });
+function up(e) { if (!downs.delete(e.pointerId)) return; if (!downs.size) release(); }
+stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+stage.addEventListener("contextmenu", (e) => e.preventDefault());
+window.addEventListener("blur", () => { downs.clear(); if (S.held) release(); });
+const typing = (e) => /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) && e.target.type !== "checkbox" && e.target.type !== "range";
+window.addEventListener("keydown", (e) => {
+  if (typing(e)) return;
+  if (e.code === "Space") { e.preventDefault(); if (!e.repeat && !S.paused) hold(); }
+  else if (e.code === "KeyR" && !e.repeat) restart();
+  else if (e.code === "KeyP" && !e.repeat) setPause();
+});
+window.addEventListener("keyup", (e) => { if (e.code === "Space" && !typing(e)) release(); });
+document.getElementById("bRestart").addEventListener("click", () => restart());
+document.getElementById("bWorld").addEventListener("click", newWorldBtn);
+document.getElementById("bPause").addEventListener("click", () => setPause());
+document.getElementById("bReset").addEventListener("click", () => applyPreset(PRESET));
+document.getElementById("bCopy").addEventListener("click", copyTune);
+document.getElementById("cDebug").addEventListener("change", (e) => { DEBUG = e.target.checked; save(); });
+document.getElementById("drawerBtn").addEventListener("click", () => { drawerOpen = !drawerOpen; save(); syncUi(); });
+document.querySelectorAll("[data-sp]").forEach((b) => b.addEventListener("click", () => setSpeed(b.dataset.sp)));
+document.querySelectorAll("[data-pr]").forEach((b) => b.addEventListener("click", () => applyPreset(b.dataset.pr)));
+// кнопки не должны оставлять фокус (пробел — это «держать»)
+document.querySelectorAll("button").forEach((b) => b.addEventListener("mouseup", () => b.blur()));
+new ResizeObserver(() => draw()).observe(stage);
+
+// ---- Тестовый API ---------------------------------------------------------------------------------------------------------
+window.__game = {
+  ready: false,
+  getState() {
+    const o = S.om, r = S.rope, c = S.cam, e = energy(), t = S.tgt;
+    return {
+      steps: S.steps, time: S.time, seed: S.seed, held: S.held, paused: S.paused, speedMul: SPEED, preset: PRESET, debug: DEBUG, drawerOpen,
+      om: { x: o.x, y: o.y, vx: o.vx, vy: o.vy, grounded: o.grounded, rot: o.rot }, speed: speed(),
+      energy: { E: e, h: e / TUNE.gravity, rope0: r ? r.E0 : null, ropeDelta: r && r.E0 ? e / r.E0 - 1 : null },
+      rope: r ? { ax: r.ax, ay: r.ay, L: r.L, house: r.house, taut: r.taut, tension: S.tension, tensionG: S.tension / TUNE.gravity } : null,
+      target: t ? { x: t.x, y: t.y, dev: t.dev, L: t.L, house: t.house } : null,
+      cam: { x: c.x, y: c.y, zoom: c.zoom, vx: c.vx, vy: c.vy }, zoom: c.zoom,
+      dist: distM(), best, catches: S.catches, misses: S.misses, sweet: S.sweet, bounces: S.bounces, candies: S.candies,
+      lastCatch: S.lastCatch, lastRelease: S.lastRelease, log: S.log.slice(-40),
+      houses: S.WD.bld.filter((b) => b.x1 > c.x - 100 && b.x0 < c.x + W / c.zoom + 100).map((b) => ({ id: b.id, x0: b.x0, x1: b.x1, top: b.top, h: b.h })),
+      gen: { houses: S.WD.bld.length, rerolls: S.WD.rerolls, fails: S.WD.fails }, worldDirty,
+      view: (() => { const q = cv.getBoundingClientRect(); return { left: q.left, top: q.top, width: q.width, height: q.height, scale: q.width / W }; })(),
+    };
+  },
+  act(a, p) {
+    if (a === "hold") hold();
+    else if (a === "release") release();
+    else if (a === "restart") restart(p && p.seed != null ? p.seed : undefined);
+    else if (a === "newWorld") { if (p && p.seed != null) restart(p.seed); else newWorldBtn(); }
+    else if (a === "tune.set") return setTune(p.key, p.v);
+    else if (a === "tune.preset") return applyPreset(p && p.name);
+    else if (a === "tune.get") return tuneJSON();
+    else if (a === "copy") return copyTune();
+    else if (a === "clock") { manual = !!(p && p.manual); acc = 0; }
+    else if (a === "step") { for (let i = 0; i < (p || 1); i++) step(); }
+    else if (a === "draw") draw();
+    else if (a === "pause") setPause(p);
+    else if (a === "speed") setSpeed(p);
+    else if (a === "debug") { DEBUG = !!p; save(); syncUi(); }
+    else if (a === "drawer") { drawerOpen = !!p; save(); syncUi(); }
+    else if (a === "place") { // dev: поставить Ома Нома (без верёвки)
+      const o = S.om; o.x = p.x; o.y = p.y; o.vx = p.vx || 0; o.vy = p.vy || 0; o.grounded = false;
+      S.rope = null; S.held = false; S.trail = []; ensureWorld(); camStep(true); updateTarget(); snapPrev();
+    }
+    else if (a === "street") { setStreet((p && p.houses) || []); ensureWorld(); updateTarget(); }
+  },
+  metrics() {
+    const s = frameTimes.slice().sort((x, y) => x - y), mean = s.reduce((q, x) => q + x, 0) / (s.length || 1);
+    return { fps: s.length ? Math.round(1000 / mean) : 0, frameMsP95: s.length ? s[Math.floor(s.length * 0.95)] : 0, drawCalls: -1 };
+  },
+};
+
+load();
+buildPanel();
+newRound(QS.has("seed") ? +QS.get("seed") : undefined);
+syncUi();
+draw();
+Promise.all(omWaits).then(() => { window.__game.ready = true; });
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
