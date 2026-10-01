@@ -19,9 +19,12 @@
         <button id="bPause" title="клавиша P">Пауза</button>
         <button data-sp="0.25">×0,25</button><button data-sp="0.5">×0,5</button><button data-sp="1">×1</button>
       </div>
+      <div class="row">
+        <button data-pr="spider">Паук</button><button data-pr="pend">Маятник</button><button data-pr="rocket">Ракета</button><button data-pr="light">Лёгкий</button><button data-pr="rubber">Резинка</button>
+      </div>
+      <div class="preset-note" id="prNote"></div>
       <div class="row more">
-        <button data-pr="pull">Подтяжка</button><button data-pr="clean">Чистый</button><button data-pr="v1">v1</button><button data-pr="v2">v2</button>
-        <span class="preset-note" id="prNote"></span>
+        <span class="preset-note">Эталоны:</span><button data-pr="pull">Подтяжка</button><button data-pr="clean">Чистый</button><button data-pr="v1">v1</button><button data-pr="v2">v2</button>
       </div>
       <div class="row more">
         <button id="bReset">Сбросить</button><button id="bWorld">Новый мир</button><button id="bCopy">Скопировать настройки</button>
@@ -79,9 +82,28 @@ const V1 = Object.assign({}, CLEAN, {
   camAnchor: 0.25, camSmooth: 0.14, lookahead: 0, camTopMargin: 0, camGround: 18,
   candiesOn: true, kickOn: true, candyKick: 25, eatDist: 34, groundMode: "tramp", bounceUp: 560, bounceVx: 140, jumpVx: 220, jumpVy: -120,
 });
-const PRESETS = { pull: PULL, clean: CLEAN, v1: V1, v2: V2 };
-const PR_NAME = { pull: "Подтяжка", clean: "Чистый", v1: "v1", v2: "v2" };
-const TUNE = Object.assign({}, PULL);
+// Пять наборов (D-61): у каждого энергия только из названного источника, рывка паутины и гарантированного подъёма нет, зум постоянный
+const SPIDER = Object.assign({}, CLEAN, { reel: 350, reelMin: 90, rayAngle: 62, ropeMax: 420, capVx: 1150, startMode: "roof" });
+const PEND = Object.assign({}, CLEAN, { reel: 150, rayAngle: 45, ropeMin: 220, ropeMax: 800, aimCone: 35, capVy: 1800,
+  hMin0: 520, hMax: 820, zoom: 0.33, camTopMargin: 200, startMode: "roof" });
+const ROCKET = Object.assign({}, CLEAN, { reel: 120, boostOn: true, sweetBoost: 1.3, sweetMin: 20, sweetMax: 65, capVx: 1100, capVy: 1800,
+  zoom: 0.35, camTopMargin: 200, startMode: "roof" });
+const LIGHT = Object.assign({}, CLEAN, { gravity: 800, airDrag: 0.9995, reel: 150, aimCone: 40, gapMax0: 180, gapCap: 300, zoom: 0.45, startMode: "roof" });
+const RUBBER = Object.assign({}, CLEAN, { elastic: 180, reel: 250, reelMin: 100, zoom: 0.45, startMode: "roof" });
+const PRESETS = { spider: SPIDER, pend: PEND, rocket: ROCKET, light: LIGHT, rubber: RUBBER, pull: PULL, clean: CLEAN, v1: V1, v2: V2 };
+const PR_NAME = { spider: "Паук", pend: "Маятник", rocket: "Ракета", light: "Лёгкий", rubber: "Резинка", pull: "Подтяжка", clean: "Чистый", v1: "v1", v2: "v2" };
+const PR_NOTE = {
+  spider: "Короткие верёвки, быстрый пологий полёт над крышами. Энергия — сильная подтяжка 350 u/с, пока держишь.",
+  pend: "Длинные верёвки, большие дуги между высокими домами, камера дальше. Энергия — подтяжка 150 u/с.",
+  rocket: "Высокие полёты над крышами. Энергия — подтяжка 120 u/с и буст ×1,3, если отпустить на подъёме 20…65°.",
+  light: "Гравитация 800: плавно и медленно, дома ближе, прицел прощает. Энергия — подтяжка 150 u/с.",
+  rubber: "Упругая верёвка пружинит (k 180). Энергия — подтяжка 250 u/с натягивает резинку.",
+  pull: "Эталон: «Чистый» + подтяжка 200 u/с, старт с крыши.",
+  clean: "Эталон без энергии: только гравитация и сопротивление — честно затухает.",
+  v1: "Эталон: hook-rnf-v1 (луч до стены, низкие частые дома, буст ×1,12, батут).",
+  v2: "Эталон: hook-rnf v2 со всеми скрытыми добавками (рывок паутины, подъём «вжух», батут).",
+};
+const TUNE = Object.assign({}, SPIDER);
 
 // Панель: [ключ, подпись, min, max, шаг] | [ключ, подпись, "bool"] | [ключ, подпись, "sel", [[знач, подпись]…]]; ADD — добавляет энергию
 const ADD = new Set(["swingOn", "backDragOn", "boostOn", "liftOn", "reel", "kickOn", "groundMode", "jumpVx"]);
@@ -174,7 +196,7 @@ const SPEC_KEYS = []; for (const g of SPEC) for (const f of g[2]) SPEC_KEYS.push
 const W = 320, H = 480, DT = 1 / 60, NSUB = 8, FLOOR = 462;
 const SIZE = { omFeet: 30, omTop: 36, mouthDy: 10, candyR: 20 };
 const START = { x: 80, y: 300, boxX0: 40, boxX1: 120, boxTop: 330 };
-const STORE = "lab.hook-tune.v2", BEST_KEY = "lab.best.hook-tune";
+const STORE = "lab.hook-tune.v3", BEST_KEY = "lab.best.hook-tune";
 const rad = (d) => d * Math.PI / 180;
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -690,7 +712,7 @@ function restart(seed) { saveBest(); newRound(seed == null ? S.seed : seed); acc
 function newWorldBtn() { restart((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
 
 // ---- Настройки: панель, наборы, localStorage ------------------------------------------------------------------------
-let PRESET = "pull", worldDirty = false, drawerOpen = false;
+let PRESET = "spider", worldDirty = false, drawerOpen = false;
 const ctl = {};
 function save() {
   try { localStorage.setItem(STORE, JSON.stringify({ preset: PRESET, tune: TUNE, ui: { debug: DEBUG, speed: SPEED, drawer: drawerOpen } })); } catch (e) {}
@@ -722,7 +744,7 @@ function setTune(key, val, noRestart) {
   return true;
 }
 function applyPreset(name) {
-  if (!PRESETS[name]) { const m = { "чистый": "clean" }; name = m[String(name).toLowerCase()] || String(name).toLowerCase(); }
+  if (!PRESETS[name]) { const low = String(name).toLowerCase(); name = Object.keys(PR_NAME).find((k) => PR_NAME[k].toLowerCase() === low) || low; }
   if (!PRESETS[name]) return false;
   PRESET = name; Object.assign(TUNE, PRESETS[name]); save(); restart(); return true;
 }
@@ -776,7 +798,7 @@ function syncUi() {
   for (const k of ["bounceUp", "bounceVx"]) ctl[k].el.classList.toggle("dis", TUNE.groundMode !== "tramp");
   for (const k of ["aimCone", "liftDy", "roofInset", "aimHyst", "reachCheck"]) ctl[k].el.classList.toggle("dis", TUNE.aimMode !== "roof");
   const nCh = Object.keys(diffFromPreset()).length;
-  document.getElementById("prNote").textContent = "набор: " + PR_NAME[PRESET] + (nCh ? " + " + nCh + " изм." : "");
+  document.getElementById("prNote").textContent = PR_NAME[PRESET] + (nCh ? " (+ " + nCh + " изм.)" : "") + ": " + PR_NOTE[PRESET];
   document.querySelectorAll("[data-pr]").forEach((b) => b.classList.toggle("on", b.dataset.pr === PRESET));
   document.querySelectorAll("[data-sp]").forEach((b) => b.classList.toggle("on", +b.dataset.sp === SPEED));
   document.getElementById("bPause").classList.toggle("on", !!(S && S.paused));
