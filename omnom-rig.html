@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:,">
+<title>Ом Ном на риге</title>
+<style>:root{--card:#c98a4b;--card2:#b8773d;--shade:#8f5427;--cut:#5a2e10;--cream:#fbebd0;--cream2:#e9cfa3;--ink:#4a2512;--act:#e8458a;--act2:#a82060;--actInk:#4f0c2c;--star:#ffd23f}*{box-sizing:border-box}html,body{background:var(--card2);height:100%;color:var(--ink);margin:0;font:700 14px/1.3 Nunito,ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{flex-direction:column;display:flex}header{flex-direction:column;gap:5px;padding:8px 12px 4px;display:flex}.row{justify-content:space-between;align-items:center;gap:8px;display:flex}a.back{color:var(--cream);font-size:13px;text-decoration:none}h1{color:var(--cream);text-shadow:0 1px 0 var(--cut);white-space:nowrap;margin:0;font-size:17px;font-weight:900}.rules{color:var(--cream);opacity:.9;min-height:2.6em;font-size:12.5px}button{font:inherit;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--cream2);-webkit-tap-highlight-color:transparent;border-radius:999px;padding:4px 11px;font-weight:800}.seg{gap:4px;display:inline-flex}.seg button.on{background:var(--cream2);box-shadow:0 1px 0 var(--cream2);transform:translateY(2px)}#ab button{padding:6px 13px;font-size:15px}#scn button{padding:3px 9px;font-size:13px}@media (width<=420px){h1{font-size:15px}#scn button{padding:3px 7px;font-size:12px}.rules{font-size:12px}.seg{gap:3px}}#ab button.on{background:var(--act);color:#fff;border-color:var(--actInk);box-shadow:0 4px 0 var(--act2);text-shadow:0 1px 0 var(--actInk), 0 -1px 0 var(--actInk), 1px 0 0 var(--actInk), -1px 0 0 var(--actInk);transform:none}#stage{flex:1;min-height:0;margin:2px 10px 8px;position:relative}canvas{touch-action:none;-webkit-user-select:none;user-select:none;box-shadow:0 0 0 5px var(--shade), 0 6px 0 5px var(--cut);border-radius:14px;display:block;position:absolute}#msg{color:var(--cream);text-align:center;justify-content:center;align-items:center;padding:20px;display:flex;position:absolute;inset:0}.ctl{color:var(--cream);grid-template-columns:74px 1fr 92px;align-items:center;gap:2px 8px;padding:0 12px 4px;font-size:12.5px;display:grid}.ctl output,.ctl .o{font-variant-numeric:tabular-nums;white-space:nowrap}.ctl input[type=range]{width:100%;accent-color:var(--act);margin:4px 0}.ctl label.ck{align-items:center;gap:3px;display:inline-flex}.clips{padding:2px 10px calc(10px + env(safe-area-inset-bottom));flex-wrap:wrap;gap:5px;display:flex}.clips button{padding:3px 9px;font-size:12.5px}</style>
+</head>
+<body>
+<header>
+  <div class="row"><a class="back" href="index.html">← Лаборатория</a>
+    <span class="seg" id="ab"><button data-v="v2">Кадры v2</button><button data-v="rig" class="on">Риг</button></span></div>
+  <div class="row"><h1>Ом Ном на риге</h1>
+    <span class="seg" id="scn"><button data-s="scene" class="on">Сценка</button><button data-s="swing">Качели</button><button data-s="pult">Пульт</button></span></div>
+  <div class="rules" id="rules"></div>
+</header>
+<div id="stage"><canvas id="cv"></canvas><div id="msg">Загрузка…</div></div>
+<div class="ctl">
+  <label for="sOpen">рот</label><input id="sOpen" type="range" min="0" max="1" step="0.01" value="0"><output id="oOpen">0</output>
+  <label for="sSpeed">скорость</label><input id="sSpeed" type="range" min="0" max="1" step="0.01" value="0"><output id="oSpeed">0</output>
+  <label for="sLook">взгляд</label><input id="sLook" type="range" min="-180" max="180" step="1" value="-150">
+  <span class="o"><label class="ck"><input type="checkbox" id="cFinger">за пальцем</label></span>
+</div>
+<div class="clips" id="clips"></div>
+<script>
+"use strict";
+// ==== TUNE: главные числа — крутить здесь =====================================================
+// Поле 320×420 u; 1 u = 3,375 px при ширине 1080 → Ом Ном 72 u ≈ 243 px (как в играх).
+// Риг: assets/omnom-rig/omnom_rig.json (пути, кости, формы, позы), клипы и пружины — assets/omnom-rig/omnom_clips.json.
+const W = 320, H = 420;
+const PX = 6.4024, K = 1 / PX;          // px холста рига (= холст кадров v2 525×506) на 1 u
+const DT = 1 / 60;
+const TUNE = {
+  floorY: 352,
+  om: [226, 352],                // лапы Ома Нома в сценке, u
+  pult: [160, 344],              // лапы в пульте (в воздухе — выше на airUp)
+  airUp: 70,
+  sling: [46, 262],              // рогатка: кожанка, u
+  slingPull: 24,                 // u, оттяжка при прицеле
+  candyR: 11,
+  gravity: 784,                  // u/с², как в играх
+  hitT: 0.9,                     // с полёта конфеты в рот
+  missT: 0.84, missOver: [24, -86], // промах: цель — над усиком, чуть позади
+  eatDist: 14, magnet: 32,       // u: рот ловит конфету; ближе magnet — подтягивает
+  openFar: 110, openNear: 30, openTau: 0.06, // open 0..1 по расстоянию конфета — рот (как в рогатке: 110 u)
+  loop: 15,                      // с, сценка
+  events: [[0.6, "aim", "hit"], [1.9, "antic"], [2.5, "launch"], [5.7, "reload"], [6.3, "aim", "miss"], [7.4, "antic"], [7.9, "launch"],
+    [10.0, "reload"], [10.5, "reach"], [12.5, "wave"]],
+  swing: { hookY: 70, L: 80, amp: 0.9, release: 0.65, reachD: 30, pump: 2.4, catchR: 20, ropeTau: 0.12, ropeDamp: 3, minCross: 2, flyTiltPerU: 0.09 },
+  dprMax: 2,
+};
+const C = { wall: "#F7E0B5", wall2: "#F0D3A0", card: "#C98A4B", card2: "#B8773D", shade: "#8F5427", cut: "#5A2E10",
+  cream: "#FBEBD0", cream2: "#E9CFA3", ink: "#4A2512", candy: "#E8412F", candy2: "#B92A1E", wrap: "#FFC93C", dot: "#FFFFFF" };
+const D2R = Math.PI / 180;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, u) => a + (b - a) * u;
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+// ---- Ом Ном кадрами приложения (D-40, не рисунок кодом) — блок OMS из hook.html; добавлено p.now (часы симуляции для моргания) ---------------------------
+// Кадры лежат в assets/omnom/ — одна папка на все прототипы; новую версию Ома Нома копируем поверх теми же именами.
+// Числа — из assets/omnom/omnom_frames.json: 6,4024 px на u, лапы = pivot, рот (кадр wide); зрачки — два слоя (левый и правый глаз), каждый ходит в эллипсе своего глаза (pupils.<кадр>.eyes).
+// В файлах Ом Ном смотрит ВЛЕВО от зрителя; flip = смотрит вправо. Кадр: p.mx, p.my — точка рта в игре (u), p.fy — лапы (по умолчанию рот + 20).
+const OMS = (() => {
+  const PX = 6.4024, PIV = [0.5366, 0.0253], MOUTH = [-2.08, -19.98];
+  // Зрачки — по слою на глаз. Для каждого: rest — центр зрачка в покое, c и r — эллипс хода центра зрачка (u от лап, оси кадра до зеркала).
+  // Сдвиг взгляда d одинаков для обоих глаз, но центр каждого зрачка потом зажимается в эллипс СВОЕГО глаза: зрачок не выходит из белка и не переходит шов.
+  const PUP = {
+    neutral: { l: { rest: [-13.93, -44.86], c: [-16.67, -45.33], r: [3.91, 3.98] },
+             r: { rest: [-0.81, -42.67], c: [2.23, -42.67], r: [6.22, 6.39] } },
+    ajar:   { l: { rest: [-13.7, -47.75], c: [-15.42, -48.29], r: [2.61, 2.51] },
+             r: { rest: [-1.6, -45.33], c: [1.92, -42.83], r: [6.06, 6.01] } },
+    wide:   { l: { rest: [-13.39, -51.18], c: [-14.79, -51.42], r: [1.98, 1.54] },
+             r: { rest: [-1.13, -48.76], c: [0.98, -45.95], r: [5.73, 5.06] } },
+    wide2:  { l: { rest: [-13.93, -52.28], c: [-14.95, -52.67], r: [1.64, 1.31] },
+             r: { rest: [-1.52, -49.54], c: [0.83, -46.58], r: [5.85, 5.25] } },
+  };
+  const LOOK = 7; // u: длина полного взгляда, больше любого радиуса хода — на краю эллипса зрачок упирается в границу
+  const NAMES = ["neutral", "ajar", "wide", "wide2", "chew", "chew2", "sad", "joy", "blink", "half", "shadow"];
+  for (const f in PUP) NAMES.push(f + "_pupils_l", f + "_pupils_r");
+  const img = {};
+  const waits = [];
+  for (const n of NAMES) {
+    const i = new Image(); img[n] = i;
+    waits.push(new Promise((res) => { i.onload = i.onerror = res; }));
+    i.src = "assets/omnom/" + n + ".png";
+  }
+  const ok = (i) => i && i.complete && i.naturalWidth > 0;
+  // центр зрачка: покой + сдвиг (dx, dy), затем в эллипс хода своего глаза: q = (p - c) / r; |q| > 1 -> p = c + q/|q| * r
+  function eyePos(e, dx, dy) {
+    let px = e.rest[0] + dx, py = e.rest[1] + dy;
+    const qx = (px - e.c[0]) / e.r[0], qy = (py - e.c[1]) / e.r[1], ql = Math.hypot(qx, qy);
+    if (ql > 1) { px = e.c[0] + qx / ql * e.r[0]; py = e.c[1] + qy / ql * e.r[1]; }
+    return [px, py];
+  }
+  // p: { frame, mx, my, fy?, flip?, tx?, ty?, rot?, piv?, shadow?, alpha? }; st — объект вызывающего: плавный взгляд
+  const last = { frame: null, l: null, r: null, d: null };
+  function draw(ctx, p, st) {
+    let f = p.frame || "neutral";
+    if (f === "neutral" && ((p.now != null ? p.now : performance.now()) + (p.blinkOff || 0)) % 3600 < 120) f = "blink";
+    const base = img[f]; if (!ok(base)) return;
+    const flip = p.flip ? -1 : 1, fx = p.mx - flip * MOUTH[0], fy = p.fy != null ? p.fy : p.my - MOUTH[1];
+    const pw = base.naturalWidth, ph = base.naturalHeight, k = 1 / PX;
+    ctx.save();
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+    if (p.alpha != null) ctx.globalAlpha = p.alpha;
+    if (p.shadow && ok(img.shadow)) ctx.drawImage(img.shadow, fx - 32, fy - 6, 64, 12);
+    ctx.translate(fx, p.piv ? fy - p.piv : fy); if (p.rot) ctx.rotate(p.rot); if (p.piv) ctx.translate(0, p.piv);
+    ctx.scale(flip * k, k);
+    ctx.drawImage(base, -PIV[0] * pw, -(1 - PIV[1]) * ph);
+    const pu = PUP[f], pl = img[f + "_pupils_l"], pr = img[f + "_pupils_r"];
+    if (pu && ok(pl) && ok(pr)) {
+      let gx = 0, gy = 0;
+      if (p.tx != null) { // цель в системе кадра до зеркала; общий сдвиг взгляда, потом зажим по каждому глазу
+        const pv = p.piv || 0;
+        let dx = p.tx - fx, dy = p.ty - (fy - pv);
+        if (p.rot) { const c = Math.cos(-p.rot), sn = Math.sin(-p.rot), qx = dx * c - dy * sn, qy = dx * sn + dy * c; dx = qx; dy = qy; }
+        dy -= pv; dx *= flip;
+        const ex = (pu.l.rest[0] + pu.r.rest[0]) / 2, ey = (pu.l.rest[1] + pu.r.rest[1]) / 2; // между глазами
+        const vx = dx - ex, vy = dy - ey, L = Math.hypot(vx, vy) || 1, a = Math.min(1, L / 45);
+        gx = vx / L * a * LOOK; gy = vy / L * a * LOOK;
+      }
+      if (st) { st.x = st.x == null ? gx : st.x + (gx - st.x) * 0.35; st.y = st.y == null ? gy : st.y + (gy - st.y) * 0.35; gx = st.x; gy = st.y; }
+      const pL = eyePos(pu.l, gx, gy), pR = eyePos(pu.r, gx, gy);
+      ctx.drawImage(pl, -PIV[0] * pw + (pL[0] - pu.l.rest[0]) * PX, -(1 - PIV[1]) * ph + (pL[1] - pu.l.rest[1]) * PX);
+      ctx.drawImage(pr, -PIV[0] * pw + (pR[0] - pu.r.rest[0]) * PX, -(1 - PIV[1]) * ph + (pR[1] - pu.r.rest[1]) * PX);
+      last.frame = f; last.l = pL; last.r = pR; last.d = [gx, gy];
+    }
+    ctx.restore();
+  }
+  return { draw, img, PUP, eyePos, last, loaded: Promise.all(waits), ready: () => NAMES.every((n) => ok(img[n])) };
+})();
+
+// ==== Матрицы 2×3 (как у canvas: x' = a x + c y + e, y' = b x + d y + f) ============================
+function mmul(A, B, o) { o = o || new Array(6);
+  const a = A[0] * B[0] + A[2] * B[1], b = A[1] * B[0] + A[3] * B[1], c = A[0] * B[2] + A[2] * B[3], d = A[1] * B[2] + A[3] * B[3],
+    e = A[0] * B[4] + A[2] * B[5] + A[4], f = A[1] * B[4] + A[3] * B[5] + A[5];
+  o[0] = a; o[1] = b; o[2] = c; o[3] = d; o[4] = e; o[5] = f; return o; }
+function minv(A) { const det = A[0] * A[3] - A[1] * A[2] || 1e-12, a = A[3] / det, b = -A[1] / det, c = -A[2] / det, d = A[0] / det;
+  return [a, b, c, d, -(a * A[4] + c * A[5]), -(b * A[4] + d * A[5])]; }
+function map(A, x, y) { return [A[0] * x + A[2] * y + A[4], A[1] * x + A[3] * y + A[5]]; }
+function mT(x, y) { return [1, 0, 0, 1, x, y]; }
+function mR(deg) { const r = deg * D2R, c = Math.cos(r), s = Math.sin(r); return [c, s, -s, c, 0, 0]; }
+function mS(x, y) { return [x, 0, 0, y, 0, 0]; }
+function chain(...ms) { let o = ms[0].slice(); for (let i = 1; i < ms.length; i++) o = mmul(o, ms[i]); return o; }
+// кость: local = T(t)·T(pivot)·R(r)·S(s)·T(−pivot)  (omnom_rig.json "transform")
+function boneLocal(pv, v, k, o) { const r = v[k + 2] * D2R, c = Math.cos(r), s = Math.sin(r), sx = v[k + 3], sy = v[k + 4];
+  const a = c * sx, b = s * sx, cc = -s * sy, d = c * sy, px = pv[0], py = pv[1];
+  o[0] = a; o[1] = b; o[2] = cc; o[3] = d; o[4] = v[k] + px - (a * px + cc * py); o[5] = v[k + 1] + py - (b * px + d * py); return o; }
+
+// ==== Риг: разбор json, семьи форм, рисование Path2D ===============================================
+function parseD(d) { const cmds = [], nums = []; const re = /[MCLZ]|-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/gi; let m;
+  while ((m = re.exec(d))) { const s = m[0]; if (/^[a-z]$/i.test(s)) cmds.push(s.toUpperCase()); else nums.push(+s); }
+  return { cmds, nums: Float64Array.from(nums) }; }
+function toPath(cmds, n) { const p = new Path2D(); let k = 0;
+  for (let i = 0; i < cmds.length; i++) { const c = cmds[i];
+    if (c === "M") { p.moveTo(n[k], n[k + 1]); k += 2; } else if (c === "L") { p.lineTo(n[k], n[k + 1]); k += 2; }
+    else if (c === "C") { p.bezierCurveTo(n[k], n[k + 1], n[k + 2], n[k + 3], n[k + 4], n[k + 5]); k += 6; } else p.closePath(); }
+  return p; }
+// слот семьи: одинаковый список команд у всех форм → морфинг = взвешенная сумма чисел
+function makeMorph(ds) { const P = ds.map(parseD), cm = P[0].cmds.join("");
+  for (const q of P) if (q.cmds.join("") !== cm || q.nums.length !== P[0].nums.length) throw new Error("morph: разные команды");
+  return { P, cmds: P[0].cmds, buf: new Float64Array(P[0].nums.length), key: "", path: null }; }
+function morphPath(m, w) { let key = ""; for (let i = 0; i < w.length; i++) key += (Math.round(w[i] * 1e4)) + ",";
+  if (key === m.key) return m.path;
+  const b = m.buf; b.fill(0);
+  for (let f = 0; f < w.length; f++) { const wf = w[f]; if (!wf) continue; const n = m.P[f].nums; for (let i = 0; i < b.length; i++) b[i] += wf * n[i]; }
+  m.key = key; m.path = toPath(m.cmds, b); return m.path; }
+function polyArea(n) { let a = 0; const L = n.length - (n.length % 2); for (let i = 0; i < L; i += 2) { const j = (i + 2) % L; a += n[i] * n[j + 1] - n[j] * n[i + 1]; } return Math.abs(a) / 2; }
+
+const R = { J: null, parts: [], bi: {}, NB: 0, shapes: [], byId: {}, fam: {}, mouth: {}, poses: {}, mot: null, clips: {}, CP: null, list: [] };
+let HEAD, BODY, MOUTH, PUPL, PUPR, SPR1, SPR2, SPR3, HANDL, ROOT, SHADOW;
+let FEET, CENTER, MOUTH_O, REST, TRAVEL, GRIP_HANG, SH_IMG = null;
+
+function rigBuild(J, CJ) {
+  R.J = J; R.mot = CJ.motion;
+  J.parts.forEach((p, i) => { R.parts.push({ id: p.id, pi: p.parent ? R.bi[p.parent] : -1, pivot: p.pivot }); R.bi[p.id] = i; });
+  R.NB = R.parts.length;
+  [ROOT, BODY, HEAD, MOUTH, PUPL, PUPR, SPR1, SPR2, SPR3, HANDL, SHADOW] =
+    ["root", "body", "head", "mouth", "pupil_l", "pupil_r", "sprout1", "sprout2", "sprout3", "hand_l", "shadow"].map((n) => R.bi[n]);
+  FEET = J.anchors.feet; CENTER = [281.71, 300]; MOUTH_O = J.families.mouth.origin;
+  REST = J.anchors.pupils.rest; TRAVEL = J.anchors.pupils.travel;
+  for (const fn of ["body", "eyes", "lids"]) { const F = J.families[fn]; R.fam[fn] = { members: F.members, slots: F.slots }; }
+  J.shapes.forEach((s, i) => {
+    const o = { id: s.id, pi: R.bi[s.part], part: s.part, z: s.z, zFront: s.zFront, fill: s.fill, opacity: s.opacity, blur: s.blur,
+      clip: s.clip || null, hidden: !!s.hidden, fam: null, morph: null, path: null, ord: i, mouth: false, nums: null };
+    let fam = null; for (const fn of ["body", "eyes", "lids"]) if (R.fam[fn].slots.includes(s.id)) fam = fn;
+    if (fam) { o.fam = fam; const F = J.families[fam]; o.morph = makeMorph(F.members.map((m) => F.forms[m][s.id])); }
+    else { o.path = new Path2D(s.d); o.nums = parseD(s.d).nums; }
+    R.shapes.push(o); R.byId[s.id] = o;
+  });
+  for (const g in J.families.mouth.groups) { const G = J.families.mouth.groups[g];
+    R.mouth[g] = { members: G.members, slots: G.slots.map((sl, i) => ({ id: sl.id, pi: MOUTH, part: "mouth", z: sl.z, fill: sl.fill,
+      clip: sl.clip || null, ord: 1000 + i, mouth: true, fam: "mouth", morph: makeMorph(G.members.map((m) => G.forms[m][sl.id])),
+      upper: /^mouth\.tooth(U\d|\d)\.fill$/.test(sl.id) })), byId: {} };
+    for (const s of R.mouth[g].slots) R.mouth[g].byId[s.id] = s; }
+  // позы: json рига + свои (clips.json "poses": base + замены костей)
+  for (const n in J.poses) R.poses[n] = poseFromJson(J.poses[n]);
+  for (const n in CJ.poses) { const c = CJ.poses[n]; const P = clonePose(R.poses[c.base]);
+    for (const id in c.bones || {}) setBone(P, id, c.bones[id], false); R.poses[n] = P; }
+  R.CP = CJ; for (const n in CJ.clips) R.clips[n] = compileClip(CJ.clips[n]);
+  // точка хвата за верёвку: центр лапки в позе hangRig (px рига, от корня)
+  const hb = bbox(R.byId["hand_l.fill"].nums); const dsH = dsFromPose(R.poses.hangRig, mT(0, 0) /* в px рига */, true);
+  GRIP_HANG = map(dsH.world[HANDL], (hb[0] + hb[2]) / 2, (hb[1] + hb[3]) / 2);
+  // тень: размытие один раз в картинку (подсказка "blur" в json; ctx.filter есть не везде — берём shadowBlur)
+  const sh = R.byId["shadow.shape"], b = bbox(sh.nums), m = sh.blur * 3;
+  const cv2 = document.createElement("canvas"); cv2.width = Math.ceil(b[2] - b[0] + 2 * m); cv2.height = Math.ceil(b[3] - b[1] + 2 * m);
+  const c2 = cv2.getContext("2d"); const off = cv2.width + 50;
+  c2.shadowColor = sh.fill; c2.shadowBlur = sh.blur * 2; c2.shadowOffsetX = off; c2.translate(m - b[0] - off, m - b[1]); c2.fillStyle = sh.fill; c2.fill(sh.path);
+  SH_IMG = { img: cv2, x: b[0] - m, y: b[1] - m, cx: (b[0] + b[2]) / 2, cy: (b[1] + b[3]) / 2 };
+}
+function bbox(n) { let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (let i = 0; i + 1 < n.length; i += 2) { x0 = Math.min(x0, n[i]); x1 = Math.max(x1, n[i]); y0 = Math.min(y0, n[i + 1]); y1 = Math.max(y1, n[i + 1]); } return [x0, y0, x1, y1]; }
+
+// ---- позы: кости (tx, ty, r, sx, sy), веса форм, группа рта, наборы show/hide/front -----------------
+const EMPTY = new Set();
+function newPose() { const b = new Float64Array(R.NB * 5); for (let i = 0; i < R.NB; i++) { b[i * 5 + 3] = 1; b[i * 5 + 4] = 1; }
+  return { b, body: Float64Array.of(1, 0, 0), eyes: Float64Array.of(1, 0, 0), lids: Float64Array.of(1, 0, 0, 0, 0, 0),
+    mg: "closed", mw: Float64Array.of(1), show: EMPTY, hide: EMPTY, front: EMPTY }; }
+function clonePose(P) { return { b: P.b.slice(), body: P.body.slice(), eyes: P.eyes.slice(), lids: P.lids.slice(), mg: P.mg, mw: P.mw.slice(), show: P.show, hide: P.hide, front: P.front }; }
+function oneHot(n, i) { const a = new Float64Array(n); a[i] = 1; return a; }
+function setBone(P, id, v, add) { const k = R.bi[id] * 5; if (k !== k) return;
+  if (v.t) { P.b[k] = (add ? P.b[k] : 0) + v.t[0]; P.b[k + 1] = (add ? P.b[k + 1] : 0) + v.t[1]; }
+  if (v.r != null) P.b[k + 2] = (add ? P.b[k + 2] : 0) + v.r;
+  if (v.s) { P.b[k + 3] = (add ? P.b[k + 3] : 1) * v.s[0]; P.b[k + 4] = (add ? P.b[k + 4] : 1) * v.s[1]; } }
+function poseFromJson(p) { const P = newPose(), f = p.forms || {};
+  if (f.body) P.body = oneHot(3, R.fam.body.members.indexOf(f.body));
+  if (f.eyes) P.eyes = oneHot(3, R.fam.eyes.members.indexOf(f.eyes));
+  if (f.lids) P.lids = oneHot(6, R.fam.lids.members.indexOf(f.lids));
+  if (f.mouth) { P.mg = f.mouth[0]; const G = R.mouth[P.mg]; P.mw = oneHot(G.members.length, G.members.indexOf(f.mouth[1])); }
+  for (const id in p.bones || {}) setBone(P, id, p.bones[id], false);
+  if (p.show) P.show = new Set(p.show); if (p.front) P.front = new Set(p.front);
+  // зрачки под закрытыми веками (blink, chew2) не прячем: веки их и так закрывают, а при открытии век белок не пустеет
+  if (p.hide) { const closed = f.lids === "blink" || f.lids === "chew2"; const h = p.hide.filter((b) => !(closed && /^pupil_/.test(b))); if (h.length) P.hide = new Set(h); }
+  return P; }
+// u: 0..1; mode: группа рта и наборы при разных группах — "A" (до ключа), "B" (сразу), "mid" (с середины)
+function lerpPose(A, B, u, mode) { const O = clonePose(A);
+  for (let i = 0; i < A.b.length; i++) {
+    if (i % 5 === 2) { let d = B.b[i] - A.b[i]; d = ((d + 540) % 360) - 180; O.b[i] = A.b[i] + d * u; }  // кратчайший угол
+    else O.b[i] = A.b[i] + (B.b[i] - A.b[i]) * u; }
+  for (const f of ["body", "eyes", "lids"]) for (let i = 0; i < O[f].length; i++) O[f][i] = A[f][i] + (B[f][i] - A[f][i]) * u;
+  if (A.mg === B.mg) { for (let i = 0; i < O.mw.length; i++) O.mw[i] = A.mw[i] + (B.mw[i] - A.mw[i]) * u;
+    const S = u < 0.5 ? A : B; O.show = S.show; O.hide = S.hide; O.front = S.front; }
+  else { const takeB = mode === "B" || (mode === "mid" && u >= 0.5); const S = takeB ? B : A;
+    O.mg = S.mg; O.mw = S.mw.slice(); O.show = S.show; O.hide = S.hide; O.front = S.front; }
+  return O; }
+
+// ---- клипы: ключи → поза + числа ----------------------------------------------------------------
+const EASE = { lin: (u) => u, in: (u) => u * u, out: (u) => 1 - (1 - u) * (1 - u), inout: (u) => u * u * (3 - 2 * u), hold: (u) => (u >= 1 ? 1 : 0) };
+function resolvePoseRef(ref) { if (typeof ref === "string") return R.poses[ref];
+  let P = null, acc = 0; for (const n in ref) { const w = ref[n]; if (!P) { P = clonePose(R.poses[n]); acc = w; } else { acc += w; P = lerpPose(P, R.poses[n], w / acc, "mid"); } } return P; }
+function compileKeys(keys) { const out = []; let pose = "neutral", sq = 0, lift = 0, lean = 0, open = 0, glance = [0, 0];
+  for (const k of keys) {
+    if (k.pose != null) pose = k.pose; if (k.sq != null) sq = k.sq; if (k.lift != null) lift = k.lift; if (k.lean != null) lean = k.lean;
+    if (k.open != null) open = k.open; if (k.glance) glance = k.glance;
+    const P = clonePose(resolvePoseRef(pose));
+    for (const id in k.bones || {}) setBone(P, id, k.bones[id], true);
+    if (k.lids) { P.lids = new Float64Array(6); for (const n in k.lids) P.lids[R.fam.lids.members.indexOf(n)] = k.lids[n]; }
+    out.push({ t: k.t, P, sq, lift, lean, open, glance, ease: EASE[k.ease || "inout"], pe: EASE[k.poseEase || k.ease || "inout"] }); }
+  return out; }
+function compileClip(c) { const o = Object.assign({}, c);
+  if (c.variants) { o.variants = {}; for (const v in c.variants) o.variants[v] = { dur: c.variants[v].dur, keys: compileKeys(c.variants[v].keys) }; o.vnames = Object.keys(o.variants); }
+  else o.keys = compileKeys(c.keys);
+  return o; }
+function sampleKeys(keys, t) { let i = 0; while (i < keys.length - 2 && t >= keys[i + 1].t - 1e-6) i++;
+  const a = keys[i], b = keys[Math.min(i + 1, keys.length - 1)];
+  let u0 = b.t > a.t ? clamp((t - a.t) / (b.t - a.t), 0, 1) : 1; if (t >= b.t - 1e-6) u0 = 1;   // 1e-6: сумма шагов 1/60 не дотягивает до ключа
+  const u = b.ease(u0), up = b.pe(u0);
+  const P = up >= 1 ? clonePose(b.P) : lerpPose(a.P, b.P, up, "A");
+  return { P, sq: lerp(a.sq, b.sq, u), lift: lerp(a.lift, b.lift, u), lean: lerp(a.lean, b.lean, u), open: lerp(a.open, b.open, u),
+    glance: [lerp(a.glance[0], b.glance[0], u), lerp(a.glance[1], b.glance[1], u)] }; }
+function openPose(o) { const st = R.mot.open.stops; let i = 0; while (i < st.length - 2 && o > st[i + 1][1]) i++;
+  const u = clamp((o - st[i][1]) / (st[i + 1][1] - st[i][1]), 0, 1); return lerpPose(R.poses[st[i][0]], R.poses[st[i + 1][0]], u, "mid"); }
+// лицо (рот, тело/глаза, голова, зрачки) от параметра open поверх позы клипа
+function mergeFace(P, F, w) { const O = clonePose(P);
+  for (const id of [HEAD, PUPL, PUPR]) for (let j = 0; j < 5; j++) { const i = id * 5 + j; O.b[i] = lerp(P.b[i], F.b[i], w); }
+  for (const f of ["body", "eyes"]) for (let i = 0; i < 3; i++) O[f][i] = lerp(P[f][i], F[f][i], w);
+  if (F.mg !== "closed" || P.mg === "closed") { O.mg = F.mg; O.mw = F.mw.slice(); }
+  return O; }
+
+// ---- пружины -------------------------------------------------------------------------------------
+// второй порядок (вид t3ssel8r): f — частота, zeta — затухание, r — отклик на старте (>1 — перехлёст)
+function SOD(p, x0) { const f = p.f, z = p.zeta, r = p.r || 0;
+  return { k1: z / (Math.PI * f), k2: 1 / ((2 * Math.PI * f) ** 2), k3: r * z / (2 * Math.PI * f), xp: x0, y: x0, yd: 0 }; }
+function sodStep(s, dt, x) { const xd = (x - s.xp) / dt; s.xp = x;
+  const k2 = Math.max(s.k2, dt * dt / 2 + dt * s.k1 / 2, dt * s.k1);
+  s.y += dt * s.yd; s.yd += dt * (x + s.k3 * xd - s.y - s.k1 * s.yd) / k2; return s.y; }
+function sodReset(s, x) { s.xp = x; s.y = x; s.yd = 0; }
+// точка на пружине в мировых координатах (росток, лапы): p'' = ω²(цель − p) − 2ζω p'
+function ptStep(s, dt, tx, ty, f, z) { const w = 2 * Math.PI * f; const n = 2, h = dt / n;
+  for (let i = 0; i < n; i++) { s.vx += h * (w * w * (tx - s.x) - 2 * z * w * s.vx); s.vy += h * (w * w * (ty - s.y) - 2 * z * w * s.vy); s.x += h * s.vx; s.y += h * s.vy; } }
+
+// ---- состояние для рисования (DS) ---------------------------------------------------------------
+function newDS() { const v = new Float64Array(R.NB * 5);
+  return { v, over: new Array(R.NB).fill(null), world: Array.from({ length: R.NB }, () => [1, 0, 0, 1, 0, 0]), loc: [1, 0, 0, 1, 0, 0],
+    body: Float64Array.of(1, 0, 0), eyes: Float64Array.of(1, 0, 0), lids: Float64Array.of(1, 0, 0, 0, 0, 0), mg: "closed", mw: Float64Array.of(1),
+    show: EMPTY, hide: EMPTY, front: EMPTY, shadowA: 1, shadowS: 1, place: mT(0, 0) }; }
+function dsWorld(ds) { for (let i = 0; i < R.NB; i++) { const p = R.parts[i];
+  const L = ds.over[i] || boneLocal(p.pivot, ds.v, i * 5, ds.loc);
+  mmul(p.pi < 0 ? ds.place : ds.world[p.pi], L, ds.world[i]); } }
+function dsFromPose(P, place, noShadow) { const ds = newDS(); ds.v.set(P.b); ds.body.set(P.body); ds.eyes.set(P.eyes); ds.lids.set(P.lids);
+  ds.mg = P.mg; ds.mw = P.mw.slice(); ds.show = P.show; ds.hide = P.hide; ds.front = P.front; ds.place = place; if (noShadow) ds.shadowA = 0; dsWorld(ds); return ds; }
+function famW(s, ds) { return s.fam === "mouth" ? ds.mw : ds[s.fam]; }
+function shapePath(s, ds) { return s.morph ? morphPath(s.morph, famW(s, ds)) : s.path; }
+function resolveShape(id, ds) { return R.byId[id] || R.mouth[ds.mg].byId[id]; }
+const MO = [1, 0, 0, 1, 0, 0];
+function shapeM(s, ds, V, out) { mmul(V, ds.world[s.pi], out); if (s.mouth) { const o = MOUTH_O; out[4] += out[0] * o[0] + out[2] * o[1]; out[5] += out[1] * o[0] + out[3] * o[1]; } return out; }
+const TM = [1, 0, 0, 1, 0, 0], TC = [1, 0, 0, 1, 0, 0];
+function drawRig(ctx, V, ds) {
+  const list = R.list; list.length = 0;
+  for (const s of R.shapes) { if (s.hidden && !ds.show.has(s.id)) continue; if (ds.hide.has(s.part)) continue;
+    s.ez = s.zFront != null && ds.front.has(s.part) ? s.zFront : s.z; list.push(s); }
+  for (const s of R.mouth[ds.mg].slots) { s.ez = s.z; list.push(s); }
+  list.sort((a, b) => a.ez - b.ez || a.ord - b.ord);
+  for (const s of list) {
+    if (s.blur) { if (ds.shadowA <= 0.01) continue; shapeM(s, ds, V, TM); const k = ds.shadowS;
+      ctx.setTransform(TM[0], TM[1], TM[2], TM[3], TM[4], TM[5]); ctx.globalAlpha = s.opacity * ds.shadowA;
+      ctx.translate(SH_IMG.cx, SH_IMG.cy); ctx.scale(k, k); ctx.translate(-SH_IMG.cx, -SH_IMG.cy);
+      ctx.drawImage(SH_IMG.img, SH_IMG.x, SH_IMG.y); ctx.globalAlpha = 1; continue; }
+    if (s.clip) { ctx.save(); for (const id of s.clip) { const c = resolveShape(id, ds); shapeM(c, ds, V, TC);
+      ctx.setTransform(TC[0], TC[1], TC[2], TC[3], TC[4], TC[5]); ctx.clip(shapePath(c, ds)); } }
+    shapeM(s, ds, V, TM); ctx.setTransform(TM[0], TM[1], TM[2], TM[3], TM[4], TM[5]);
+    ctx.fillStyle = s.fill; ctx.fill(shapePath(s, ds));
+    if (s.clip) ctx.restore();
+  }
+}
+function mouthStats(ds) { const G = R.mouth[ds.mg]; let teeth = 0;
+  for (const s of G.slots) if (s.upper) { morphPath(s.morph, ds.mw); if (polyArea(s.morph.buf) > 25) teeth++; }
+  let open = 0; if (ds.mg === "open") { const OP = { ajar: 0.35, wide: 0.7, wide2: 1, joy: 0.85 }; G.members.forEach((m, i) => open += ds.mw[i] * OP[m]); }
+  const top = G.members.reduce((b, m, i) => ds.mw[i] > b[1] ? [m, ds.mw[i]] : b, ["", -1])[0];
+  return { teethUpper: teeth, mouthOpen: +open.toFixed(3), mouthGroup: ds.mg, mouthForm: top }; }
+
+// ==== Ом Ном: клип + параметры игры + пружины → DS ===================================================
+function makeOm(seed) {
+  const M = R.mot;
+  const om = { clip: "idle", def: R.clips.idle, t: 0, vname: "breath", dur: 3.2, keys: null, then: null, fade: null, last: R.poses.neutral,
+    p: { open: 0, speed: 0, dir: [0, -1], air: 0, look: null },
+    sq: SOD(M.squash, 0), lean: SOD(M.lean, 0), tilt: SOD(M.tilt, 0), tiltT: 0, tiltOn: false,
+    hj: 0, hjv: 0, hpPrev: null, hvPrev: null, spr: { x: 0, y: 0, vx: 0, vy: 0, ok: false }, paw: { x: 0, y: 0, vx: 0, vy: 0, ok: false },
+    sprDeg: 0, pawD: 0, g: [0, 0], leanQ: new Float64Array(16), leanQi: 0, gazeLean: 0,
+    blink: { next: 1.2, t0: -9 }, noAutoBlink: false,
+    shown: { mg: "closed", mw: Float64Array.of(1) }, pend: null,
+    simT: 0, rng: mulberry(seed || 7), place: { x: 160, y: 344, piv: FEET, rot: 0, flip: 1, fx: 1, flipT: 1 },
+    ds: newDS(), pupilNorm: [0, 0], groupSwitches: 0, lastSq: 0, lastLift: 0, lastLean: 0, frozen: false };
+  om.keys = om.def.variants.breath.keys; om.dur = 3.2;
+  computePlace(om); om.ds = dsFromPose(R.poses.neutral, om.ds.place); return om;
+}
+function omPlay(om, name, opt) {
+  const def = R.clips[name]; if (!def) return false; opt = opt || {};
+  om.fade = opt.noFade ? null : { from: om.last, t: 0, dur: def.fade != null ? def.fade : R.mot.fade };
+  om.clip = name; om.def = def; om.t = 0; om.then = opt.then || null;
+  if (def.variants) pickVariant(om, opt.variant); else { om.keys = def.keys; om.dur = def.dur; }
+  return true; }
+function pickVariant(om, force) { const vn = om.def.vnames; let v = force || vn[Math.floor(om.rng() * vn.length)];
+  if (!force && v === om.vname && vn.length > 1) v = vn[(vn.indexOf(v) + 1) % vn.length];
+  om.vname = v; om.keys = om.def.variants[v].keys; om.dur = om.def.variants[v].dur; }
+function computePlace(om) { const p = om.place;
+  om.ds.place = chain(mT(p.x, p.y), mR(p.rot), mS(p.fx * K, K), mT(-p.piv[0], -p.piv[1])); }
+function omStep(om, dt) {
+  const M = R.mot; om.simT += dt;
+  // 1. время клипа
+  om.t += dt;
+  if (om.t >= om.dur) { const d = om.def;
+    if (d.loop) { const lf = d.loopFrom || 0; om.t = lf + (om.t - om.dur) % Math.max(1e-6, om.dur - lf); if (d.variants) { om.t = 0; pickVariant(om); } }
+    else omPlay(om, om.then || "idle"); }
+  // 2. ключи
+  const Kf = sampleKeys(om.keys, om.t); let P = Kf.P, src = "key";
+  // 3. рот от open (покой, предвкушение)
+  let open = 0;
+  if (om.def.openParam) { open = Math.max(om.p.open, Kf.open);
+    if (open > 0.001) { const F = openPose(open); P = mergeFace(P, F, clamp(open / 0.15, 0, 1)); if (P.mg !== Kf.P.mg) src = "param"; } }
+  // 4. переход между клипами
+  if (om.fade) { om.fade.t += dt; const u = clamp(om.fade.t / om.fade.dur, 0, 1), us = u * u * (3 - 2 * u);
+    P = lerpPose(om.fade.from, P, us, "B"); src = "fade"; if (u >= 1) om.fade = null; }
+  om.last = P;
+  // 5. смена группы рта: из ключа — сразу (ключ стоит на пике сжатия); иначе — с задержкой и «блипом» сжатия
+  const GS = M.groupSwitch; let blip = 0;
+  if (P.mg !== om.shown.mg) {
+    if (src === "key" && !om.pend) { om.shown.mg = P.mg; om.shown.mw = P.mw.slice(); om.groupSwitches++; }
+    else if (!om.pend || om.pend.to !== P.mg) om.pend = { t: 0, to: P.mg };
+  } else { om.shown.mw = P.mw.slice(); if (om.pend) om.pend = null; }
+  if (om.flipT != null) { om.flipT += dt; const half = GS.blipMs / 2000; blip += GS.blipSq * Math.max(0, 1 - Math.abs(om.flipT - half) / half); if (om.flipT > 2 * half) om.flipT = null; }
+  if (om.pend) { om.pend.t += dt; const bt = om.pend.t, half = GS.blipMs / 2000;
+    blip = GS.blipSq * Math.max(0, 1 - Math.abs(bt - half) / half);
+    if (bt >= half && om.shown.mg !== om.pend.to) { om.shown.mg = om.pend.to; om.shown.mw = P.mg === om.pend.to ? P.mw.slice() : oneHot(R.mouth[om.pend.to].members.length, 0); om.groupSwitches++; }
+    if (bt >= 2 * half) om.pend = null; }
+  else if (om.shown.mg === P.mg) om.shown.mw = P.mw.slice();
+  // 6. числа: сжатие, наклон, подъём
+  const air = om.def.air ? 1 : om.p.air;
+  let sqT = Kf.sq + blip;
+  if (om.def.breath && !om.frozenBreath) sqT += M.breath.sq * Math.sin(2 * Math.PI * om.simT / M.breath.periodS);
+  const sq = clamp(sodStep(om.sq, dt, sqT), -M.squash.max, M.squash.max);
+  // 7. взгляд (по голове прошлого кадра): зрачки сразу (τ 70 мс), наклон тела — через 100 мс
+  const G = M.gaze, ds = om.ds, Wh = ds.world[HEAD];
+  const pl = [REST.l[0] + P.b[PUPL * 5], REST.l[1] + P.b[PUPL * 5 + 1]], pr = [REST.r[0] + P.b[PUPR * 5], REST.r[1] + P.b[PUPR * 5 + 1]];
+  let gx = 0, gy = 0, lx = 0;
+  if (om.p.look) { const q = map(minv(Wh), om.p.look[0], om.p.look[1]); const mx = (pl[0] + pr[0]) / 2, my = (pl[1] + pr[1]) / 2;
+    const dx = q[0] - mx, dy = q[1] - my, L = Math.hypot(dx, dy) || 1, a = Math.min(1, L / G.fullDistPx);
+    gx = dx / L * a * G.lookPx; gy = dy / L * a * G.lookPx; lx = dx / L * a; }
+  else if (Kf.glance[0] || Kf.glance[1]) { gx = Kf.glance[0] * G.lookPx; gy = Kf.glance[1] * G.lookPx; lx = Kf.glance[0] * 0.6; }
+  const kk = 1 - Math.exp(-dt / (G.tauMs / 1000)); om.g[0] += (gx - om.g[0]) * kk; om.g[1] += (gy - om.g[1]) * kk;
+  const nq = om.leanQ.length, delay = Math.round(G.leanDelayMs / 1000 / dt);
+  om.leanQ[om.leanQi % nq] = lx; const lxD = om.leanQi >= delay ? om.leanQ[(om.leanQi - delay) % nq] : 0; om.leanQi++;
+  om.gazeLean = G.leanMaxDeg * lxD * (air ? 0.4 : 1);
+  const lean = sodStep(om.lean, dt, Kf.lean + om.gazeLean);
+  // 8. моргание 130 мс раз в 2–5 с
+  const B = M.blink, lids = P.lids.slice(), iOpen = 0, iBlink = R.fam.lids.members.indexOf("blink");
+  if (!om.def.noBlink && !om.noAutoBlink) {
+    if (om.simT >= om.blink.next) { if (lids[iOpen] > 0.6 && !P.hide.has("pupil_l")) om.blink.t0 = om.simT; om.blink.next = om.simT + B.everyS[0] + om.rng() * (B.everyS[1] - B.everyS[0]); }
+    const bt = (om.simT - om.blink.t0) * 1000, c = B.closeMs, h = B.holdMs, o = B.openMs;
+    let e = 0; if (bt >= 0 && bt < c) e = (bt / c) ** 2; else if (bt < c + h) e = 1; else if (bt < c + h + o) { const u = (bt - c - h) / o; e = 1 - u * u * (3 - 2 * u); }
+    if (e > 0) for (let i = 0; i < 6; i++) lids[i] = lerp(lids[i], i === iBlink ? 1 : 0, e); }
+  // 9. собираем DS
+  ds.v.set(P.b); ds.body.set(P.body); ds.eyes.set(P.eyes); ds.lids.set(lids);
+  ds.mg = om.shown.mg; ds.mw = om.shown.mw; ds.show = P.show; ds.hide = P.hide; ds.front = P.front;
+  // зрачки: покой + поза + взгляд, зажим в эллипс СВОЕГО глаза (формы глаз смешаны теми же весами)
+  for (let e = 0; e < 2; e++) { const id = e ? PUPR : PUPL, side = e ? "r" : "l", base = e ? pr : pl;
+    let cx = 0, cy = 0, rx = 0, ry = 0; ["neutral", "wide", "wide2"].forEach((f, i) => { const T = TRAVEL[f][side], w = P.eyes[i];
+      cx += w * T.center[0]; cy += w * T.center[1]; rx += w * T.radii[0]; ry += w * T.radii[1]; });
+    // поза с зрачком вне эллипса (грустный — зрачки внизу под веками): ход вокруг позы, в 0,15 радиуса
+    const qb = Math.hypot((base[0] - cx) / rx, (base[1] - cy) / ry), wo = clamp((qb - 0.9) / 0.2, 0, 1);
+    cx = lerp(cx, base[0], wo); cy = lerp(cy, base[1], wo); rx = lerp(rx, rx * 0.15, wo); ry = lerp(ry, ry * 0.15, wo);
+    let px = base[0] + om.g[0], py = base[1] + om.g[1]; const qx = (px - cx) / rx, qy = (py - cy) / ry, ql = Math.hypot(qx, qy);
+    if (ql > 1) { px = cx + qx / ql * rx; py = cy + qy / ql * ry; }
+    om.pupilNorm[e] = Math.min(ql, 1);
+    ds.v[id * 5] = px - REST[side][0]; ds.v[id * 5 + 1] = py - REST[side][1]; }
+  // тело: сжатие от лап (в воздухе — от центра), растяжение по скорости, наклон, подъём
+  const lift = Kf.lift; const bv = ds.v, k = BODY * 5;
+  const Q = [lerp(FEET[0], CENTER[0], air), lerp(FEET[1], CENTER[1], air)];
+  const st = M.speedStretch.max * om.p.speed; om.stretch = st; let ux = om.p.dir[0], uy = om.p.dir[1]; const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
+  const a = 1 + st, b = 1 / (1 + st);
+  const Sv = [a * ux * ux + b * uy * uy, (a - b) * ux * uy, (a - b) * ux * uy, a * uy * uy + b * ux * ux, 0, 0];
+  ds.over[BODY] = chain(mT(bv[k], bv[k + 1] - lift), mT(FEET[0], FEET[1]), mR(bv[k + 2] + lean), mT(-FEET[0], -FEET[1]),
+    mT(Q[0], Q[1]), mS(1 / (1 + sq), 1 + sq), Sv, mT(-Q[0], -Q[1]), mT(FEET[0], FEET[1]), mS(bv[k + 3], bv[k + 4]), mT(-FEET[0], -FEET[1]));
+  // голова отстаёт от ускорения тела, росток и лапы — пружины (значения с прошлого шага)
+  ds.v[HEAD * 5 + 1] += om.hj;
+  const S = M.sprout; ds.v[SPR1 * 5 + 2] += S.gains[0] * om.sprDeg; ds.v[SPR2 * 5 + 2] += S.gains[1] * om.sprDeg; ds.v[SPR3 * 5 + 2] += S.gains[2] * om.sprDeg;
+  for (const n in M.paws.gains) ds.v[R.bi[n] * 5 + 2] += clamp(-M.paws.gains[n] * om.pawD, -M.paws.maxDeg, M.paws.maxDeg) * air;
+  ds.shadowA = air ? 0 : clamp(1 - lift / 260, 0, 1); ds.shadowS = clamp(1 - lift / 360, 0.5, 1);
+  // 10. размещение и мир
+  if (om.tiltOn) om.place.rot = clamp(sodStep(om.tilt, dt, clamp(om.tiltT, -M.tilt.maxDeg, M.tilt.maxDeg)), -M.tilt.maxDeg, M.tilt.maxDeg);
+  // разворот: зеркало за один кадр (голову в 3D не крутим), с тем же «блипом» сжатия, что и смена группы рта
+  if (om.place.fx !== om.place.flip) { om.place.fx = om.place.flip; om.flipT = 0; om.groupSwitches += 0; }
+  computePlace(om); dsWorld(ds);
+  // 11. пружины вторичного движения (мир этого кадра → значения на следующий)
+  secondary(om, dt, air);
+  om.lastSq = sq; om.lastLift = lift; om.lastLean = lean; om.open = open;
+}
+function secondary(om, dt, air) {
+  const M = R.mot, ds = om.ds, Wb = ds.world[BODY], Wh = ds.world[HEAD];
+  // голова: инерция вертикального ускорения точки шеи (в px рига)
+  const hp = map(Wb, R.parts[HEAD].pivot[0], R.parts[HEAD].pivot[1]);
+  if (om.hpPrev) { const vx = (hp[0] - om.hpPrev[0]) / dt, vy = (hp[1] - om.hpPrev[1]) / dt;
+    if (om.hvPrev) { const ax = (vx - om.hvPrev[0]) / dt, ay = (vy - om.hvPrev[1]) / dt; const iv = minv(Wb); const al = [iv[0] * ax + iv[2] * ay, iv[1] * ax + iv[3] * ay];
+      const H = M.head, w = 2 * Math.PI * H.f; for (let i = 0; i < 2; i++) { const h = dt / 2; om.hjv += h * (-w * w * om.hj - 2 * H.zeta * w * om.hjv - H.gain * al[1]); om.hj += h * om.hjv; }
+      om.hj = clamp(om.hj, -H.maxPx, H.maxPx); }
+    om.hvPrev = [vx, vy]; }
+  om.hpPrev = hp;
+  // росток: кончик — точка на пружине в мире; отклонение угла вокруг основания → три звена
+  const S = M.sprout, B0 = R.parts[SPR1].pivot, tw = map(Wh, S.tip[0], S.tip[1]), sp = om.spr;
+  if (!sp.ok) { sp.x = tw[0]; sp.y = tw[1]; sp.vx = sp.vy = 0; sp.ok = true; }
+  ptStep(sp, dt, tw[0], tw[1], S.f, S.zeta);
+  const q = map(minv(Wh), sp.x, sp.y); let dA = Math.atan2(q[1] - B0[1], q[0] - B0[0]) - Math.atan2(S.tip[1] - B0[1], S.tip[0] - B0[0]);
+  dA = ((dA + 3 * Math.PI) % (2 * Math.PI)) - Math.PI; om.sprDeg = clamp(dA / D2R, -S.maxDeg, S.maxDeg);
+  // лапы: точка низа тела на пружине; боковое отставание → поворот долей (только в воздухе)
+  const Pw = M.paws, pt = map(Wb, Pw.point[0], Pw.point[1]), pw = om.paw;
+  if (!pw.ok) { pw.x = pt[0]; pw.y = pt[1]; pw.vx = pw.vy = 0; pw.ok = true; }
+  ptStep(pw, dt, pt[0], pt[1], Pw.f, Pw.zeta);
+  const ql = map(minv(Wb), pw.x, pw.y); om.pawD = (ql[0] - Pw.point[0]);
+}
+function omSettle(om) { om.sq.yd = 0; om.lean.yd = 0; om.spr.ok = false; om.paw.ok = false; om.hj = om.hjv = 0; om.hpPrev = om.hvPrev = null; om.g = [0, 0]; om.pend = null; }
+
+// ==== Кадры v2 (как в играх): стоячие кадры — OMS выше, позы — картинки 640×608 (сдвиг 64 px) =========
+const V2P = {}, V2P_NAMES = ["hang", "fly", "fly_wide", "reach", "wave1", "wave2"];
+const v2Loaded = Promise.all(V2P_NAMES.map((n) => new Promise((res) => { const i = new Image(); V2P[n] = i; i.onload = i.onerror = res; i.src = "assets/omnom-rig/v2/" + n + ".png"; })));
+// какой кадр v2 показала бы игра в этот момент клипа (смена кадров, без сквоша — как сейчас в играх)
+function v2Frame(om) {
+  const t = om.t, o = om.open || 0;
+  const byOpen = o < 0.15 ? "neutral" : o < 0.48 ? "ajar" : o < 0.82 ? "wide" : "wide2";
+  switch (om.clip) {
+    case "eat": return t < 0.05 ? "wide2" : t < 0.5 ? (Math.floor(t * 12) % 2 ? "chew2" : "chew") : "neutral";
+    case "joy": return t >= 0.08 && t < 1.3 ? "joy" : "neutral";
+    case "oops": return t < 0.07 ? "ajar" : t < 0.3 ? "wide" : "sad";
+    case "reach": return t >= 0.28 && t < 1.3 ? "pose:reach" : t >= 0.1 ? "ajar" : "neutral";
+    case "wave": return t >= 0.08 && t < 0.7 ? (Math.floor((t - 0.08) / 0.13) % 2 ? "pose:wave2" : "pose:wave1") : "neutral";
+    case "hang": return "pose:hang";
+    case "fly": return "pose:fly";
+    case "flyWide": return "pose:fly_wide";
+    case "blink": return t >= 0.06 && t < 0.18 ? "blink" : "neutral";
+    default: return om.clip[0] === "@" ? (OMS.img[om.clip.slice(1)] ? om.clip.slice(1) : "pose:" + om.clip.slice(1)) : byOpen;
+  }
+}
+const v2Gaze = {};
+function drawV2(ctx, V, om) {
+  const f = v2Frame(om), pl = om.place, grounded = !om.def.air && !om.tiltOn;
+  if (f.startsWith("pose:")) { const img = V2P[f.slice(5)]; if (!img || !img.naturalWidth) return;
+    ctx.setTransform(V[0], V[1], V[2], V[3], V[4], V[5]);
+    if (grounded && OMS.img.shadow.naturalWidth) ctx.drawImage(OMS.img.shadow, pl.x - 32, pl.y - 6, 64, 12);
+    const M = mmul(V, om.ds.place); ctx.setTransform(M[0], M[1], M[2], M[3], M[4], M[5]);
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, img.naturalWidth > 600 ? -64 : 0, 0); return; }
+  ctx.setTransform(V[0], V[1], V[2], V[3], V[4], V[5]);
+  // лапы в точке place (стоя: piv = лапы); OMS ставит кадр по точке рта mx и лапам fy
+  const flip = pl.flip < 0;
+  OMS.draw(ctx, { frame: f, mx: pl.x + (flip ? -1 : 1) * -2.08, my: pl.y - 19.98, fy: pl.y, flip, shadow: grounded, now: om.simT * 1000,
+    tx: om.p.look ? om.p.look[0] : undefined, ty: om.p.look ? om.p.look[1] : undefined }, v2Gaze);
+}
+
+// ==== Сцена ==========================================================================================
+const S = { scene: "scene", view: "rig", t: 0, candy: null, kind: null, aimT0: 0, openS: 0, oopsDone: false, frozen: false,
+  finger: null, ptrDown: false, apiLook: undefined, pultLook: null, lookSlider: false,
+  P: { open: 0, speed: 0, look: -150 }, staticDS: null, pose: null };
+let om = null, SW = null;
+const RULES = {
+  scene: "Сценка 15 с: прицел → конфета летит → ест → радость; промах → «ой»; потом тянется к рогатке и машет. Переключай «Кадры v2 / Риг».",
+  swing: "Качели: висит на верёвке, раскачивается и перелетает на другую — тело, росток и лапы догоняют пружинами.",
+  pult: "Пульт: ползунки рта, скорости (растяжение) и взгляда; кнопки — клипы. Тап по полю — посмотреть туда.",
+};
+function placeGround(pos) { const p = om.place; p.x = pos[0]; p.y = pos[1]; p.piv = FEET; p.rot = 0; p.flip = p.fx = 1;
+  om.tiltOn = false; om.p.air = 0; om.p.speed = 0; om.p.dir = [0, -1]; computePlace(om); }
+function mouthWorld() { return map(om.ds.world[MOUTH], MOUTH_O[0], MOUTH_O[1]); }
+function freshOm() { om = makeOm(7); }
+function sceneReset() { S.t = 0; S.kind = null; S.oopsDone = false; S.candy = { x: TUNE.sling[0], y: TUNE.sling[1], vx: 0, vy: 0, st: "sling", rot: 0, s: 1, t: 0 }; }
+function setScene(name, quiet) {
+  S.scene = name; S.frozen = false; S.staticDS = null; S.pose = null; freshOm(); SW = null;
+  if (name === "scene") { sceneReset(); placeGround(TUNE.om); S.candy.s = 1; }
+  else if (name === "swing") swingInit();
+  else { placeGround(TUNE.pult); S.candy = null; }
+  omStep(om, 1e-4);
+  for (const b of document.querySelectorAll("#scn button")) b.classList.toggle("on", b.dataset.s === name);
+  document.getElementById("rules").textContent = RULES[name];
+  if (!quiet) draw();
+}
+function launchV(cx, cy, tx, ty, T) { const g = TUNE.gravity; return [(tx - cx) / T, (ty - cy - 0.5 * g * T * T) / T]; }
+function aimTarget() { const m = mouthWorld(); return S.kind === "miss" ? [m[0] + TUNE.missOver[0], m[1] + TUNE.missOver[1]] : m; }
+function fire(e) {
+  const c = S.candy;
+  if (e[1] === "aim" && c && c.st === "sling") { S.kind = e[2]; c.st = "aim"; S.aimT0 = S.t; }
+  else if (e[1] === "antic") omPlay(om, "anticipate");
+  else if (e[1] === "launch" && c && c.st === "aim") { const T = S.kind === "hit" ? TUNE.hitT : TUNE.missT, tg = aimTarget();
+    [c.vx, c.vy] = launchV(c.x, c.y, tg[0], tg[1], T); c.st = "fly"; S.oopsDone = false; }
+  else if (e[1] === "reload") S.candy = { x: TUNE.sling[0], y: TUNE.sling[1], vx: 0, vy: 0, st: "sling", rot: 0, s: 0, t: 0 };
+  else if (e[1] === "reach") omPlay(om, "reach");
+  else if (e[1] === "wave") omPlay(om, "wave");
+}
+function sceneStep(dt) {
+  const t0 = S.t; S.t += dt;
+  if (S.t >= TUNE.loop) { S.t -= TUNE.loop; sceneReset(); S.t = 0; }
+  else for (const e of TUNE.events) if (e[0] > t0 && e[0] <= S.t) fire(e);
+  const c = S.candy, g = TUNE.gravity, m = mouthWorld(); let openRaw = 0;
+  if (c) {
+    c.t += dt; if (c.s < 1 && c.st === "sling") c.s = Math.min(1, c.s + dt / 0.25);
+    if (c.st === "aim") { const u = clamp((S.t - S.aimT0) / 0.5, 0, 1), e = u * u * (3 - 2 * u);
+      const tg = aimTarget(), v = launchV(TUNE.sling[0], TUNE.sling[1], tg[0], tg[1], 1), l = Math.hypot(v[0], v[1]) || 1;
+      const wob = Math.sin(S.t * 9) * 3 * (1 - clamp((S.t - S.aimT0) / 1.6, 0, 1));
+      c.x = TUNE.sling[0] - v[0] / l * TUNE.slingPull * e - v[1] / l * wob; c.y = TUNE.sling[1] - v[1] / l * TUNE.slingPull * e + v[0] / l * wob; }
+    else if (c.st === "fly") {
+      c.vy += g * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.rot += dt * 9;
+      const d = Math.hypot(c.x - m[0], c.y - m[1]);
+      openRaw = clamp((TUNE.openFar - d) / (TUNE.openFar - TUNE.openNear), 0, 1);
+      if (S.kind === "hit") {
+        if (d < TUNE.magnet) { c.x += (m[0] - c.x) * 0.35; c.y += (m[1] - c.y) * 0.35; }
+        if (d < TUNE.eatDist) { c.st = "eaten"; c.t = 0; omPlay(om, "eat", { then: "joy" }); }
+      } else if (!S.oopsDone && c.x > om.place.x + 4) { S.oopsDone = true; omPlay(om, "oops"); }
+      const fy = TUNE.floorY - TUNE.candyR;
+      if (c.y > fy) { c.y = fy; c.vy = Math.abs(c.vy) > 60 ? -Math.abs(c.vy) * 0.38 : 0; c.vx *= 0.8; }
+      if (c.x > W + 30 || c.x < -30) c.st = "gone";
+    } else if (c.st === "eaten") { c.x = m[0]; c.y = m[1]; if (c.t > 0.08) c.st = "gone"; }
+  }
+  S.openS += (openRaw - S.openS) * (1 - Math.exp(-dt / TUNE.openTau));
+  om.p.open = S.openS;
+  om.p.look = lookOverride() || (c && (c.st === "sling" || c.st === "aim" || c.st === "fly") ? [c.x, c.y] : null);
+}
+function lookOverride() { return S.apiLook !== undefined && S.apiLook !== null ? S.apiLook : S.finger; }
+
+// ---- качели: маятник на верёвке, отпускание у верха, полёт к другой верёвке ---------------------------
+function swingInit() {
+  const s = TUNE.swing, g = TUNE.gravity, L = s.L;
+  const w = Math.sqrt(2 * g / L * (Math.cos(s.release) - Math.cos(s.amp)));
+  const rx = L * Math.sin(s.release), ry = L * Math.cos(s.release), vx = L * w * Math.cos(s.release), vy = -L * w * Math.sin(s.release);
+  const tt = (-vy + Math.sqrt(vy * vy - 2 * g * (ry - L))) / g, D = rx + vx * tt;   // где падающая дуга проходит конец верёвки
+  SW = { hooks: [{ x: W / 2 - D / 2, y: s.hookY, th: 0, w: 0 }, { x: W / 2 + D / 2, y: s.hookY, th: 0, w: 0 }],
+    cur: 0, next: 1, ph: "hang", th: -s.amp * 0.9, w: 0, Lc: L, cross: 0, pos: [0, 0], vel: [0, 0], catches: 0 };
+  const p = om.place; p.piv = GRIP_HANG; p.flip = p.fx = -1; p.rot = -SW.th / D2R; om.tiltOn = true; om.p.air = 1;
+  sodReset(om.tilt, p.rot); omPlay(om, "hang", { noFade: true }); S.candy = null;
+  const h = SW.hooks[0]; p.x = h.x + L * Math.sin(SW.th); p.y = h.y + L * Math.cos(SW.th); computePlace(om);
+}
+function toLocalDir(vx, vy) { const r = -om.place.rot * D2R, c = Math.cos(r), s = Math.sin(r); return [(vx * c - vy * s) * Math.sign(om.place.fx || 1), vx * s + vy * c]; }
+function swingStep(dt) {
+  const s = TUNE.swing, g = TUNE.gravity, sw = SW, p = om.place;
+  for (let i = 0; i < 2; i++) if (!(sw.ph === "hang" && sw.cur === i)) { const h = sw.hooks[i];
+    h.w += -(g / s.L) * Math.sin(h.th) * dt; h.w *= Math.exp(-dt * s.ropeDamp); h.th += h.w * dt; }  // пустая верёвка лёгкая — быстро успокаивается
+  if (sw.ph === "hang") {
+    sw.Lc = lerp(sw.Lc, s.L, 1 - Math.exp(-dt / s.ropeTau)); const Lc = sw.Lc;
+    const E = 0.5 * sw.w * sw.w - (g / Lc) * Math.cos(sw.th), Et = -(g / Lc) * Math.cos(s.amp);
+    const acc = -(g / Lc) * Math.sin(sw.th) + clamp(s.pump * (Et - E), -3, 3) * (sw.w >= 0 ? 1 : -1);
+    sw.w += acc * dt; const th0 = sw.th; sw.th += sw.w * dt; if (th0 * sw.th < 0) sw.cross++;
+    const h = sw.hooks[sw.cur]; h.th = sw.th; h.w = sw.w;
+    const other = sw.hooks[1 - sw.cur], dir = Math.sign(other.x - h.x), want = dir > 0 ? -1 : 1;
+    if (p.flip !== want && Math.abs(sw.w) < 0.5) p.flip = want;          // разворот — у края качания
+    p.x = h.x + Lc * Math.sin(sw.th); p.y = h.y + Lc * Math.cos(sw.th); p.piv = GRIP_HANG;
+    om.tiltT = -sw.th / D2R;
+    om.p.speed = clamp(Math.abs(sw.w) * Lc / 420, 0, 1); om.p.dir = toLocalDir(Math.sin(sw.th), Math.cos(sw.th));
+    if (sw.cross >= s.minCross && sw.th * dir >= s.release && sw.w * dir > 0 && Math.abs(E - Et) < 0.6 && p.fx === want) {
+      sw.vel = [Lc * sw.w * Math.cos(sw.th), -Lc * sw.w * Math.sin(sw.th)];
+      const c = map(om.ds.place, CENTER[0], CENTER[1]); sw.pos = [c[0], c[1]]; sw.ph = "fly"; sw.next = 1 - sw.cur;
+      p.piv = CENTER; p.x = c[0]; p.y = c[1]; omPlay(om, "fly"); }
+  } else {
+    sw.vel[1] += g * dt; sw.pos[0] += sw.vel[0] * dt; sw.pos[1] += sw.vel[1] * dt;
+    p.x = sw.pos[0]; p.y = sw.pos[1]; p.piv = CENTER;
+    om.tiltT = clamp(sw.vel[0] * s.flyTiltPerU, -26, 26);
+    om.p.speed = clamp(Math.hypot(sw.vel[0], sw.vel[1]) / 480, 0, 1); om.p.dir = toLocalDir(sw.vel[0], sw.vel[1]);
+    const tg = sw.hooks[sw.next], ex = tg.x + s.L * Math.sin(tg.th), ey = tg.y + s.L * Math.cos(tg.th);
+    const gp = map(om.ds.place, GRIP_HANG[0], GRIP_HANG[1]), d = Math.hypot(gp[0] - ex, gp[1] - ey);
+    if (d < s.reachD && om.clip === "fly") omPlay(om, "hang");                    // тянется к верёвке
+    if (d < s.catchR && sw.vel[1] > -40) {
+      sw.cur = sw.next; sw.ph = "hang"; sw.th = Math.atan2(gp[0] - tg.x, gp[1] - tg.y); sw.Lc = Math.hypot(gp[0] - tg.x, gp[1] - tg.y);
+      sw.w = (sw.vel[0] * Math.cos(sw.th) - sw.vel[1] * Math.sin(sw.th)) / sw.Lc; sw.cross = 0; sw.catches++;
+      p.piv = GRIP_HANG; p.x = gp[0]; p.y = gp[1];
+      if (om.clip !== "hang") omPlay(om, "hang"); }
+    if (sw.pos[1] > H + 120) { swingInit(); }
+  }
+  om.p.look = lookOverride() || null;
+}
+// ---- пульт ----------------------------------------------------------------------------------------
+function pultStep() {
+  const p = om.place, air = !!om.def.air; p.x = TUNE.pult[0]; p.y = TUNE.pult[1] - (air ? TUNE.airUp : 0);
+  om.p.open = S.P.open; om.p.speed = S.P.speed; om.p.dir = [0, -1]; om.p.air = 0;
+  let look = lookOverride() || S.pultLook;
+  if (!look && S.lookSlider) { const a = S.P.look * D2R, e = map(om.ds.world[HEAD], 236, 210); look = [e[0] + 200 * Math.cos(a), e[1] + 200 * Math.sin(a)]; }
+  om.p.look = look || null;
+}
+function step() {
+  if (S.frozen || !om) return;
+  if (S.scene === "scene") sceneStep(DT); else if (S.scene === "swing") swingStep(DT); else pultStep();
+  omStep(om, DT);
+}
+
+// ==== Рисование =====================================================================================
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d"), stage = document.getElementById("stage");
+let scale = 1, dpr = 1;
+function fit() {
+  const r = stage.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return;
+  const s = Math.min((r.width - 12) / W, (r.height - 14) / H); dpr = Math.min(TUNE.dprMax, window.devicePixelRatio || 1);
+  const cw = Math.floor(W * s), ch = Math.floor(H * s);
+  if (cv.width !== Math.round(cw * dpr) || cv.height !== Math.round(ch * dpr)) { cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr); }
+  cv.style.width = cw + "px"; cv.style.height = ch + "px";
+  cv.style.left = Math.floor((r.width - cw) / 2) + "px"; cv.style.top = Math.floor((r.height - ch - 6) / 2) + "px"; scale = s;
+}
+function setV(c, V) { c.setTransform(V[0], V[1], V[2], V[3], V[4], V[5]); }
+function drawBack(c) {
+  c.fillStyle = C.wall; c.fillRect(0, 0, W, H);
+  c.fillStyle = C.wall2; for (let x = 14; x < W; x += 46) c.fillRect(x, 0, 14, TUNE.floorY);
+  const F = TUNE.floorY; c.fillStyle = C.card; c.fillRect(0, F, W, H - F);
+  c.fillStyle = C.shade; c.fillRect(0, F, W, 3); c.fillStyle = "rgba(90,46,16,.18)"; c.fillRect(0, F - 4, W, 4);
+  c.fillStyle = C.card2; for (let x = 6; x < W; x += 22) c.fillRect(x, F + 16, 12, 3);
+}
+function drawCandy(c, x, y, rot, s) { if (s <= 0.01) return; const r = TUNE.candyR * s;
+  c.save(); c.translate(x, y); c.rotate(rot);
+  c.fillStyle = C.wrap; c.strokeStyle = C.ink; c.lineWidth = 1.4;
+  for (const d of [-1, 1]) { c.beginPath(); c.moveTo(d * r * 0.8, 0); c.lineTo(d * r * 1.75, -r * 0.62); c.lineTo(d * r * 1.75, r * 0.62); c.closePath(); c.fill(); c.stroke(); }
+  c.beginPath(); c.arc(0, 0, r, 0, 7); c.fillStyle = C.candy; c.fill(); c.stroke();
+  c.beginPath(); c.arc(0, 0, r * 0.62, 0.6, 2.5); c.strokeStyle = C.candy2; c.lineWidth = r * 0.22; c.stroke();
+  c.beginPath(); c.ellipse(-r * 0.32, -r * 0.38, r * 0.3, r * 0.18, -0.6, 0, 7); c.fillStyle = "rgba(255,255,255,.85)"; c.fill();
+  c.restore(); }
+function drawSling(c, front) { const [x, y] = TUNE.sling, F = TUNE.floorY, cd = S.candy;
+  const tipL = [x - 13, y - 6], tipR = [x + 13, y - 6], pouch = cd && (cd.st === "aim" || cd.st === "sling") ? [cd.x, cd.y + 2] : [x, y + 2];
+  if (!front) { c.lineCap = "round"; c.strokeStyle = C.cut; c.lineWidth = 9;
+    c.beginPath(); c.moveTo(x, F); c.lineTo(x, y + 22); c.lineTo(tipL[0], tipL[1]); c.moveTo(x, y + 22); c.lineTo(tipR[0], tipR[1]); c.stroke();
+    c.strokeStyle = C.card; c.lineWidth = 6; c.stroke();
+    c.strokeStyle = C.cut; c.lineWidth = 2.2; c.beginPath(); c.moveTo(tipR[0], tipR[1]); c.lineTo(pouch[0], pouch[1]); c.stroke(); }
+  else { c.strokeStyle = C.cut; c.lineWidth = 2.2; c.lineCap = "round"; c.beginPath(); c.moveTo(tipL[0], tipL[1]); c.lineTo(pouch[0], pouch[1]); c.stroke(); } }
+function drawAim(c) { const cd = S.candy; if (!cd || cd.st !== "aim") return;
+  const T = S.kind === "hit" ? TUNE.hitT : TUNE.missT, tg = aimTarget(); const v = launchV(cd.x, cd.y, tg[0], tg[1], T);
+  const wob = 0.1 * Math.sin(S.t * 7) * (1 - clamp((S.t - S.aimT0) / 1.6, 0, 1)), cs = Math.cos(wob), sn = Math.sin(wob);
+  const vx = v[0] * cs - v[1] * sn, vy = v[0] * sn + v[1] * cs, g = TUNE.gravity;
+  c.fillStyle = C.dot; c.globalAlpha = 0.9 * clamp((S.t - S.aimT0) / 0.3, 0, 1);
+  for (let i = 1; i <= 7; i++) { const tt = i * 0.06; c.beginPath(); c.arc(cd.x + vx * tt, cd.y + vy * tt + 0.5 * g * tt * tt, 2.6 - i * 0.18, 0, 7); c.fill(); }
+  c.globalAlpha = 1; }
+function drawHookBtn(c, x, y) { c.fillStyle = C.cream; c.strokeStyle = C.ink; c.lineWidth = 2; c.beginPath(); c.arc(x, y, 9, 0, 7); c.fill(); c.stroke();
+  c.fillStyle = C.ink; for (const [dx, dy] of [[-3, -3], [3, -3], [-3, 3], [3, 3]]) { c.beginPath(); c.arc(x + dx, y + dy, 1.3, 0, 7); c.fill(); } }
+function drawRope(c, x0, y0, x1, y1) { c.lineCap = "round"; c.strokeStyle = C.cut; c.lineWidth = 3.6; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke();
+  c.strokeStyle = C.cream2; c.lineWidth = 1.6; c.setLineDash([4, 3]); c.stroke(); c.setLineDash([]); }
+function drawOm(c, V, view) {
+  if (S.staticDS) { if (view === "rig") drawRig(c, V, S.staticDS); else { const keep = om.clip; om.clip = "@" + S.staticName; drawV2(c, V, om); om.clip = keep; } return; }
+  if (view === "rig") drawRig(c, V, om.ds); else drawV2(c, V, om);
+}
+function drawField(c, V, view, noLabel) {
+  setV(c, V); c.imageSmoothingEnabled = true; drawBack(c);
+  if (S.scene === "scene") { drawSling(c, false); drawAim(c); }
+  if (S.scene === "swing" && SW) { const s = TUNE.swing;
+    for (let i = 0; i < 2; i++) { const h = SW.hooks[i]; let ex, ey;
+      if (SW.ph === "hang" && SW.cur === i) { const hb = R.byId["hand_l.fill"].nums, b = bbox(hb); [ex, ey] = map(om.ds.world[HANDL], (b[0] + b[2]) / 2, (b[1] + b[3]) / 2); }
+      else { ex = h.x + s.L * Math.sin(h.th); ey = h.y + s.L * Math.cos(h.th); }
+      drawRope(c, h.x, h.y, ex, ey); if (!(SW.ph === "hang" && SW.cur === i)) { c.fillStyle = C.cut; c.beginPath(); c.arc(ex, ey, 2.6, 0, 7); c.fill(); }
+      drawHookBtn(c, h.x, h.y); } }
+  drawOm(c, V, view); setV(c, V);
+  if (S.scene === "scene") { drawSling(c, true); const cd = S.candy;
+    if (cd && cd.st !== "gone") drawCandy(c, cd.x, cd.y, cd.rot, cd.st === "eaten" ? Math.max(0, 1 - cd.t / 0.08) : cd.s); }
+  const lk = om && om.p.look; if (S.scene === "pult" && lk) { c.strokeStyle = C.act || "#E8458A"; c.strokeStyle = "#E8458A"; c.lineWidth = 1.5;
+    c.beginPath(); c.arc(lk[0], lk[1], 4, 0, 7); c.moveTo(lk[0] - 7, lk[1]); c.lineTo(lk[0] + 7, lk[1]); c.moveTo(lk[0], lk[1] - 7); c.lineTo(lk[0], lk[1] + 7); c.stroke(); }
+  if (!noLabel) { const txt = (view === "rig" ? "Риг" : "Кадры v2") + (S.scene === "scene" ? " · " + S.t.toFixed(1).replace(".", ",") + " с" : "") + (om ? " · " + om.clip : "");
+    c.font = "800 9px Nunito, ui-rounded, system-ui, sans-serif"; const w = c.measureText(txt).width + 12;
+    c.fillStyle = view === "rig" ? "#E8458A" : C.cream; c.strokeStyle = view === "rig" ? "#4F0C2C" : C.ink; c.lineWidth = 1.2;
+    c.beginPath(); c.roundRect ? c.roundRect(6, 6, w, 15, 7.5) : c.rect(6, 6, w, 15); c.fill(); c.stroke();
+    c.fillStyle = view === "rig" ? "#fff" : C.ink; c.textBaseline = "middle"; c.fillText(txt, 12, 14); }
+}
+const drawTimes = [];
+function draw() {
+  fit(); if (!om) return;
+  const t0 = performance.now();
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
+  const k = scale * dpr; drawField(ctx, [k, 0, 0, k, 0, 0], S.view);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  drawTimes.push(performance.now() - t0); if (drawTimes.length > 240) drawTimes.shift();
+}
+
+// ==== Цикл: фиксированный шаг 1/60, часы симуляции ====================================================
+let manual = false, acc = 0, lastT = 0; const frameTimes = [];
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (lastT) { frameTimes.push(now - lastT); if (frameTimes.length > 240) frameTimes.shift();
+    if (!manual) { acc += Math.min(0.05, (now - lastT) / 1000); let n = 0; while (acc >= DT && n < 3) { step(); acc -= DT; n++; } if (n === 3) acc = 0; } }
+  lastT = now; draw();
+}
+
+// ==== Ввод и пульт ==================================================================================
+const $ = (id) => document.getElementById(id);
+function toField(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; }
+cv.addEventListener("pointerdown", (e) => { e.preventDefault(); S.ptrDown = true; try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+  const p = toField(e); if ($("cFinger").checked) S.finger = p; else if (S.scene === "pult") { S.pultLook = p; S.lookSlider = false; } });
+cv.addEventListener("pointermove", (e) => { if ($("cFinger").checked && (S.ptrDown || e.pointerType === "mouse")) S.finger = toField(e); });
+function ptrUp(e) { S.ptrDown = false; if (e.pointerType !== "mouse") S.finger = null; }
+cv.addEventListener("pointerup", ptrUp); cv.addEventListener("pointercancel", ptrUp);
+cv.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") S.finger = null; });
+cv.addEventListener("contextmenu", (e) => e.preventDefault());
+$("cFinger").addEventListener("change", () => { if (!$("cFinger").checked) S.finger = null; });
+function toPult() { if (S.scene !== "pult") setScene("pult"); else if (S.frozen) { S.frozen = false; S.staticDS = null; } }
+function setView(v) { S.view = v; for (const b of document.querySelectorAll("#ab button")) b.classList.toggle("on", b.dataset.v === v); draw(); }
+for (const b of document.querySelectorAll("#ab button")) b.addEventListener("click", () => setView(b.dataset.v));
+for (const b of document.querySelectorAll("#scn button")) b.addEventListener("click", () => setScene(b.dataset.s));
+function syncSliders() { $("sOpen").value = S.P.open; $("sSpeed").value = S.P.speed; $("sLook").value = S.P.look;
+  $("oOpen").textContent = (+S.P.open).toFixed(2).replace(".", ","); $("oSpeed").textContent = (+S.P.speed).toFixed(2).replace(".", ","); }
+$("sOpen").addEventListener("input", (e) => { toPult(); S.P.open = +e.target.value; syncSliders(); });
+$("sSpeed").addEventListener("input", (e) => { toPult(); S.P.speed = +e.target.value; syncSliders(); });
+$("sLook").addEventListener("input", (e) => { toPult(); S.P.look = +e.target.value; S.lookSlider = true; S.pultLook = null; });
+const CLIP_BTNS = [["eat", "ест"], ["anticipate", "ждёт"], ["idle", "покой"], ["joy", "радость"], ["oops", "ой"], ["reach", "тянется"],
+  ["wave", "машет"], ["blink", "моргает"], ["hang", "висит"], ["fly", "летит"], ["reset", "сброс"]];
+for (const [id, name] of CLIP_BTNS) { const b = document.createElement("button"); b.textContent = name; b.dataset.clip = id;
+  b.addEventListener("click", () => { toPult();
+    if (id === "reset") { S.P.open = 0; S.P.speed = 0; S.lookSlider = false; S.pultLook = null; syncSliders(); omPlay(om, "idle"); return; }
+    omPlay(om, id); });
+  $("clips").appendChild(b); }
+new ResizeObserver(() => draw()).observe(stage);
+window.addEventListener("orientationchange", () => draw());
+
+// ==== Проверки: позы с заморозкой, листы, зрачки, запаздывание ростка ===================================
+function poseAt(clip, t, o) {
+  o = o || {}; if (S.scene !== "pult") setScene("pult", true);
+  freshOm(); placeGround(TUNE.pult); om.noAutoBlink = true; S.staticDS = null;
+  S.P.open = o.open || 0; S.P.speed = o.speed || 0; S.lookSlider = false; S.pultLook = o.look || null;
+  if (!omPlay(om, clip, { noFade: true, variant: o.variant })) return false;
+  const n = Math.round(t / DT); S.frozen = false;
+  pultStep(); omStep(om, 1e-4); om.t = 0; om.simT = 0;
+  for (let i = 0; i < n; i++) { pultStep(); omStep(om, DT); }
+  S.frozen = true; S.pose = { clip, t }; return true;
+}
+function staticClip(name) { if (!R.clips["@" + name]) R.clips["@" + name] = compileClip({ loop: true, dur: 1, noBlink: true, keys: [{ t: 0, pose: name }, { t: 1 }] }); return "@" + name; }
+function seek(scene, t) { setScene(scene, true); const n = Math.round(t / DT); for (let i = 0; i < n; i++) step(); S.frozen = true; S.pose = { scene, t }; }
+function sheet(o) {
+  const crop = o.crop, pxu = o.pxu || 2.5, cols = o.cols || 8, fr = o.frames, lab = 18, top = o.title ? 30 : 0;
+  const cw = Math.round(crop[2] * pxu), ch = Math.round(crop[3] * pxu) + lab, rows = Math.ceil(fr.length / cols);
+  const c = document.createElement("canvas"); c.width = cw * cols; c.height = top + ch * rows; const x = c.getContext("2d");
+  x.fillStyle = "#F8F4EC"; x.fillRect(0, 0, c.width, c.height);
+  if (o.title) { x.fillStyle = "#4A2512"; x.font = "700 16px system-ui, sans-serif"; x.textBaseline = "middle"; x.fillText(o.title, 10, 15); }
+  const keepView = S.view;
+  fr.forEach((f, i) => {
+    if (f.seek != null) seek(f.scene || "scene", f.seek); else if (f.rigPose) { poseAt(staticClip(f.rigPose), 0); } else poseAt(f.clip, f.t, f);
+    const cx = (i % cols) * cw, cy = top + Math.floor(i / cols) * ch;
+    if (o.follow) { const b = map(om.ds.world[BODY], CENTER[0], CENTER[1] - 40); crop[0] = b[0] - crop[2] / 2; crop[1] = b[1] - crop[3] / 2; }  // кадр за Омом Номом
+    x.save(); x.beginPath(); x.rect(cx, cy + lab, cw, ch - lab); x.clip();
+    drawField(x, [pxu, 0, 0, pxu, cx - crop[0] * pxu, cy + lab - crop[1] * pxu], f.view || o.view || "rig", true);
+    x.restore(); x.setTransform(1, 0, 0, 1, 0, 0);
+    x.fillStyle = "#4A2512"; x.font = "600 12px system-ui, sans-serif"; x.textBaseline = "middle"; x.fillText(f.label || "", cx + 6, cy + lab / 2);
+    x.strokeStyle = "rgba(74,37,18,.25)"; x.strokeRect(cx + 0.5, cy + 0.5, cw - 1, ch - 1);
+  });
+  S.view = keepView; return c.toDataURL("image/png");
+}
+// зрачок вне своего глаза (белок ∩ половина со швом): рисуем маску, поверх зрачок в режиме source-out — остаток = вне глаза
+function pupilOutside(ds) {
+  const c = pupilOutside.c || (pupilOutside.c = document.createElement("canvas")); c.width = 600; c.height = 600;
+  const x = c.getContext("2d", { willReadFrequently: true }), V = mmul(mT(40, 40), minv(ds.place)), out = [0, 0], tot = [0, 0], T = [1, 0, 0, 1, 0, 0];
+  ["L", "R"].forEach((side, e) => {
+    x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = "source-over"; x.clearRect(0, 0, 600, 600);
+    x.save(); const half = R.byId["eyes.half" + side]; shapeM(half, ds, V, T); setV(x, T); x.clip(shapePath(half, ds));
+    const wh = R.byId["eyes.white"]; shapeM(wh, ds, V, T); setV(x, T); x.fillStyle = "#fff"; x.fill(shapePath(wh, ds)); x.restore();
+    const pu = R.byId[(e ? "pupil_r" : "pupil_l") + ".pupil"]; shapeM(pu, ds, V, T); setV(x, T);
+    x.globalCompositeOperation = "source-out"; x.fillStyle = "#000"; x.fill(pu.path);
+    const d = x.getImageData(0, 0, 600, 600).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 128) n++; out[e] = n;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = "source-over"; x.clearRect(0, 0, 600, 600); setV(x, T); x.fill(pu.path);
+    const d2 = x.getImageData(0, 0, 600, 600).data; let m = 0; for (let i = 3; i < d2.length; i += 4) if (d2[i] > 128) m++; tot[e] = m;
+  });
+  return { out, tot };
+}
+function gazeCheck(o) {
+  o = o || {}; const faces = o.faces || ["neutral", "ajar", "wide", "wide2", "half", "sadRig", "chewA", "chewB", "reach", "wave1"], dirs = o.dirs || 8, dist = o.dist || [400];
+  const rows = []; let worst = 0;
+  for (const f of faces) for (const D of dist) for (let k = 0; k < dirs; k++) {
+    const a = k / dirs * 2 * Math.PI; poseAt(staticClip(f), 0);
+    const e = map(om.ds.world[HEAD], 236, 210); S.pultLook = [e[0] + D * Math.cos(a), e[1] + D * Math.sin(a)];
+    S.frozen = false; for (let i = 0; i < 40; i++) { pultStep(); omStep(om, DT); } S.frozen = true;
+    const r = pupilOutside(om.ds); worst = Math.max(worst, r.out[0], r.out[1]);
+    rows.push({ face: f, dir: Math.round(a / D2R), dist: D, outL: r.out[0], outR: r.out[1], pxL: r.tot[0], pxR: r.tot[1], normL: +om.pupilNorm[0].toFixed(3), normR: +om.pupilNorm[1].toFixed(3) });
+  }
+  return { worst, n: rows.length, rows };
+}
+// запаздывание ростка: корреляция скоростей «куда тянет голова» и «где кончик» (мс)
+function sproutLag(clip) {
+  poseAt(clip || "joy", 0); S.frozen = false; const S0 = R.mot.sprout, a = [], b = [];
+  for (let i = 0; i < 90; i++) { pultStep(); omStep(om, DT); const tw = map(om.ds.world[HEAD], S0.tip[0], S0.tip[1]); a.push(tw[0], tw[1]); b.push(om.spr.x, om.spr.y); }
+  S.frozen = true; let best = 0, bestC = -1e9;
+  for (let lag = 0; lag <= 18; lag++) { let cc = 0; for (let i = 2 + lag; i < 90; i++) { const j = i - lag;
+    const va = [a[2 * j] - a[2 * j - 2], a[2 * j + 1] - a[2 * j - 1]], vb = [b[2 * i] - b[2 * i - 2], b[2 * i + 1] - b[2 * i - 1]]; cc += va[0] * vb[0] + va[1] * vb[1]; }
+    if (cc > bestC) { bestC = cc; best = lag; } }
+  return Math.round(best * DT * 1000);
+}
+
+// ==== Тестовый API ==================================================================================
+window.__game = {
+  ready: false,
+  getState() {
+    const r = cv.getBoundingClientRect(), ds = S.staticDS || (om && om.ds);
+    const st = { scene: S.scene, view: S.view, t: +S.t.toFixed(4), frozen: S.frozen, manual, pose: S.pose, canvas: { left: r.left, top: r.top, scale: r.width / W } };
+    if (!om) return st;
+    st.om = Object.assign({ clip: om.clip, t: +om.t.toFixed(4), variant: om.vname, open: +(om.open || 0).toFixed(3),
+      pupilNormL: +om.pupilNorm[0].toFixed(4), pupilNormR: +om.pupilNorm[1].toFixed(4), pupilsHidden: ds.hide.has("pupil_l"),
+      squash: +om.lastSq.toFixed(4), stretch: +(om.stretch || 0).toFixed(4), lean: +om.lastLean.toFixed(3), lift: +om.lastLift.toFixed(2), tilt: +om.place.rot.toFixed(3), flip: om.place.flip,
+      x: +om.place.x.toFixed(2), y: +om.place.y.toFixed(2), look: om.p.look, front: [...ds.front], sproutDeg: +om.sprDeg.toFixed(2), headJiggle: +om.hj.toFixed(2),
+      groupSwitches: om.groupSwitches, v2frame: v2Frame(om) }, mouthStats(ds));
+    if (S.candy) st.candy = { x: +S.candy.x.toFixed(2), y: +S.candy.y.toFixed(2), st: S.candy.st };
+    if (SW) st.swing = { ph: SW.ph, cur: SW.cur, th: +SW.th.toFixed(4), w: +SW.w.toFixed(4), cross: SW.cross, catches: SW.catches, hooks: SW.hooks.map((h) => [+h.x.toFixed(1), h.y]) };
+    return st;
+  },
+  act(a, p) {
+    p = p || {};
+    if (a === "omnom.play") { if (S.frozen) { S.frozen = false; S.staticDS = null; } return omPlay(om, p.clip); }
+    if (a === "omnom.set") { const v = +p.v;
+      if (p.param === "open" || p.param === "speed") { S.P[p.param] = v; syncSliders(); om.p[p.param] = v; }
+      else if (p.param === "look") { S.P.look = v; S.lookSlider = true; }
+      else if (p.param === "air") om.p.air = v; else if (p.param === "flip") om.place.flip = v < 0 ? -1 : 1; else return false;
+      return true; }
+    if (a === "omnom.look") { S.apiLook = p && p.x != null ? [+p.x, +p.y] : null; return true; }
+    if (a === "pose") return poseAt(p.clip, +p.t || 0, p);
+    if (a === "rigPose") { if (S.scene !== "pult") setScene("pult", true); S.staticName = p.name; S.staticDS = dsFromPose(R.poses[p.name], om.ds.place); S.frozen = true; return true; }
+    if (a === "unfreeze") { S.frozen = false; S.staticDS = null; S.pose = null; return true; }
+    if (a === "view") { setView(p.view || p); return true; }
+    if (a === "scene") { setScene(p.scene || p); return true; }
+    if (a === "seek") { seek(p.scene || "scene", +p.t || 0); return true; }
+    if (a === "clock") { manual = !!p.manual; return true; }
+    if (a === "step") { const n = typeof p === "number" ? p : p.n || 1; const fz = S.frozen; S.frozen = false; for (let i = 0; i < n; i++) step(); S.frozen = fz; draw(); return true; }
+    if (a === "gazeCheck") return gazeCheck(p);
+    if (a === "sheet") return sheet(p);
+    if (a === "sproutLag") return sproutLag(p.clip);
+    if (a === "draw") { draw(); return true; }
+    return false;
+  },
+  metrics() {
+    const q = (arr, f) => { const s = arr.slice().sort((x, y) => x - y); return s.length ? s[Math.min(s.length - 1, Math.floor(s.length * f))] : 0; };
+    const mean = frameTimes.reduce((s, x) => s + x, 0) / (frameTimes.length || 1);
+    return { fps: frameTimes.length ? Math.round(1000 / mean) : 0, frameMsP95: +q(frameTimes, 0.95).toFixed(2), drawMsP95: +q(drawTimes, 0.95).toFixed(2), drawMsMax: +q(drawTimes, 1).toFixed(2), drawCalls: -1 };
+  },
+};
+
+// ==== Загрузка ======================================================================================
+syncSliders(); document.getElementById("rules").textContent = RULES.scene;
+Promise.all([fetch("assets/omnom-rig/omnom_rig.json").then((r) => r.json()), fetch("assets/omnom-rig/omnom_clips.json").then((r) => r.json()), OMS.loaded, v2Loaded])
+  .then(([J, CJ]) => { rigBuild(J, CJ); setScene("scene"); $("msg").style.display = "none"; window.__game.ready = true; requestAnimationFrame(frame); })
+  .catch((err) => { $("msg").textContent = "Не загрузился риг: " + err.message + ". Открой лабораторию через сервер (не file://)."; console.warn(err); });
+</script>
+</body>
+</html>
