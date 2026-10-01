@@ -10,7 +10,7 @@
 <body>
 <header>
   <div class="row"><a class="back" href="index.html">← Лаборатория</a><h1>Торт-башня</h1><button id="restart">Заново</button></div>
-  <div class="modes"><button id="mCur">Как сейчас</button><button id="mSway">Качается и режет</button><button id="mSlide">Съезжает, башня стоит</button><button id="mPhy">С физикой</button></div>
+  <div class="modes"><button id="mSway">Качается и режет</button><button id="mCur">Как сейчас</button><button id="mSlide">Съезжает, башня стоит</button><button id="mPhy">С физикой</button></div>
   <div class="row sub"><div id="rule"></div><button id="ghost" class="hide">контур: выкл</button></div>
 </header>
 <div id="stage">
@@ -116,8 +116,19 @@ const TUNE = {
   maxLayers: 50,      // current и physics: торт готов
   // режим current (tower.md §6)
   curStar2: 15, curStar3: 30,
-  // «Качается и режет» (§0.2)
-  sway: { lives: 3, perfectPx: 20, perfectGrow: 60, swayPerLayer: 3, swayMax: 200, Tmin: 1.0, maxLayers: 100, star2: 25, star3: 70 },
+  // «Качается и режет» v2 (§0.2 п. 1–3 + §0.6, D-57): качание от центра масс — мягкий стержень на блюде, формулой между посадками
+  sway: { lives: 3, perfectPx: 20, perfectGrow: 60, Tmin: 1.0, maxLayers: 100, star2: 25, star3: 65,
+    ampMax: 300,      // px, потолок размаха маятника (маятник висит над равновесием вершины, камера по x держит его в центре)
+    ph: {
+      T0: 2.2, T100: 3.0,          // с, период качания башни на 0 и 100 слоях (высокая качается медленнее)
+      zeta: 0.06, zetaPerfect: 0.35, // затухание; после «идеально» — сильное до следующей посадки
+      gLean: 0.05,                 // податливость на слой: крен равновесия s* = S·tanh(gLean·n·x_c / S)
+      sLim: 180, leanMaxDeg: 4,    // px, °: потолок крена равновесия (S = min(sLim, n·96·tan(leanMax)/p))
+      hit: 5, nSoft: 15, softMax: 8, // 1/с: удар краем Δs' = hit·d·min(softMax, n/nSoft)
+      hitLean: 2,                  // 1/с: толчок по наклонной вершине Δs' = hitLean·s* (каждая посадка)
+      cap: 220, tiltMaxDeg: 4,     // px, °: предел качания (режется только скорость)
+      bend: 1.5, Href: 960,        // изгиб: слой i смещён на u·(i·96/Href)^bend
+    } },
   // «Съезжает, башня стоит» (§0.3)
   slide: { layerW: 220, lives: 3, perfectPx: 14, swayPerLayer: 3, leanRef: 100, swayMax: 200, edge: 300, Tmin: 1.0, maxLayers: 100, star2: 20, star3: 60 },
   ghostTop: false,    // контур вершины там, где она будет через fallT (§0.5 п. 1); переключатель на странице, по умолчанию выключен
@@ -134,7 +145,7 @@ const TUNE = {
   botSigma: [90, 45, 25], botBeta: [0.4, 0.7, 0.95], botGamma: [0, 0.3, 0.6],
   botFrom: 0.3,       // с после готовности — раньше бот не целится
 };
-const MODES = ["current", "sway", "slide", "physics"];
+const MODES = ["sway", "current", "slide", "physics"]; // порядок кнопок слева направо
 const MODE_BTN = { current: "mCur", sway: "mSway", slide: "mSlide", physics: "mPhy" };
 const RULES = {
   current: "Тап — слой падает вниз на башню. Свес отрезается, промах — конец.",
@@ -167,12 +178,12 @@ const swings = (m) => m !== "current";                         // башня к�
 const modeLives = (m) => m === "sway" || m === "slide" ? TUNE[m].lives : TUNE.lives;
 const modeMax = (m) => m === "sway" || m === "slide" ? TUNE[m].maxLayers : TUNE.maxLayers;
 const modeStars = (m) => m === "current" ? [TUNE.curStar2, TUNE.curStar3] : m === "physics" ? [TUNE.star2, TUNE.star3] : [TUNE[m].star2, TUNE[m].star3];
-const modeSwayMax = (m) => m === "sway" || m === "slide" ? TUNE[m].swayMax : TUNE.swayMax;
+const modeSwayMax = (m) => m === "slide" ? TUNE.slide.swayMax : m === "sway" ? TUNE.sway.ph.cap : TUNE.swayMax; // sway: лицо wide по |s − s*| от предела качания
 const modePerfect = (m) => m === "sway" || m === "slide" ? TUNE[m].perfectPx : TUNE.perfectPx;
 const modeW = (m) => m === "physics" ? TUNE.layerW : m === "slide" ? TUNE.slide.layerW : 0; // 0 — ширина слоя = ширина вершины (свес режется)
 
 // ---- Состояние ----
-let MODE = "current";
+let MODE = "sway"; // без ?mode и без сохранённого режима — «Качается и режет» (D-57)
 try { const m = localStorage.getItem("lab.tower.mode"); if (MODES.includes(m)) MODE = m; } catch (e) {}
 const BEST = {};
 for (const m of MODES) { BEST[m] = 0; try { BEST[m] = +localStorage.getItem("lab.best.tower-" + m) || 0; } catch (e) {} }
@@ -192,7 +203,8 @@ function newRound(seed, mode, silent) {
     score: 0, lives: modeLives(MODE), streak: 0, falls: 0, collapses: 0, perfects: 0,
     lastResult: null, lastOffset: null, lastEvent: null, lastAct: null,
     sw: { Sf: 0, St: 0, Lt: 0, t0: 0 }, lean: 0, scared: false, scaredT: 0,
-    cam: { f: 0, to: 0, t0: 0, dur: TUNE.rampT },
+    cam: { f: 0, to: 0, t0: 0, dur: TUNE.rampT }, camX: { f: 0, to: 0, t0: 0, dur: TUNE.rampT },
+    ph: MODE === "sway" ? { cur: { t0: 0, us: 0, u0: 0, v0: 0, Om: 2 * Math.PI / TUNE.sway.ph.T0, z: TUNE.sway.ph.zeta }, prev: null, xc: 0, M: 0, sStar: 0, kick: { edge: 0, slope: 0, clipped: false } } : null,
     cur: null, fall: null, cutAt: null, hop: null, jump: null, react: null, landFrom: null,
     lowT0: 0, readyTick: 24, readyT: 0.4,
     crumbs: [], debris: [], rings: [], texts: [], stubs: [],
@@ -207,10 +219,13 @@ let botPlanned = false;
 
 // ---- Кривая маятника ----
 function prepareLayer(readyTick) {
-  const m = S.mode, top = S.layers[S.n], k = S.n + 1, c = top.x;
+  const m = S.mode, top = S.layers[S.n], k = S.n + 1;
   const w = modeW(m) || top.w;
-  const fit = Math.min(c, FW - c) - 0.35 * w;
-  const A = m === "current" || m === "sway" ? Math.max(150, Math.min(ampCurve(k), fit)) : Math.max(60, Math.min(ampCurve(k), fit));
+  // sway (§0.6 п. 6): маятник висит над равновесием вершины x_n + s*; камера по x приводит его к центру экрана, поэтому размах — от центра
+  const c = m === "sway" ? top.x + S.ph.sStar : top.x;
+  const fit = (m === "sway" ? X0 : Math.min(c, FW - c)) - 0.35 * w;
+  const A = m === "sway" ? Math.min(TUNE.sway.ampMax, ampCurve(k), fit)
+    : m === "current" ? Math.max(150, Math.min(ampCurve(k), fit)) : Math.max(60, Math.min(ampCurve(k), fit));
   // sway и slide: маятник ускоряется и после 27-го слоя, до Tmin (§0.1)
   const T = m === "sway" || m === "slide" ? Math.max(TUNE[m].Tmin, 2.6 - 0.1 * Math.floor((k - 1) / 2)) : periodOf(k);
   S.cur = { c, w, A, T, phi0: (k % 2 ? 1 : -1) * Math.PI / 2, k, ci: S.placed % 4 };
@@ -223,21 +238,81 @@ function xl(t) { const c = S.cur; return c.c + c.A * Math.sin(2 * Math.PI * (t -
 // σ(t) = Σ(t)·sin(2πt/swayT + ψ); амплитуда Σ = L / (n·LH), где L — раскачка вершины по правилам режима.
 // После посадки / обрушения плавно (rampT) меняется только Σ: веса слоёв по высоте в px не меняются,
 // поэтому ни старые слои, ни вершина не дёргаются, когда башня растёт (§0.5 п. 4: добавка corr не нужна).
+// sway (§0.6) — своя модель ниже: мягкий стержень, изгиб u(t) формулой затухающих колебаний.
 const sigAmpAt = (t) => lerp(S.sw.Sf, S.sw.St, smooth(ramp(t, S.sw.t0, TUNE.rampT)));
-function sigAt(t) { return swings(S.mode) ? sigAmpAt(t) * Math.sin(2 * Math.PI * t / TUNE.swayT + S.psi) : 0; }
-function swayAt(t) { return sigAt(t) * S.n * LH; }          // s(t): смещение вершины
+function sigAt(t) { // тангенс крена вершины
+  if (S.mode === "sway") return TUNE.sway.ph.bend * swayAt(t) / (Math.max(1, S.n) * LH);
+  return swings(S.mode) ? sigAmpAt(t) * Math.sin(2 * Math.PI * t / TUNE.swayT + S.psi) : 0;
+}
+function swayAt(t) { return S.mode === "sway" ? physAt(t).u * kOf(S.n) : sigAt(t) * S.n * LH; } // s(t): смещение вершины
 function tiltAt(t) { return Math.atan(sigAt(t)); }
-const Lat = (t) => sigAmpAt(t) * Math.max(1, S.n) * LH;     // текущая амплитуда раскачки вершины
+const Lat = (t) => S.mode === "sway" ? physAt(t).env * kOf(S.n) : sigAmpAt(t) * Math.max(1, S.n) * LH; // текущая амплитуда раскачки вершины
+
+// ---- «Качается и режет» v2: качание от центра масс (§0.6, D-57) ----
+// Башня — мягкий стержень на блюде. Изгиб u (px на опорной высоте Href): слой i смещён на off_i = u·(i·96/Href)^p, наклонён на θ_i = atan(p·off_i/(i·96)).
+// Центр масс слоёв над блюдом (x_c) даёт крен равновесия s*; около него u качается с затуханием — между посадками это формула, тик её только читает,
+// поэтому «где будет вершина через fallT» точно и для правил, и для бота, и для контура. Посадка: u непрерывна (ничего не прыгает), меняются равновесие,
+// период и скорость (удар краем + толчок по наклонной вершине). Предел режет только скорость. Случайности и обрушения нет.
+const kOf = (n) => Math.pow(Math.max(1, n) * LH / TUNE.sway.ph.Href, TUNE.sway.ph.bend); // s = u·k(n)
+// сегмент { t0, us (u*), u0 (u − u* в t0), v0 (u' в t0), Om, z }: u, u' и огибающая |u − u*| в момент t
+function segAt(sg, t) {
+  const tau = Math.max(0, t - sg.t0), a = sg.z * sg.Om, wd = sg.Om * Math.sqrt(1 - sg.z * sg.z), e = Math.exp(-a * tau);
+  const B = (sg.v0 + a * sg.u0) / wd, c = Math.cos(wd * tau), sn = Math.sin(wd * tau);
+  return { u: sg.us + e * (sg.u0 * c + B * sn), v: e * (-a * (sg.u0 * c + B * sn) + wd * (-sg.u0 * sn + B * c)), env: e * Math.hypot(sg.u0, B) };
+}
+function physSeg(t) { const P = S.ph; return t < P.cur.t0 && P.prev ? P.prev : P.cur; }
+function physAt(t) { return segAt(physSeg(t), t); }
+// поза слоя i мягкого стержня (центр, крен) для покоящегося центра xr
+function poseSway(xr, i, t) {
+  const P = TUNE.sway.ph, off = physAt(t).u * Math.pow(i * LH / P.Href, P.bend), th = i > 0 ? Math.atan(P.bend * off / (i * LH)) : 0;
+  return { x: xr + off, y: PLATE_Y - (i + 0.5) * LH * Math.cos(th), rot: th };
+}
+// слой встал (§0.6 п. 5): новый центр масс, крен равновесия, период; толчок; предел по скорости
+function retargetSway(t0) {
+  const P = TUNE.sway.ph, L = S.layers, D2R = Math.PI / 180;
+  let M = 0, Q = 0; for (let i = 1; i <= S.n; i++) { const m = L[i].w / BASE_W; M += m; Q += m * (L[i].x - X0); }
+  const xc = M ? Q / M : 0, n = Math.max(1, S.n), H = kOf(n), Htop = n * LH;
+  const Smax = Math.min(P.sLim, Htop * Math.tan(P.leanMaxDeg * D2R) / P.bend);
+  const sStar = Smax * Math.tanh(P.gLean * S.n * xc / Smax);
+  const Om = 2 * Math.PI / (P.T0 + (P.T100 - P.T0) * Math.min(1, S.n / 100));
+  const now = physAt(t0);
+  const edge = S.lastResult === "trim" ? P.hit * S.lastOffset * Math.min(P.softMax, S.n / P.nSoft) : 0; // удар краем (d со знаком)
+  const slope = P.hitLean * sStar;                                                                     // толчок по наклонной вершине — в сторону крена
+  const z = S.lastResult === "perfect" ? P.zetaPerfect : P.zeta;
+  const us = sStar / H, u0 = now.u - us, a = z * Om, wd = Om * Math.sqrt(1 - z * z);
+  let v0 = now.v + (edge + slope) / H, clipped = false;
+  const R = Math.min(P.cap, Htop * Math.tan(P.tiltMaxDeg * D2R) / P.bend) / H, B = (v0 + a * u0) / wd;
+  if (Math.hypot(u0, B) > R) { // режем только скорость: положение непрерывно
+    clipped = true;
+    v0 = Math.abs(u0) >= R ? -a * u0 : Math.sign(B) * wd * Math.sqrt(R * R - u0 * u0) - a * u0;
+  }
+  S.ph = { cur: { t0, us, u0, v0, Om, z }, prev: S.ph.cur, xc, M, sStar, kick: { edge, slope, clipped } };
+  S.lean = xc;
+}
+// камера по x (§0.6 п. 7): после посадки за rampT плавно приводит маятник (над равновесием вершины) к центру экрана
+function camXAt(t) { const c = S.camX; return lerp(c.f, c.to, smooth(ramp(t, c.t0, c.dur))); }
+function moveCamX(t0) {
+  const f = camXAt(t0), to = S.layers[S.n].x + S.ph.sStar - X0;
+  S.camX = { f, to, t0, dur: Math.max(TUNE.rampT, 1.5 * Math.abs(to - f) / (TUNE.camMaxStep * 60)) };
+}
+function physState(t) {
+  const P = S.ph, sg = physSeg(t), r = segAt(sg, t), n = Math.max(1, S.n), H = kOf(n), q = TUNE.sway.ph.bend * H / (n * LH), R2D = 180 / Math.PI;
+  const f4 = (v) => +v.toFixed(4);
+  return { u: f4(r.u), s: f4(r.u * H), sStar: f4(P.sStar), sDyn: f4(r.u * H - P.sStar), amp: f4(H * r.env), xc: f4(P.xc), M: f4(P.M),
+    tiltDeg: f4(Math.atan(q * r.u) * R2D), tiltStarDeg: f4(Math.atan(TUNE.sway.ph.bend * P.sStar / (n * LH)) * R2D),
+    omegaDeg: f4(q * r.v / (1 + (q * r.u) * (q * r.u)) * R2D), T: f4(2 * Math.PI / sg.Om), zeta: sg.z,
+    kick: { edge: f4(P.kick.edge), slope: f4(P.kick.slope), clipped: P.kick.clipped }, camX: f4(camXAt(t)) };
+}
 // пересчёт силы раскачки после посадки / обрушения / соскальзывания; t0 — момент события
 function retarget(t0) {
+  if (S.mode === "sway") return retargetSway(t0);
   const n = S.n, m = S.mode; let lean = 0;
   if (n > 0) { let sum = 0; for (let i = 1; i <= n; i++) sum += S.layers[i].x; lean = sum / n - X0; }
   let L = 0;
   if (m === "physics") {
     L = Math.min(TUNE.swayMax, TUNE.swayPerLayer * n + TUNE.swayLean * Math.abs(lean));
     L = Math.min(L, n * LH * Math.tan(TUNE.maxTiltDeg * Math.PI / 180)); // низкая башня: крен не больше maxTiltDeg
-  } else if (m === "sway") L = Math.min(TUNE.sway.swayMax, TUNE.sway.swayPerLayer * n);
-  else if (m === "slide") L = Math.min(TUNE.slide.swayMax, TUNE.slide.swayPerLayer * n * (1 + Math.abs(lean) / TUNE.slide.leanRef));
+  } else if (m === "slide") L = Math.min(TUNE.slide.swayMax, TUNE.slide.swayPerLayer * n * (1 + Math.abs(lean) / TUNE.slide.leanRef));
   if (S.streak >= 3) L *= TUNE.perfectCalm;
   S.sw = { Sf: sigAmpAt(t0), St: L / (Math.max(1, n) * LH), Lt: L, t0 };
   S.lean = lean;
@@ -254,6 +329,7 @@ function moveCam(t0, dur, sm) {
 
 // поза слоя с покоящимся центром xr на месте i башни в момент t (центр, крен)
 function poseAt(xr, i, t) {
+  if (S.mode === "sway") return poseSway(xr, i, t);
   const sg = sigAt(t), th = Math.atan(sg);
   return { x: xr + sg * i * LH, y: PLATE_Y - (i + 0.5) * LH * Math.cos(th) + (xr - X0) * Math.sin(th), rot: th };
 }
@@ -357,7 +433,7 @@ function land() {
     hopFrom(12);
     react([[18, "wide"], [600, "sad"]]);
     if (m === "current") over = true;
-    else { S.lives--; S.falls++; extra = 6; retarget(t); if (S.lives <= 0) over = true; }
+    else { S.lives--; S.falls++; extra = 6; if (m !== "sway") retarget(t); if (S.lives <= 0) over = true; } // sway: промах сегмент не меняет (§0.6 п. 5)
   } else if (kind === "slip" || kind === "edge") { // physics и slide: соскальзывает (за край вершины или за край блюда)
     S.lastResult = "slip"; S.lastEvent = kind; S.streak = 0; S.lives--; S.falls++; extra = 6;
     const dir = (kind === "slip" ? d : top.x + d - X0) < 0 ? -1 : 1, W = modeW(m);
@@ -412,6 +488,7 @@ function land() {
       const camT = moveCam(t, TUNE.collapseCamT, true);
       extra += Math.max(0, Math.round((camT - TUNE.collapseCamT) * 60)); // следующий слой — когда камера доехала
     } else moveCam(t, TUNE.rampT);
+    if (m === "sway") moveCamX(t);
     if (swings(m) && S.lives <= 0) over = true;
     if (S.score >= modeMax(m)) { over = true; overFrame = "joy"; }
   }
@@ -458,7 +535,7 @@ function tick() {
   if (S.phase === "fall" && S.t >= S.fall.tland - 1e-9) land();
   // страшно на сильной раскачке — с гистерезисом и выдержкой, без мигания на пороге (§0.5 п. 7)
   if (S.phase === "ready" && swings(S.mode)) {
-    const a = Math.abs(swayAt(S.t)), mx = modeSwayMax(S.mode);
+    const a = Math.abs(swayAt(S.t) - (S.mode === "sway" ? S.ph.sStar : 0)), mx = modeSwayMax(S.mode); // sway: качание около крена, не сам крен
     if (!S.scared) { if (a > TUNE.scaredOn * mx) { S.scared = true; S.scaredT = S.t; } }
     else if (a < TUNE.scaredOff * mx && S.t - S.scaredT >= TUNE.scaredHold) S.scared = false;
   } else if (S.phase !== "fall") S.scared = false;
@@ -545,22 +622,22 @@ function drawSlab(x, y, w, h, rot, col, sq) {
 }
 const colOf = (ci) => ci < 0 ? BASE_COL : SL[ci % 4];
 
-function drawBg(cam) {
+function drawBg(cam, camX) {
   const g = ctx.createLinearGradient(0, 0, 0, FH);
   g.addColorStop(0, C.mintHi); g.addColorStop(1, C.mint);
   ctx.fillStyle = g; ctx.fillRect(0, 0, FW, FH);
   // кафель кухни, едет с половинной скоростью камеры
   ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 6;
-  const step = 180, off = (cam * 0.5) % step;
+  const step = 180, off = (cam * 0.5) % step, offX = ((-camX * 0.5) % step + step) % step; // и по x — за камерой sway
   ctx.beginPath();
   for (let y = off - step; y < FH + step; y += step) { ctx.moveTo(0, y); ctx.lineTo(FW, y); }
-  for (let x = 0; x <= FW; x += step) { ctx.moveTo(x, 0); ctx.lineTo(x, FH); }
+  for (let x = offX - step; x <= FW + step; x += step) { ctx.moveTo(x, 0); ctx.lineTo(x, FH); }
   ctx.stroke();
 }
 function drawPlate() {
   // стол и блюдо (мировые координаты)
-  ctx.fillStyle = C.card; ctx.fillRect(-20, PLATE_Y + 34, FW + 40, 3000);
-  ctx.fillStyle = C.cardSh; ctx.fillRect(-20, PLATE_Y + 34, FW + 40, 14);
+  ctx.fillStyle = C.card; ctx.fillRect(-2000, PLATE_Y + 34, FW + 4000, 3000); // шире экрана: камера sway ездит по x
+  ctx.fillStyle = C.cardSh; ctx.fillRect(-2000, PLATE_Y + 34, FW + 4000, 14);
   rrect(X0 - 450, PLATE_Y - 2, 900, 36, 18); ctx.fillStyle = "#FFFFFF"; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = C.ink; ctx.stroke();
 }
 function drawCherry(x, y, r, on) {
@@ -615,9 +692,9 @@ function render() {
   const rt = manual ? S.t : S.t + acc, tickf = manual ? S.tick : S.tick + acc / DT, fr = (tickf - S.tick) * DT;
   ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
   ctx.clearRect(0, 0, FW, FH);
-  const cam = camAt(rt);
-  drawBg(cam);
-  ctx.save(); ctx.translate(0, cam);
+  const cam = camAt(rt), camX = S.mode === "sway" ? camXAt(rt) : 0;
+  drawBg(cam, camX);
+  ctx.save(); ctx.translate(-camX, cam);
   drawPlate();
   const sw = swings(S.mode);
   const hanging = S.phase === "ready" || (S.phase === "after" && S.tick >= S.lowT0);
@@ -650,7 +727,8 @@ function render() {
   if (hanging && S.phase === "ready") {
     // пунктирная проекция под качающимся слоем — на текущую вершину (не предсказание)
     const h = hangPose(rt), th = tiltAt(rt);
-    ctx.save(); ctx.translate(h.x, PLATE_Y - (S.n + 1.5) * LH * Math.cos(th) + (h.x - X0) * Math.sin(th)); ctx.rotate(th);
+    const py = PLATE_Y - (S.n + 1.5) * LH * Math.cos(th) + (S.mode === "sway" ? 0 : (h.x - X0) * Math.sin(th)); // sway: мягкий стержень без поворота вокруг блюда
+    ctx.save(); ctx.translate(h.x, py); ctx.rotate(th);
     ctx.setLineDash([16, 12]); ctx.lineWidth = 5; ctx.strokeStyle = "rgba(74,37,18,.55)"; ctx.lineCap = "butt";
     rrect(-S.cur.w / 2, -LH / 2 + 4, S.cur.w, LH - 8, 16); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
     // флаг ghostTop: тонкий контур вершины там, где она будет через fallT (куда реально сядет слой)
@@ -798,7 +876,8 @@ window.__game = {
         topX: top.x, topW: top.w, streak: S.streak, lastResult: S.lastResult, lastOffset: S.lastOffset, lastEvent: S.lastEvent,
         score: S.score, lives: S.lives, livesMax: modeLives(S.mode), maxLayers: modeMax(S.mode), falls: S.falls, collapses: S.collapses, perfects: S.perfects,
         period: cur.T, amp: cur.A, swingX: xl(t), swingReady: S.phase === "ready", readyTick: S.readyTick,
-        sway: { L: Lat(t), target: S.sw.Lt, s: swayAt(t), sigma: sigAt(t), lean: S.lean, tilt: tiltAt(t) },
+        sway: { L: Lat(t), target: S.mode === "sway" ? null : S.sw.Lt, s: swayAt(t), sigma: sigAt(t), lean: S.lean, tilt: tiltAt(t) },
+        phys: S.mode === "sway" ? physState(t) : null, // §0.6: модель центра масс (только sway)
         topPose: { x: r3(tp.x), y: r3(tp.y), rot: +tp.rot.toFixed(5) },
         fallRot: fp ? +fp.rot.toFixed(5) : null, fallPose: fp ? { x: r3(fp.x), y: r3(fp.y), rot: +fp.rot.toFixed(5), tau: r3(fp.tau) } : null,
         ropeCount: 2, cam: camAt(t), visibleLayers: Math.min(S.n + 1, Math.floor((FH - (CAM_TOP)) / LH) + 6),
