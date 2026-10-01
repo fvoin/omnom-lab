@@ -22,6 +22,9 @@
       <div class="row">
         <button data-pr="spider">Паук</button><button data-pr="pend">Маятник</button><button data-pr="rocket">Ракета</button><button data-pr="light">Лёгкий</button><button data-pr="rubber">Резинка</button>
       </div>
+      <div class="row">
+        <button data-pr="swing">Раскачка</button><button data-pr="tarzan">Тарзан</button><button data-pr="glider">Планер</button><button data-pr="hopper">Кузнечик</button><button data-pr="far">Дальнобой</button>
+      </div>
       <div class="preset-note" id="prNote"></div>
       <div class="row more">
         <span class="preset-note">Эталоны:</span><button data-pr="pull">Подтяжка</button><button data-pr="clean">Чистый</button><button data-pr="v1">v1</button><button data-pr="v2">v2</button>
@@ -48,7 +51,7 @@ const CLEAN = {
   gravity: 1300, airDrag: 0.999, ropeDrag: 1, capOn: true, capVx: 950, capVy: 1400, maxSpeed: 0, ceilOn: false,
   // верёвка
   aimMode: "roof", rayAngle: 55, aimCone: 30, liftDy: 60, roofInset: 8, aimHyst: 6, ropeMin: 80, ropeMax: 600,
-  reel: 0, reelMin: 120, elastic: 0,
+  reel: 0, reelMin: 120, elastic: 0, pumpOn: false, pumpSpeed: 300, pumpDL: 120, pumpZone: 25, vDrag: 1,
   swingOn: false, swingMin: 350, backDragOn: false, backDrag: 0.985,
   // отпускание
   boostOn: false, sweetBoost: 1.08, sweetMin: 25, sweetMax: 60, liftOn: false, sweetLift: 160,
@@ -90,14 +93,30 @@ const ROCKET = Object.assign({}, CLEAN, { reel: 120, boostOn: true, sweetBoost: 
   zoom: 0.35, camTopMargin: 200, startMode: "roof" });
 const LIGHT = Object.assign({}, CLEAN, { gravity: 800, airDrag: 0.9995, reel: 150, aimCone: 40, gapMax0: 180, gapCap: 300, zoom: 0.45, startMode: "roof" });
 const RUBBER = Object.assign({}, CLEAN, { elastic: 180, reel: 250, reelMin: 100, zoom: 0.45, startMode: "roof" });
-const PRESETS = { spider: SPIDER, pend: PEND, rocket: ROCKET, light: LIGHT, rubber: RUBBER, pull: PULL, clean: CLEAN, v1: V1, v2: V2 };
-const PR_NAME = { spider: "Паук", pend: "Маятник", rocket: "Ракета", light: "Лёгкий", rubber: "Резинка", pull: "Подтяжка", clean: "Чистый", v1: "v1", v2: "v2" };
+// Ещё пять (D-65)
+const SWING = Object.assign({}, CLEAN, { pumpOn: true, pumpSpeed: 300, pumpDL: 200, pumpZone: 35, startMode: "roof" });
+const TARZAN = Object.assign({}, CLEAN, { pumpOn: true, pumpSpeed: 350, pumpDL: 150, boostOn: true, sweetBoost: 1.35, sweetMin: 15, sweetMax: 70,
+  rayAngle: 48, ropeMin: 180, ropeMax: 650, aimCone: 35, capVx: 1200, capVy: 1800, hMin0: 520, hMax: 820, zoom: 0.33, camTopMargin: 220, startMode: "roof" });
+const GLIDER = Object.assign({}, CLEAN, { vDrag: 0.95, reel: 300, capVx: 1100, startMode: "roof" });
+const HOPPER = Object.assign({}, CLEAN, { gravity: 2200, reel: 450, reelMin: 70, rayAngle: 65, ropeMin: 60, ropeMax: 340, liftDy: 40, capVy: 1800,
+  gapMin: 80, gapMax0: 150, gapGrow: 0.002, gapCap: 220, hMin0: 380, hMax: 620, jumpVx: 350, jumpVy: -750, zoom: 0.45, startMode: "roof" });
+const FAR = Object.assign({}, CLEAN, { reel: 250, rayAngle: 48, ropeMax: 800, capVx: 1300, gapMin: 260, gapMax0: 380, gapGrow: 0.003, gapCap: 520,
+  hMin0: 560, hMinG: 0.4, hMax: 880, wMin: 90, wMax0: 160, wFloor: 120, zoom: 0.3, camTopMargin: 200, startMode: "roof" });
+const PRESETS = { spider: SPIDER, pend: PEND, rocket: ROCKET, light: LIGHT, rubber: RUBBER, swing: SWING, tarzan: TARZAN, glider: GLIDER, hopper: HOPPER, far: FAR,
+  pull: PULL, clean: CLEAN, v1: V1, v2: V2 };
+const PR_NAME = { spider: "Паук", pend: "Маятник", rocket: "Ракета", light: "Лёгкий", rubber: "Резинка",
+  swing: "Раскачка", tarzan: "Тарзан", glider: "Планер", hopper: "Кузнечик", far: "Дальнобой", pull: "Подтяжка", clean: "Чистый", v1: "v1", v2: "v2" };
 const PR_NOTE = {
   spider: "Короткие верёвки, быстрый пологий полёт над крышами. Энергия — сильная подтяжка 350 u/с, пока держишь.",
   pend: "Длинные верёвки, большие дуги между высокими домами, камера дальше. Энергия — подтяжка 150 u/с.",
   rocket: "Высокие полёты над крышами. Энергия — подтяжка 120 u/с и буст ×1,3, если отпустить на подъёме 20…65°.",
   light: "Гравитация 800: плавно и медленно, дома ближе, прицел прощает. Энергия — подтяжка 150 u/с.",
   rubber: "Упругая верёвка пружинит (k 180). Энергия — подтяжка 250 u/с натягивает резинку.",
+  swing: "Как на качелях: держишь — внизу маха верёвка короче, на подъёме длиннее. Энергия — раскачка в правильной фазе (300 u/с, ход 200 u).",
+  tarzan: "Длинные лианы, высокие дома, сильный бросок. Энергия — раскачка и буст ×1,35, если отпустить на подъёме 15…70°.",
+  glider: "Падение тормозится сильнее, чем полёт вперёд: парит и медленно снижается. Энергия — подтяжка 300 u/с.",
+  hopper: "Гравитация 2200, короткие верёвки, частые перескоки с крыши на крышу. Энергия — подтяжка 450 u/с и прыжок 750 с крыши/земли.",
+  far: "Редкие узкие дома, широкие пропасти, длинные перелёты, камера дальше. Энергия — подтяжка 250 u/с.",
   pull: "Эталон: «Чистый» + подтяжка 200 u/с, старт с крыши.",
   clean: "Эталон без энергии: только гравитация и сопротивление — честно затухает.",
   v1: "Эталон: hook-rnf-v1 (луч до стены, низкие частые дома, буст ×1,12, батут).",
@@ -106,12 +125,13 @@ const PR_NOTE = {
 const TUNE = Object.assign({}, SPIDER);
 
 // Панель: [ключ, подпись, min, max, шаг] | [ключ, подпись, "bool"] | [ключ, подпись, "sel", [[знач, подпись]…]]; ADD — добавляет энергию
-const ADD = new Set(["swingOn", "backDragOn", "boostOn", "liftOn", "reel", "kickOn", "groundMode", "jumpVx"]);
+const ADD = new Set(["pumpOn", "swingOn", "backDragOn", "boostOn", "liftOn", "reel", "kickOn", "groundMode", "jumpVx"]);
 const SPEC = [
   ["Мир", "", [
     ["gravity", "Гравитация, u/с²", 200, 3000, 10],
     ["airDrag", "Сопротивление в полёте, × скорости за тик", 0.98, 1, 0.0005],
     ["ropeDrag", "Сопротивление на верёвке, × за тик", 0.98, 1, 0.0005],
+    ["vDrag", "Сопротивление падению в полёте (только vy вниз), × за тик", 0.9, 1, 0.0005],
     ["capOn", "Пределы скорости по осям (v2)", "bool"],
     ["capVx", "Предел |vx|, u/с", 200, 3000, 10],
     ["capVy", "Предел |vy|, u/с", 200, 3000, 10],
@@ -130,6 +150,10 @@ const SPEC = [
     ["reel", "Подтяжка, пока держишь, u/с (0 — нет)", 0, 800, 5],
     ["reelMin", "Подтяжка до длины, u", 40, 400, 5],
     ["elastic", "Упругость k, 1/с² (0 — жёсткая)", 0, 3000, 10],
+    ["pumpOn", "Раскачка: внизу маха верёвка укорачивается, на подъёме отпускается (вместо подтяжки)", "bool"],
+    ["pumpSpeed", "…скорость, u/с", 0, 1000, 5],
+    ["pumpDL", "…ход длины, u", 0, 400, 5],
+    ["pumpZone", "…«низ маха» — ±° от вертикали", 2, 60, 1],
     ["swingOn", "Рывок паутины при зацепе (v2)", "bool"],
     ["swingMin", "…касательная скорость не меньше, u/с", 0, 900, 5],
     ["backDragOn", "Гашение обратного маха (v2)", "bool"],
@@ -388,9 +412,22 @@ function tautCheck(r, why) {
   if (why === "slack" && Math.abs(v1 - v0) > 1) logEv({ type: "taut", vBefore: +v0.toFixed(1), vAfter: +v1.toFixed(1) });
   return true;
 }
+// скорость изменения длины верёвки (−: укорачивается). Подтяжка — пока держишь; раскачка — как на качелях: внизу маха (большое натяжение)
+// верёвка короче, на подъёме длина возвращается (натяжение меньше) — разница работ идёт в энергию маха, честно
+function ropeRd(r) {
+  if (!S.held) return 0;
+  const o = S.om;
+  if (TUNE.pumpOn) {
+    const phi = Math.atan2(o.x - r.ax, o.y - r.ay), lo = Math.max(TUNE.reelMin, r.L0 - TUNE.pumpDL);
+    if (Math.abs(phi) < rad(TUNE.pumpZone)) return r.L > lo + 1e-6 ? -TUNE.pumpSpeed : 0;
+    if (o.vy < 0 && r.L < r.L0 - 1e-6) return TUNE.pumpSpeed;
+    return 0;
+  }
+  return (TUNE.reel > 0 && r.L > TUNE.reelMin + 1e-6) ? -TUNE.reel : 0;
+}
 function substep(h, k) {
   const o = S.om, r = S.rope, g = TUNE.gravity;
-  if (r) r.rd = (S.held && TUNE.reel > 0 && r.L > TUNE.reelMin + 1e-6) ? -TUNE.reel : 0;
+  if (r) r.rd = ropeRd(r);
   if (r && r.taut && TUNE.elastic <= 0) {
     const L0 = r.L;
     if (r.rd === 0) { // leapfrog: симплектический, энергия не уползает
@@ -416,6 +453,7 @@ function substep(h, k) {
     } else { // баллистика: точно для постоянной g
       o.x += o.vx * h; o.y += o.vy * h + 0.5 * g * h * h; o.vy += g * h;
       const kk = r ? k.rope * (k.back !== 1 && o.vx < 0 ? k.back : 1) : k.air; o.vx *= kk; o.vy *= kk;
+      if (!r && o.vy > 0) o.vy *= k.vd; // «планер»: падение тормозится сильнее, чем движение вперёд (энергия только теряется)
       if (r) { if (r.rd !== 0) r.L = Math.max(TUNE.reelMin, Math.min(r.L, Math.hypot(o.x - r.ax, o.y - r.ay)) + r.rd * h); tautCheck(r, "slack"); }
     }
   }
@@ -511,7 +549,7 @@ function step() {
   const o = S.om;
   S.tension = 0;
   if (!o.grounded) {
-    const k = { air: Math.pow(TUNE.airDrag, 1 / NSUB), rope: Math.pow(TUNE.ropeDrag, 1 / NSUB), back: TUNE.backDragOn ? Math.pow(TUNE.backDrag, 1 / NSUB) : 1 };
+    const k = { air: Math.pow(TUNE.airDrag, 1 / NSUB), rope: Math.pow(TUNE.ropeDrag, 1 / NSUB), back: TUNE.backDragOn ? Math.pow(TUNE.backDrag, 1 / NSUB) : 1, vd: Math.pow(TUNE.vDrag, 1 / NSUB) };
     for (let i = 0; i < NSUB && !o.grounded; i++) substep(DT / NSUB, k);
     applyCaps();
   }
@@ -786,7 +824,7 @@ function buildPanel() {
   }
 }
 const DEP = { capVx: "capOn", capVy: "capOn", swingMin: "swingOn", backDrag: "backDragOn", sweetBoost: "boostOn", sweetLift: "liftOn",
-  zoomFast: "zoomSpeedOn", zoomV0: "zoomSpeedOn", zoomV1: "zoomSpeedOn", zoomLerp: "zoomSpeedOn", candyKick: "kickOn", reelMin: "reel" };
+  zoomFast: "zoomSpeedOn", zoomV0: "zoomSpeedOn", zoomV1: "zoomSpeedOn", zoomLerp: "zoomSpeedOn", candyKick: "kickOn", reelMin: "reel", pumpSpeed: "pumpOn", pumpDL: "pumpOn", pumpZone: "pumpOn" };
 function syncUi() {
   const p = PRESETS[PRESET];
   for (const k of SPEC_KEYS) {
