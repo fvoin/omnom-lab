@@ -1,189 +1,1082 @@
 {
-  "character": "omnom",
-  "version": 2,
-  "decision": "D-51",
-  "madeBy": "studio programmer (run 2026-09-30-offline-games), lab prototype games/lab/omnom-rig.html v2 (reviews game-designer-rig-1, art-director-rig-1); to be moved next to omnom_rig.json by the art director",
-  "units": "time in s; sq > 0 = stretch up, sq < 0 = squash; body scale around the feet sx = 1/(1+sq), sy = 1+sq (volume kept); lift = rig px up; lean = deg, + clockwise on screen; open = minimum mouth open 0..1; glance = gaze direction (-1..1) when the game gives no look target",
-  "layersNote": "Two layers. BASE = body state (layer base): stand (idle, aim, anticipate), hang, fly - loops, never end by themselves; the game switches them. REACT = face and hands over the base (layer react): eat, joy, oops, whoosh, shrug, reach, wave, blink - when a reaction ends the body returns to the CURRENT base, not to idle. Merge: face bones (head, mouth, eyes, pupils, lids, sprout, body) = base + w * (reaction - neutral pose) (t, r added, s multiplied); body/eyes/lids form weights = lerp(base, reaction, w); mouth group, show/hide = reaction's when w >= 0.5; arms (arm/fore/hand) = lerp(base, reaction, aw) only for the arms the state lets go: stand both, hang only arm_r (hand_l holds the rope), fly both; paws and root = base only; sq, lean added; lift added only when standing. w = key w * fade-in (clip fade) * fade-out (last fadeOut s); aw = key aw * the same (0 for clips with arms false).",
-  "keysNote": "pose = pose name (omnom_rig.json poses or this file's poses) or {name: weight}; a key without pose keeps the previous pose; sq/lift/lean/open/glance/w/aw carry forward; bones = additive offsets for this key only ({t:[x,y], r: deg, s:[x,y] multiplies}); lids = replace lid weights for this key only. ease = how the segment ENDING at this key runs: lin, in, out, inout, hold (jump at the key). Mouth group switches (closed / open / sad / chew) happen exactly at the key where the new group appears - author those keys at a squash peak (D-51). A group change that is not authored (fade, the open param, a reaction over a different base face) is delayed by blipMs/2 and gets a small squash blip.",
-  "partsNote": "Parametric clips (intro / loop / outro) take dur and rate from the game: loop keys (t in (0, cycle]) repeat round((dur - intro end - outro length) / (cycle / rate)) times, stretched to fill dur exactly; 0 repeats = the short version (joy 0.6: jump and joy without the second bounce). replayFrom: the same reaction played again before its outro starts jumps straight to that time (eat: the gulp at the squash peak, hands stay at the face).",
-  "posesNote": "custom pose = base pose + bones (set, not added) + front (parts drawn in front) + armsFrom (copy arm/fore/hand bones and their front flags from another pose) + forms (replace body / eyes / lids form).",
-  "motion": {
-    "squash":  { "f": 4.8, "zeta": 0.42, "r": 0.6, "max": 0.18, "note": "second-order follow of the keyed sq (t3ssel8r form: f Hz, zeta damping, r initial response): overshoot = jelly settle" },
-    "lean":    { "f": 2.4, "zeta": 0.6, "r": 0.4 },
-    "tilt":    { "f": 2.6, "zeta": 0.7, "r": 0.0, "hangK": 0.6, "hangMaxDeg": 40, "flyMaxDeg": 60, "fallK": 1.5, "grabS": 0.2,
-      "note": "whole-body tilt: on a rope exactly 0.6 of the rope angle, max +-40 deg, around the grip (after a grab: smooth blend from the flight tilt over grabS); in flight along the velocity: rising = 90 - elevation (body axis along v), falling = 90 + elevation * fallK (feet swing down to grab), max +-60 (at the apex of a flight the body lies at 60, not 90: a face lying on its side read badly while eating), around the body centre" },
-    "head":    { "f": 5.5, "zeta": 0.24, "gain": 0.55, "maxPx": 9, "note": "head lags vertical acceleration of the body (rig px)" },
-    "sprout":  { "f": 2.3, "zeta": 0.22, "gains": [0.28, 0.36, 0.46], "maxDeg": 40, "tip": [316, 58], "note": "tip point on a spring in world space; deflection angle around sprout1 split over 3 links; lag 80-120 ms (D-51)" },
-    "paws":    { "f": 2.5, "zeta": 0.18, "gains": { "paw_fl": 0.32, "paw_fr": 0.25, "paw_bl": 0.2, "paw_br": 0.28 }, "maxDeg": 14, "point": [281, 455], "note": "dangle only in the air (rope, flight)" },
-    "gaze":    { "tauMs": 70, "leanDelayMs": 100, "leanMaxDeg": 8, "lookPx": 70, "fullDistPx": 260, "note": "pupils first (exp. smoothing tau), body lean follows the same look 100 ms later; each pupil clamped into the travel ellipse of ITS eye (omnom_rig.json anchors.pupils)" },
-    "blink":   { "closeMs": 45, "holdMs": 30, "openMs": 110, "everyS": [2, 5], "note": "close ease-in (u^2), hold, open fast then slowing down: closed = (1-u)^3 -> at 133 ms from the start the eye is ~89 % open, fully open at 185 ms" },
-    "breath":  { "periodS": 1.6, "sq": 0.016 },
-    "tremble": { "hz": 11, "hz2": 7.3, "sq": 0.03, "leanDeg": 1.8, "base": 0.15, "note": "anticipation tremble, amplitude = base + (1 - base) * open from the game (0..1, distance candy..mouth): grows as the candy comes closer; fades under a reaction" },
-    "groupSwitch": { "blipSq": -0.06, "blipMs": 90 },
-    "open":    { "stops": [["neutral", 0], ["ajar", 0.3], ["wide", 0.65], ["wide2", 1]], "near": 30,
-      "far": { "sling": 110, "slide": 140, "hook": 140 },
-      "note": "open 0..1 = (far - distance candy..mouth) / (far - near), u; far is a game parameter; neutral->ajar switches the mouth group at 0.15 (blip)" },
-    "speedStretch": { "max": 0.2, "v0": 300, "v1": 900, "note": "speed 0..1 = (|v| - v0) / (v1 - v0) u/s -> stretch along the velocity (squash pivot moves to the body centre in the air)" },
-    "react": { "fadeOut": 0.06, "note": "cancelBlink: a startle opens the eyes at once (a blink in progress is dropped); the last fadeOut s of a reaction blend its face back to the base face (stand: the same neutral; fly: ajar); clips with arms lower them by keys (aw 0) before this window" },
-    "fade": 0.15
+ "character": "omnom",
+ "version": 3,
+ "decision": "D-51",
+ "madeBy": "studio programmer (run 2026-09-30-offline-games), lab prototype games/lab/omnom-rig.html v2 (reviews game-designer-rig-1, art-director-rig-1); to be moved next to omnom_rig.json by the art director; v3 programmer (D-56, rig data v2)",
+ "units": "time in s; sq > 0 = stretch up, sq < 0 = squash; body scale around the feet sx = 1/(1+sq), sy = 1+sq (volume kept); lift = rig px up; lean = deg, + clockwise on screen; open = minimum mouth open 0..1; glance = gaze direction (-1..1) when the game gives no look target",
+ "layersNote": "Two layers. BASE = body state (layer base): stand (idle, aim, anticipate), hang, fly - loops, never end by themselves; the game switches them. REACT = face and hands over the base (layer react): eat, joy, oops, whoosh, shrug, reach, wave, blink - when a reaction ends the body returns to the CURRENT base, not to idle. Merge: face bones (head, mouth, eyes, pupils, lids, sprout, body) = base + w * (reaction - neutral pose) (t, r added, s multiplied); body/eyes/lids form weights = lerp(base, reaction, w); mouth group, show/hide = reaction's when w >= 0.5; arms = front paws (arm/fore/paw_fl|paw_fr) = lerp(base, reaction, aw) only for the arms the state lets go: stand both, hang only the right paw (the left one is the grip_l on the rope), fly both; legs (paw_bl/paw_br) and root = base only; sq, lean added; lift added only when standing. w = key w * fade-in (clip fade) * fade-out (last fadeOut s); aw = key aw * the same (0 for clips with arms false).",
+ "keysNote": "pose = pose name (omnom_rig.json poses or this file's poses) or {name: weight}; a key without pose keeps the previous pose; sq/lift/lean/open/glance/w/aw carry forward; bones = additive offsets for this key only ({t:[x,y], r: deg, s:[x,y] multiplies}); lids = replace lid weights for this key only. ease = how the segment ENDING at this key runs: lin, in, out, inout, hold (jump at the key). Mouth group switches (closed / open / sad / chew) happen exactly at the key where the new group appears - author those keys at a squash peak (D-51). A group change that is not authored (fade, the open param, a reaction over a different base face) is delayed by blipMs/2 and gets a small squash blip.",
+ "partsNote": "Parametric clips (intro / loop / outro) take dur and rate from the game: loop keys (t in (0, cycle]) repeat round((dur - intro end - outro length) / (cycle / rate)) times, stretched to fill dur exactly; 0 repeats = the short version (joy 0.6: jump and joy without the second bounce). replayFrom: the same reaction played again before its outro starts jumps straight to that time (eat: the gulp at the squash peak, hands stay at the face).",
+ "posesNote": "custom pose = base pose + bones (set, not added) + front (parts drawn in front) + armsFrom (copy arm/fore/hand bones and their front flags from another pose) + forms (replace body / eyes / lids form).",
+ "motion": {
+  "squash": {
+   "f": 4.8,
+   "zeta": 0.42,
+   "r": 0.6,
+   "max": 0.18,
+   "note": "second-order follow of the keyed sq (t3ssel8r form: f Hz, zeta damping, r initial response): overshoot = jelly settle"
   },
-  "poses": {
-    "chewA":   { "base": "chew",  "bones": { "mouth": { "s": [1.0, 1.04] } } },
-    "chewB":   { "base": "chew2", "bones": { "mouth": { "s": [1.1, 0.74] } } },
-    "eatOut":  { "base": "half", "armsFrom": "chew", "note": "exit from eating: mouth closed and lids half at the squash peak, hands still at the face (lowered over the next 90 ms)" },
-    "handsDown": { "base": "half", "front": ["hand_l", "hand_r"], "bones": {
-      "arm_l": { "r": 95 }, "fore_l": { "r": 0 }, "hand_l": { "r": 0, "s": [0.85, 0.85] },
-      "arm_r": { "r": -95 }, "fore_r": { "r": 0 }, "hand_r": { "r": 0, "s": [0.85, 0.85] } },
-      "note": "exit of eat / joy / shrug: hands slid down to the sides of the belly (still in front, visible), lids still half; next key = neutral with aw 0 (hands go behind the body)" },
-    "joyUp":   { "base": "joy", "armsFrom": "fly", "note": "jump of joy: arms raised (fly arms) on the take-off" },
-    "joyOut":  { "base": "half", "armsFrom": "joy", "note": "exit from joy: lids half, mouth closed at the squash peak, arms lowered over the next 90 ms" },
-    "startle": { "base": "ajar", "forms": { "eyes": "wide2" }, "bones": { "pupil_l": { "s": [0.6, 0.6] }, "pupil_r": { "s": [0.6, 0.6] } },
-      "note": "miss: flinch with small pupils and a small mouth (not the wide red mouth of anticipation)" },
-    "sadOut":  { "base": "half", "note": "exit from sad through half lids" },
-    "shrug":   { "base": "wide", "bones": {
-      "arm_l": { "r": -196, "s": [1.1, 1.1] }, "fore_l": { "r": 52 }, "hand_l": { "r": 20, "s": [0.8, 0.8] },
-      "arm_r": { "r": -164, "s": [1.1, 1.1] }, "fore_r": { "r": -52 }, "hand_r": { "r": -20, "s": [0.8, 0.8] } },
-      "note": "dead end of the box: arms out to the sides, forearms up (palms up), wide face" },
-    "shrugOut": { "base": "half", "armsFrom": "shrug" },
-    "hangRig": { "base": "hang", "bones": {
-      "paw_fl": { "r": 4, "t": [3.6, 10.5] }, "paw_fr": { "r": -4.2, "t": [1.9, 11.3] },
-      "paw_bl": { "r": 5.4, "t": [3.6, 8.3] }, "paw_br": { "r": -2.9, "t": [0, -0.9] },
-      "body": { "s": [0.95, 1.06], "t": [-10, 8.1] } },
-      "note": "TEMPORARY until rig v2 (separate paw lobes): paws at 0.2 of the fitted hang offsets, at 0.35+ the merged bottom outline tears" },
-    "sadRig": { "base": "sad", "bones": { "pupil_l": { "t": [-3.6, 35] }, "pupil_r": { "t": [-17.05, 39] } },
-      "note": "TEMPORARY until rig v2 moves it into the sad pose: pupils of the fitted sad pose hung below the eye white; raised to the lowest in-eye place minus 7.5 px" },
-    "flyRig": { "base": "fly", "bones": {
-      "paw_fl": { "r": -7.6, "t": [3.6, 7.5] }, "paw_fr": { "r": 4.3, "t": [-1, 14.9] },
-      "paw_bl": { "r": 8, "t": [3.6, -1.6] }, "paw_br": { "r": 8, "t": [-3.6, -1.6] },
-      "body": { "s": [0.95, 1.06], "t": [-12.1, 7.9] } }, "note": "TEMPORARY, same 0.2 rule as hangRig" },
-    "flyWideRig": { "base": "fly_wide", "bones": {
-      "paw_fl": { "r": -7.7, "t": [3.6, 7.9] }, "paw_fr": { "r": 5.3, "t": [0.7, 14.9] },
-      "paw_bl": { "r": 8, "t": [3.6, -1.6] }, "paw_br": { "r": 8, "t": [-3.6, -1.6] },
-      "body": { "s": [0.95, 1.06], "t": [-14.2, 15.4] } }, "note": "TEMPORARY, same 0.2 rule as hangRig" }
+  "lean": {
+   "f": 2.4,
+   "zeta": 0.6,
+   "r": 0.4
   },
-  "clips": {
-    "idle": { "layer": "base", "state": "stand", "loop": true, "openParam": true, "breath": true, "fade": 0.2,
-      "note": "3 variants picked at random each pass so the rest never repeats; not while aiming (aim)",
-      "variants": {
-        "breath": { "dur": 3.2, "keys": [ { "t": 0, "pose": "neutral", "sq": 0, "lean": 0 }, { "t": 3.2 } ] },
-        "look": { "dur": 3.2, "keys": [
-          { "t": 0, "pose": "neutral", "glance": [0, 0] },
-          { "t": 0.45, "glance": [-1, -0.35], "ease": "hold" },
-          { "t": 1.35, "glance": [0.9, 0.15], "ease": "hold" },
-          { "t": 2.3, "glance": [0, 0], "ease": "hold" },
-          { "t": 3.2 } ] },
-        "sway": { "dur": 3.2, "keys": [
-          { "t": 0, "pose": "neutral", "lean": 0 },
-          { "t": 0.8, "lean": -3, "ease": "inout" },
-          { "t": 1.6, "lean": 0, "ease": "inout" },
-          { "t": 1.95, "pose": "half", "lean": 1.5, "ease": "inout" },
-          { "t": 2.6, "pose": "half" },
-          { "t": 2.95, "pose": "neutral", "lean": 0, "ease": "inout" },
-          { "t": 3.2 } ] }
-      } },
-    "aim": { "layer": "base", "state": "stand", "loop": true, "openParam": true, "minOpen": 0.3, "breath": true, "fade": 0.15, "dur": 1,
-      "note": "while the player aims: no rest variants, eyes on the candy (the game gives look), mouth at least ajar",
-      "keys": [ { "t": 0, "pose": "neutral", "sq": 0, "lean": 0 }, { "t": 1 } ] },
-    "anticipate": { "layer": "base", "state": "stand", "loop": true, "loopFrom": 0.34, "dur": 0.66, "openParam": true, "minOpen": 0.3, "tremble": true, "fade": 0.08,
-      "note": "crouch, then up on the toes; tremble grows with open (motion.tremble); the mouth follows the open param (at least ajar)",
-      "keys": [
-        { "t": 0, "pose": "neutral", "sq": 0, "lean": 0, "open": 0 },
-        { "t": 0.12, "sq": -0.09, "lean": -2, "open": 0.3, "ease": "out" },
-        { "t": 0.34, "sq": 0.05, "lean": -3, "ease": "inout" },
-        { "t": 0.5, "sq": 0.025, "lean": -2.5, "ease": "inout" },
-        { "t": 0.66, "sq": 0.05, "lean": -3, "ease": "inout" } ] },
-    "hang": { "layer": "base", "state": "hang", "loop": true, "openParam": true, "dur": 1, "fade": 0.12, "keys": [ { "t": 0, "pose": "hangRig" }, { "t": 1 } ] },
-    "fly":  { "layer": "base", "state": "fly", "loop": true, "openParam": true, "dur": 1, "fade": 0.12, "keys": [ { "t": 0, "pose": "flyRig" }, { "t": 1 } ] },
-    "flyWide": { "layer": "base", "state": "fly", "loop": true, "dur": 1, "fade": 0.1, "keys": [ { "t": 0, "pose": "flyWideRig" }, { "t": 1 } ] },
-
-    "eat": { "layer": "react", "arms": true, "fade": 0.04, "dur": 0.6, "rate": 1, "lengths": [0.45, 0.6], "replayFrom": 0.05,
-      "note": "gulp 0.1 s (stretch to the candy, squash peak = switch to chew, hands to the face) -> chew loop (one cycle = 2 bites, 0.18 s at rate 1, series: rate 1.5) -> exit: squash peak = mouth closed + lids half, hands lowered over 90 ms, lids open",
-      "intro": [
-        { "t": 0, "pose": "wide2", "sq": 0.08, "lean": -3 },
-        { "t": 0.05, "pose": "chewA", "sq": -0.2, "lean": 0, "ease": "in" },
-        { "t": 0.1, "sq": 0.04, "ease": "out" } ],
-      "loop": { "cycle": 0.18, "keys": [
-        { "t": 0.09, "pose": "chewB", "sq": -0.06, "ease": "inout" },
-        { "t": 0.18, "pose": "chewA", "sq": 0.03, "ease": "inout" } ] },
-      "outro": [
-        { "t": 0.05, "pose": "eatOut", "sq": -0.07, "ease": "in" },
-        { "t": 0.14, "pose": "handsDown", "sq": 0.02, "ease": "inout" },
-        { "t": 0.2, "pose": "neutral", "sq": 0, "aw": 0, "ease": "out" } ] },
-    "joy": { "layer": "react", "arms": true, "fade": 0.06, "dur": 0.9, "rate": 1, "lengths": [0.6, 0.9, 1.4],
-      "note": "crouch (switch to joy at its peak) -> jump with raised arms (lift only when standing) -> land squash -> bounce loop (0 at 0.6 s, 1 at 0.9, 2 at 1.4) -> rebound, squash peak = half lids + closed mouth, arms down 90 ms",
-      "intro": [
-        { "t": 0, "pose": "neutral", "sq": 0, "lift": 0 },
-        { "t": 0.06, "pose": "joy", "sq": -0.14, "ease": "out" },
-        { "t": 0.09, "pose": "joyUp", "sq": 0.16, "lift": 16, "ease": "in" },
-        { "t": 0.18, "sq": 0.05, "lift": 78, "ease": "out" },
-        { "t": 0.24, "sq": 0, "lift": 86, "ease": "out" },
-        { "t": 0.34, "pose": { "joyUp": 0.55, "joy": 0.45 }, "sq": 0.08, "lift": 0, "ease": "in" },
-        { "t": 0.38, "pose": "joy", "sq": -0.16, "ease": "out" } ],
-      "loop": { "cycle": 0.4, "keys": [
-        { "t": 0.1, "sq": 0.04, "bones": { "arm_l": { "r": -12 }, "arm_r": { "r": 12 } }, "ease": "inout" },
-        { "t": 0.2, "sq": -0.05, "bones": { "arm_l": { "r": 8 }, "arm_r": { "r": -8 } }, "ease": "inout" },
-        { "t": 0.3, "sq": 0.05, "lift": 14, "bones": { "arm_l": { "r": -12 }, "arm_r": { "r": 12 } }, "ease": "out" },
-        { "t": 0.4, "sq": -0.07, "lift": 0, "ease": "in" } ] },
-      "outro": [
-        { "t": 0.04, "sq": 0.03, "ease": "out" },
-        { "t": 0.08, "pose": "joyOut", "sq": -0.08, "ease": "in" },
-        { "t": 0.17, "pose": "handsDown", "sq": 0.02, "ease": "inout" },
-        { "t": 0.22, "pose": "neutral", "sq": 0, "aw": 0, "ease": "out" } ] },
-    "oops": { "layer": "react", "arms": false, "fade": 0.03, "dur": 0.6, "cancelBlink": true,
-      "note": "miss: flinch at once (startle: small pupils, small mouth, stretch) -> sad at the squash peak at 0.15 s -> half lids at the squash peak at 0.5 -> neutral; no arms, so in the air it keeps the flight pose",
-      "keys": [
-        { "t": 0, "pose": "startle", "sq": 0.02, "lift": 0, "lean": 0 },
-        { "t": 0.05, "sq": 0.13, "lift": 7, "lean": 2, "ease": "out" },
-        { "t": 0.15, "pose": "sadRig", "sq": -0.15, "lift": 0, "lean": 4, "ease": "in" },
-        { "t": 0.28, "sq": -0.03, "lean": 3, "ease": "out" },
-        { "t": 0.42, "sq": -0.05, "lean": 3.5, "ease": "inout" },
-        { "t": 0.5, "pose": "sadOut", "sq": -0.08, "lean": 2, "ease": "in" },
-        { "t": 0.6, "pose": "neutral", "sq": 0, "lean": 0, "ease": "out" } ] },
-    "whoosh": { "layer": "react", "arms": false, "fade": 0.03, "fadeOut": 0.06, "dur": 0.25, "cancelBlink": true,
-      "note": "wide2 face 0.25 s on the sweet release (Rope'n'Fly v2 'whoosh'), stretch along the flight",
-      "keys": [
-        { "t": 0, "pose": "wide2", "sq": -0.05 },
-        { "t": 0.06, "sq": 0.12, "ease": "out" },
-        { "t": 0.18, "sq": 0.04, "ease": "inout" },
-        { "t": 0.25, "sq": 0, "ease": "inout" } ] },
-    "shrug": { "layer": "react", "arms": true, "fade": 0.06, "dur": 1.0,
-      "note": "dead end of the box (blocks.md): wide 1.0 s, shoulders up twice with a sway, exit through half lids (squash peak at 0.82), arms down by 0.92",
-      "keys": [
-        { "t": 0, "pose": "neutral", "sq": 0, "lift": 0, "lean": 0 },
-        { "t": 0.1, "pose": "shrug", "sq": -0.1, "ease": "out" },
-        { "t": 0.24, "sq": 0.06, "lift": 6, "lean": -4, "bones": { "arm_l": { "r": 10 }, "arm_r": { "r": -10 }, "head": { "t": [0, 6] } }, "ease": "out" },
-        { "t": 0.42, "sq": -0.02, "lift": 0, "lean": 4, "ease": "inout" },
-        { "t": 0.6, "sq": 0.04, "lift": 4, "lean": -3, "bones": { "arm_l": { "r": 8 }, "arm_r": { "r": -8 }, "head": { "t": [0, 5] } }, "ease": "inout" },
-        { "t": 0.76, "sq": -0.01, "lift": 0, "lean": 2, "ease": "inout" },
-        { "t": 0.82, "pose": "shrugOut", "sq": -0.07, "lean": 0, "ease": "in" },
-        { "t": 0.91, "pose": "handsDown", "sq": 0.02, "ease": "inout" },
-        { "t": 1.0, "pose": "neutral", "sq": 0, "aw": 0, "ease": "out" } ] },
-    "reach": { "layer": "react", "arms": true, "dur": 1.42, "fade": 0.06,
-      "note": "hint without text: dip, reach out to the left (viewer side), wiggle the paw, back",
-      "keys": [
-        { "t": 0, "pose": "neutral", "sq": 0, "lean": 0 },
-        { "t": 0.1, "pose": "ajar", "sq": -0.06, "lean": 1, "ease": "out" },
-        { "t": 0.28, "pose": "reach", "sq": 0.06, "lean": -5, "ease": "out" },
-        { "t": 0.45, "sq": 0, "lean": -4, "ease": "inout" },
-        { "t": 0.62, "bones": { "hand_l": { "r": 14 }, "fore_l": { "r": -6 } }, "ease": "inout" },
-        { "t": 0.78, "bones": { "hand_l": { "r": -8 }, "fore_l": { "r": 4 } }, "ease": "inout" },
-        { "t": 0.94, "bones": { "hand_l": { "r": 12 }, "fore_l": { "r": -5 } }, "ease": "inout" },
-        { "t": 1.12, "lean": -3, "ease": "inout" },
-        { "t": 1.3, "pose": "neutral", "sq": -0.05, "lean": 0, "ease": "in" },
-        { "t": 1.42, "sq": 0, "ease": "out" } ] },
-    "wave": { "layer": "react", "arms": true, "dur": 0.8, "fade": 0.06,
-      "keys": [
-        { "t": 0, "pose": "neutral", "sq": 0 },
-        { "t": 0.08, "pose": "wave1", "sq": -0.06, "ease": "out" },
-        { "t": 0.2, "pose": "wave2", "sq": 0.04, "bones": { "arm_l": { "r": -10 }, "hand_l": { "r": -8 } }, "ease": "inout" },
-        { "t": 0.33, "pose": "wave1", "sq": 0, "bones": { "arm_l": { "r": 10 }, "hand_l": { "r": 10 } }, "ease": "inout" },
-        { "t": 0.46, "pose": "wave2", "sq": 0.03, "bones": { "arm_l": { "r": -10 }, "hand_l": { "r": -8 } }, "ease": "inout" },
-        { "t": 0.59, "pose": "wave1", "sq": 0, "bones": { "arm_l": { "r": 8 }, "hand_l": { "r": 8 } }, "ease": "inout" },
-        { "t": 0.7, "pose": "neutral", "sq": -0.05, "ease": "in" },
-        { "t": 0.8, "sq": 0, "ease": "out" } ] },
-    "blink": { "layer": "react", "blink": true, "dur": 0.25, "fade": 0, "fadeOut": 0.01,
-      "note": "starts the blink (motion.blink) now; changes nothing else (w 0)",
-      "keys": [ { "t": 0, "pose": "neutral", "w": 0, "aw": 0 }, { "t": 0.25 } ] }
+  "tilt": {
+   "f": 2.6,
+   "zeta": 0.7,
+   "r": 0,
+   "hangK": 0.6,
+   "hangMaxDeg": 40,
+   "flyMaxDeg": 60,
+   "fallK": 1.5,
+   "grabS": 0.2,
+   "note": "whole-body tilt: on a rope exactly 0.6 of the rope angle, max +-40 deg, around the grip (after a grab: smooth blend from the flight tilt over grabS); in flight along the velocity: rising = 90 - elevation (body axis along v), falling = 90 + elevation * fallK (feet swing down to grab), max +-60 (at the apex of a flight the body lies at 60, not 90: a face lying on its side read badly while eating), around the body centre"
+  },
+  "head": {
+   "f": 5.5,
+   "zeta": 0.24,
+   "gain": 0.55,
+   "maxPx": 9,
+   "note": "head lags vertical acceleration of the body (rig px)"
+  },
+  "sprout": {
+   "f": 2.3,
+   "zeta": 0.22,
+   "gains": [0.28, 0.36, 0.46
+   ],
+   "maxDeg": 40,
+   "tip": [316, 58
+   ],
+   "note": "tip point on a spring in world space; deflection angle around sprout1 split over 3 links; lag 80-120 ms (D-51)"
+  },
+  "paws": {
+   "f": 2.5,
+   "zeta": 0.18,
+   "gains": {
+    "paw_bl": 0.2,
+    "paw_br": 0.28
+   },
+   "maxDeg": 14,
+   "point": [281, 455
+   ],
+   "note": "dangle only in the air (rope, flight); only the back lobes (legs): the front paws ride on the arm chain"
+  },
+  "gaze": {
+   "tauMs": 70,
+   "leanDelayMs": 100,
+   "leanMaxDeg": 8,
+   "lookPx": 70,
+   "fullDistPx": 260,
+   "note": "pupils first (exp. smoothing tau), body lean follows the same look 100 ms later; each pupil clamped into the travel ellipse of ITS eye (omnom_rig.json anchors.pupils)"
+  },
+  "blink": {
+   "closeMs": 45,
+   "holdMs": 30,
+   "openMs": 110,
+   "everyS": [2, 5
+   ],
+   "note": "close ease-in (u^2), hold, open fast then slowing down: closed = (1-u)^3 -> at 133 ms from the start the eye is ~89 % open, fully open at 185 ms"
+  },
+  "breath": {
+   "periodS": 1.6,
+   "sq": 0.016
+  },
+  "tremble": {
+   "hz": 11,
+   "hz2": 7.3,
+   "sq": 0.03,
+   "leanDeg": 1.8,
+   "base": 0.15,
+   "note": "anticipation tremble, amplitude = base + (1 - base) * open from the game (0..1, distance candy..mouth): grows as the candy comes closer; fades under a reaction"
+  },
+  "groupSwitch": {
+   "blipSq": -0.06,
+   "blipMs": 90
+  },
+  "open": {
+   "stops": [
+    ["neutral", 0
+    ],
+    ["ajar", 0.3
+    ],
+    ["wide", 0.65
+    ],
+    ["wide2", 1
+    ]
+   ],
+   "near": 30,
+   "far": {
+    "sling": 110,
+    "slide": 140,
+    "hook": 140
+   },
+   "note": "open 0..1 = (far - distance candy..mouth) / (far - near), u; far is a game parameter; neutral->ajar switches the mouth group at 0.15 (blip)"
+  },
+  "speedStretch": {
+   "max": 0.015,
+   "v0": 300,
+   "v1": 900,
+   "note": "speed 0..1 = (|v| - v0) / (v1 - v0) u/s -> stretch along the velocity, volume kept; D-56: at most 1.5 % (was 20 %), the stretch matrix itself is smoothed (tau s) so speed / direction changes never jump",
+   "tau": 0.15
+  },
+  "react": {
+   "fadeOut": 0.06,
+   "note": "cancelBlink: a startle opens the eyes at once (a blink in progress is dropped); the last fadeOut s of a reaction blend its face back to the base face (stand: the same neutral; fly: ajar); clips with arms lower them by keys (aw 0) before this window"
+  },
+  "fade": 0.15,
+  "air": {
+   "sqK": 0.12,
+   "sqMax": 0.012,
+   "headK": 0.25,
+   "headMaxPx": 3,
+   "note": "D-56 (user: 'should not squash strangely on the swing'): on the rope and in flight the keyed squash of reactions and the mouth-switch blip are scaled by sqK and capped at sqMax; head lag gain x headK, cap headMaxPx. Squash stays on the ground only (anticipation crouch, landing of the joy jump, gulp). Measured whole-body axis deviation on the swing: getState().om.axisDev"
+  },
+  "hang": {
+   "armMaxDeg": 20,
+   "armInDeg": 8,
+   "note": "on the rope arm_l (and its child grip_l) turns by (rope angle - body tilt) so the body swings under the arm; the hang pose's own slant of the grip (rig v2: raised diagonally like the v2 frame) is kept. Limits in arm_l local degrees: away from the head up to armMaxDeg (rig v2 grip base shows jaggies past ~20), toward the head up to armInDeg (the grip is drawn behind the body: further in, the fist disappears behind the head). Body tilt stays 0.6 of the rope angle (tilt); rope point = anchors.hands.grip_l, pinned to the rope end"
   }
+ },
+ "poses": {
+  "chewA": {
+   "base": "chew",
+   "bones": {
+    "mouth": {
+     "s": [1, 1.04
+     ]
+    }
+   }
+  },
+  "chewB": {
+   "base": "chew2",
+   "bones": {
+    "mouth": {
+     "s": [1.1, 0.74
+     ]
+    }
+   }
+  },
+  "eatOut": {
+   "base": "half",
+   "armsFrom": "chew",
+   "note": "exit from eating: mouth closed and lids half at the squash peak, hands still at the face (lowered over the next 90 ms)"
+  },
+  "handsDown": {
+   "base": "half",
+   "front": ["paw_fl", "paw_fr"
+   ],
+   "bones": {
+    "arm_l": {
+     "r": 10
+    },
+    "fore_l": {
+     "r": 0
+    },
+    "paw_fl": {
+     "r": 0
+    },
+    "arm_r": {
+     "r": -6
+    },
+    "fore_r": {
+     "r": 0
+    },
+    "paw_fr": {
+     "r": 0
+    }
+   },
+   "note": "exit of eat / joy / shrug: the front paws come down IN FRONT of the belly almost to their place on the ground (lids still half); next key = neutral with aw 0: the paws drop behind the body outline at the middle of that last 80 ms, already at the ground (smallest visible change)"
+  },
+  "joyUp": {
+   "base": "joy",
+   "armsFrom": "fly",
+   "note": "jump of joy: arms raised (fly arms) on the take-off"
+  },
+  "joyOut": {
+   "base": "half",
+   "armsFrom": "joy",
+   "note": "exit from joy: lids half, mouth closed at the squash peak, arms lowered over the next 90 ms"
+  },
+  "startle": {
+   "base": "ajar",
+   "forms": {
+    "eyes": "wide2"
+   },
+   "bones": {
+    "pupil_l": {
+     "s": [0.6, 0.6
+     ]
+    },
+    "pupil_r": {
+     "s": [0.6, 0.6
+     ]
+    }
+   },
+   "note": "miss: flinch with small pupils and a small mouth (not the wide red mouth of anticipation)"
+  },
+  "sadOut": {
+   "base": "half",
+   "note": "exit from sad through half lids"
+  },
+  "shrug": {
+   "base": "wide",
+   "bones": {
+    "arm_l": {
+     "r": 112,
+     "s": [1.05, 1.05
+     ]
+    },
+    "fore_l": {
+     "r": 48
+    },
+    "paw_fl": {
+     "r": -70,
+     "s": [0.85, 0.85
+     ]
+    },
+    "arm_r": {
+     "r": -112,
+     "s": [1.05, 1.05
+     ]
+    },
+    "fore_r": {
+     "r": -48
+    },
+    "paw_fr": {
+     "r": 70,
+     "s": [0.85, 0.85
+     ]
+    }
+   },
+   "note": "dead end of the box: front paws out to the sides, forearms up (palms up), wide face"
+  },
+  "shrugOut": {
+   "base": "half",
+   "armsFrom": "shrug"
+  },
+  "eatGulp": {
+   "base": "wide2",
+   "armsFrom": "chew",
+   "note": "next candy of a series: the mouth opens for the gulp while the front paws stay at the mouth"
+  }
+ },
+ "clips": {
+  "idle": {
+   "layer": "base",
+   "state": "stand",
+   "loop": true,
+   "openParam": true,
+   "breath": true,
+   "fade": 0.2,
+   "note": "3 variants picked at random each pass so the rest never repeats; not while aiming (aim)",
+   "variants": {
+    "breath": {
+     "dur": 3.2,
+     "keys": [
+      {
+       "t": 0,
+       "pose": "neutral",
+       "sq": 0,
+       "lean": 0
+      },
+      {
+       "t": 3.2
+      }
+     ]
+    },
+    "look": {
+     "dur": 3.2,
+     "keys": [
+      {
+       "t": 0,
+       "pose": "neutral",
+       "glance": [0, 0
+       ]
+      },
+      {
+       "t": 0.45,
+       "glance": [-1, -0.35
+       ],
+       "ease": "hold"
+      },
+      {
+       "t": 1.35,
+       "glance": [0.9, 0.15
+       ],
+       "ease": "hold"
+      },
+      {
+       "t": 2.3,
+       "glance": [0, 0
+       ],
+       "ease": "hold"
+      },
+      {
+       "t": 3.2
+      }
+     ]
+    },
+    "sway": {
+     "dur": 3.2,
+     "keys": [
+      {
+       "t": 0,
+       "pose": "neutral",
+       "lean": 0
+      },
+      {
+       "t": 0.8,
+       "lean": -3,
+       "ease": "inout"
+      },
+      {
+       "t": 1.6,
+       "lean": 0,
+       "ease": "inout"
+      },
+      {
+       "t": 1.95,
+       "pose": "half",
+       "lean": 1.5,
+       "ease": "inout"
+      },
+      {
+       "t": 2.6,
+       "pose": "half"
+      },
+      {
+       "t": 2.95,
+       "pose": "neutral",
+       "lean": 0,
+       "ease": "inout"
+      },
+      {
+       "t": 3.2
+      }
+     ]
+    }
+   }
+  },
+  "aim": {
+   "layer": "base",
+   "state": "stand",
+   "loop": true,
+   "openParam": true,
+   "minOpen": 0.3,
+   "breath": true,
+   "fade": 0.15,
+   "dur": 1,
+   "note": "while the player aims: no rest variants, eyes on the candy (the game gives look), mouth at least ajar",
+   "keys": [
+    {
+     "t": 0,
+     "pose": "neutral",
+     "sq": 0,
+     "lean": 0
+    },
+    {
+     "t": 1
+    }
+   ]
+  },
+  "anticipate": {
+   "layer": "base",
+   "state": "stand",
+   "loop": true,
+   "loopFrom": 0.34,
+   "dur": 0.66,
+   "openParam": true,
+   "minOpen": 0.3,
+   "tremble": true,
+   "fade": 0.08,
+   "note": "crouch, then up on the toes; tremble grows with open (motion.tremble); the mouth follows the open param (at least ajar)",
+   "keys": [
+    {
+     "t": 0,
+     "pose": "neutral",
+     "sq": 0,
+     "lean": 0,
+     "open": 0
+    },
+    {
+     "t": 0.12,
+     "sq": -0.09,
+     "lean": -2,
+     "open": 0.3,
+     "ease": "out"
+    },
+    {
+     "t": 0.34,
+     "sq": 0.05,
+     "lean": -3,
+     "ease": "inout"
+    },
+    {
+     "t": 0.5,
+     "sq": 0.025,
+     "lean": -2.5,
+     "ease": "inout"
+    },
+    {
+     "t": 0.66,
+     "sq": 0.05,
+     "lean": -3,
+     "ease": "inout"
+    }
+   ]
+  },
+  "hang": {
+   "layer": "base",
+   "state": "hang",
+   "loop": true,
+   "openParam": true,
+   "dur": 1,
+   "fade": 0.12,
+   "keys": [
+    {
+     "t": 0,
+     "pose": "hang"
+    },
+    {
+     "t": 1
+    }
+   ]
+  },
+  "fly": {
+   "layer": "base",
+   "state": "fly",
+   "loop": true,
+   "openParam": true,
+   "dur": 1,
+   "fade": 0.12,
+   "keys": [
+    {
+     "t": 0,
+     "pose": "fly"
+    },
+    {
+     "t": 1
+    }
+   ]
+  },
+  "flyWide": {
+   "layer": "base",
+   "state": "fly",
+   "loop": true,
+   "dur": 1,
+   "fade": 0.1,
+   "keys": [
+    {
+     "t": 0,
+     "pose": "fly_wide"
+    },
+    {
+     "t": 1
+    }
+   ]
+  },
+  "eat": {
+   "layer": "react",
+   "arms": true,
+   "fade": 0.05,
+   "dur": 0.9,
+   "rate": 1,
+   "lengths": [0.65, 0.9
+   ],
+   "replayFrom": null,
+   "note": "D-56 (user: 'eats very fast'): ~0.9 s. Gulp 0.16 s (wide2 -> chew at the squash peak at 0.09, paws to the mouth) -> chew loop (cycle 0.27 = 2 bites, fitted into dur: 0.125 s per switch at 0.9 and at 0.65) -> exit 0.24 s: squash peak = mouth closed + lids half, paws down in front of the belly to the ground, lids open. Series (candies in a row): dur 0.65, every next candy restarts with replayIntro (a full gulp >= 0.15 s, paws stay at the mouth)",
+   "intro": [
+    {
+     "t": 0,
+     "pose": "wide2",
+     "sq": 0.08,
+     "lean": -3
+    },
+    {
+     "t": 0.09,
+     "pose": "chewA",
+     "sq": -0.2,
+     "lean": 0,
+     "ease": "in"
+    },
+    {
+     "t": 0.16,
+     "sq": 0.04,
+     "ease": "out"
+    }
+   ],
+   "loop": {
+    "cycle": 0.27,
+    "keys": [
+     {
+      "t": 0.135,
+      "pose": "chewB",
+      "sq": -0.06,
+      "ease": "inout"
+     },
+     {
+      "t": 0.27,
+      "pose": "chewA",
+      "sq": 0.03,
+      "ease": "inout"
+     }
+    ]
+   },
+   "outro": [
+    {
+     "t": 0.07,
+     "pose": "eatOut",
+     "sq": -0.07,
+     "ease": "in"
+    },
+    {
+     "t": 0.16,
+     "pose": "handsDown",
+     "sq": 0.02,
+     "ease": "inout"
+    },
+    {
+     "t": 0.24,
+     "pose": "neutral",
+     "sq": 0,
+     "aw": 0,
+     "ease": "out"
+    }
+   ],
+   "replayFade": 0.05,
+   "replayIntro": [
+    {
+     "t": 0,
+     "pose": "eatGulp",
+     "sq": 0.05,
+     "lean": -2
+    },
+    {
+     "t": 0.09,
+     "pose": "chewA",
+     "sq": -0.16,
+     "lean": 0,
+     "ease": "in"
+    },
+    {
+     "t": 0.16,
+     "sq": 0.04,
+     "ease": "out"
+    }
+   ]
+  },
+  "joy": {
+   "layer": "react",
+   "arms": true,
+   "fade": 0.06,
+   "dur": 0.9,
+   "rate": 1,
+   "lengths": [0.6, 0.9, 1.4
+   ],
+   "note": "crouch (switch to joy at its peak) -> jump with raised arms (lift only when standing) -> land squash -> bounce loop (0 at 0.6 s, 1 at 0.9, 2 at 1.4) -> rebound, squash peak = half lids + closed mouth, arms down 90 ms",
+   "intro": [
+    {
+     "t": 0,
+     "pose": "neutral",
+     "sq": 0,
+     "lift": 0
+    },
+    {
+     "t": 0.06,
+     "pose": "joy",
+     "sq": -0.14,
+     "ease": "out"
+    },
+    {
+     "t": 0.09,
+     "pose": "joyUp",
+     "sq": 0.16,
+     "lift": 16,
+     "ease": "in"
+    },
+    {
+     "t": 0.18,
+     "sq": 0.05,
+     "lift": 78,
+     "ease": "out"
+    },
+    {
+     "t": 0.24,
+     "sq": 0,
+     "lift": 86,
+     "ease": "out"
+    },
+    {
+     "t": 0.34,
+     "pose": {
+      "joyUp": 0.55,
+      "joy": 0.45
+     },
+     "sq": 0.08,
+     "lift": 0,
+     "ease": "in"
+    },
+    {
+     "t": 0.38,
+     "pose": "joy",
+     "sq": -0.16,
+     "ease": "out"
+    }
+   ],
+   "loop": {
+    "cycle": 0.4,
+    "keys": [
+     {
+      "t": 0.1,
+      "sq": 0.04,
+      "bones": {
+       "arm_l": {
+        "r": -12
+       },
+       "arm_r": {
+        "r": 12
+       }
+      },
+      "ease": "inout"
+     },
+     {
+      "t": 0.2,
+      "sq": -0.05,
+      "bones": {
+       "arm_l": {
+        "r": 8
+       },
+       "arm_r": {
+        "r": -8
+       }
+      },
+      "ease": "inout"
+     },
+     {
+      "t": 0.3,
+      "sq": 0.05,
+      "lift": 14,
+      "bones": {
+       "arm_l": {
+        "r": -12
+       },
+       "arm_r": {
+        "r": 12
+       }
+      },
+      "ease": "out"
+     },
+     {
+      "t": 0.4,
+      "sq": -0.07,
+      "lift": 0,
+      "ease": "in"
+     }
+    ]
+   },
+   "outro": [
+    {
+     "t": 0.04,
+     "sq": 0.03,
+     "ease": "out"
+    },
+    {
+     "t": 0.08,
+     "pose": "joyOut",
+     "sq": -0.08,
+     "ease": "in"
+    },
+    {
+     "t": 0.17,
+     "pose": "handsDown",
+     "sq": 0.02,
+     "ease": "inout"
+    },
+    {
+     "t": 0.22,
+     "pose": "neutral",
+     "sq": 0,
+     "aw": 0,
+     "ease": "out"
+    }
+   ]
+  },
+  "oops": {
+   "layer": "react",
+   "arms": false,
+   "fade": 0.03,
+   "dur": 0.6,
+   "cancelBlink": true,
+   "note": "miss: flinch at once (startle: small pupils, small mouth, stretch) -> sad at the squash peak at 0.15 s -> half lids at the squash peak at 0.5 -> neutral; no arms, so in the air it keeps the flight pose",
+   "keys": [
+    {
+     "t": 0,
+     "pose": "startle",
+     "sq": 0.02,
+     "lift": 0,
+     "lean": 0
+    },
+    {
+     "t": 0.05,
+     "sq": 0.13,
+     "lift": 7,
+     "lean": 2,
+     "ease": "out"
+    },
+    {
+     "t": 0.15,
+     "pose": "sad",
+     "sq": -0.15,
+     "lift": 0,
+     "lean": 4,
+     "ease": "in"
+    },
+    {
+     "t": 0.28,
+     "sq": -0.03,
+     "lean": 3,
+     "ease": "out"
+    },
+    {
+     "t": 0.42,
+     "sq": -0.05,
+     "lean": 3.5,
+     "ease": "inout"
+    },
+    {
+     "t": 0.5,
+     "pose": "sadOut",
+     "sq": -0.08,
+     "lean": 2,
+     "ease": "in"
+    },
+    {
+     "t": 0.6,
+     "pose": "neutral",
+     "sq": 0,
+     "lean": 0,
+     "ease": "out"
+    }
+   ]
+  },
+  "whoosh": {
+   "layer": "react",
+   "arms": false,
+   "fade": 0.03,
+   "fadeOut": 0.06,
+   "dur": 0.25,
+   "cancelBlink": true,
+   "note": "wide2 face 0.25 s on the sweet release (Rope'n'Fly v2 'whoosh'), stretch along the flight",
+   "keys": [
+    {
+     "t": 0,
+     "pose": "wide2",
+     "sq": -0.05
+    },
+    {
+     "t": 0.06,
+     "sq": 0.12,
+     "ease": "out"
+    },
+    {
+     "t": 0.18,
+     "sq": 0.04,
+     "ease": "inout"
+    },
+    {
+     "t": 0.25,
+     "sq": 0,
+     "ease": "inout"
+    }
+   ]
+  },
+  "shrug": {
+   "layer": "react",
+   "arms": true,
+   "fade": 0.06,
+   "dur": 1,
+   "note": "dead end of the box (blocks.md): wide 1.0 s, shoulders up twice with a sway, exit through half lids (squash peak at 0.82), arms down by 0.92",
+   "keys": [
+    {
+     "t": 0,
+     "pose": "neutral",
+     "sq": 0,
+     "lift": 0,
+     "lean": 0
+    },
+    {
+     "t": 0.1,
+     "pose": "shrug",
+     "sq": -0.1,
+     "ease": "out"
+    },
+    {
+     "t": 0.24,
+     "sq": 0.06,
+     "lift": 6,
+     "lean": -4,
+     "bones": {
+      "arm_l": {
+       "r": 10
+      },
+      "arm_r": {
+       "r": -10
+      },
+      "head": {
+       "t": [0, 6
+       ]
+      }
+     },
+     "ease": "out"
+    },
+    {
+     "t": 0.42,
+     "sq": -0.02,
+     "lift": 0,
+     "lean": 4,
+     "ease": "inout"
+    },
+    {
+     "t": 0.6,
+     "sq": 0.04,
+     "lift": 4,
+     "lean": -3,
+     "bones": {
+      "arm_l": {
+       "r": 8
+      },
+      "arm_r": {
+       "r": -8
+      },
+      "head": {
+       "t": [0, 5
+       ]
+      }
+     },
+     "ease": "inout"
+    },
+    {
+     "t": 0.76,
+     "sq": -0.01,
+     "lift": 0,
+     "lean": 2,
+     "ease": "inout"
+    },
+    {
+     "t": 0.82,
+     "pose": "shrugOut",
+     "sq": -0.07,
+     "lean": 0,
+     "ease": "in"
+    },
+    {
+     "t": 0.91,
+     "pose": "handsDown",
+     "sq": 0.02,
+     "ease": "inout"
+    },
+    {
+     "t": 1,
+     "pose": "neutral",
+     "sq": 0,
+     "aw": 0,
+     "ease": "out"
+    }
+   ]
+  },
+  "reach": {
+   "layer": "react",
+   "arms": true,
+   "dur": 1.42,
+   "fade": 0.06,
+   "note": "hint without text: dip, reach out to the left (viewer side), wiggle the paw, back",
+   "keys": [
+    {
+     "t": 0,
+     "pose": "neutral",
+     "sq": 0,
+     "lean": 0
+    },
+    {
+     "t": 0.1,
+     "pose": "ajar",
+     "sq": -0.06,
+     "lean": 1,
+     "ease": "out"
+    },
+    {
+     "t": 0.28,
+     "pose": "reach",
+     "sq": 0.06,
+     "lean": -5,
+     "ease": "out"
+    },
+    {
+     "t": 0.45,
+     "sq": 0,
+     "lean": -4,
+     "ease": "inout"
+    },
+    {
+     "t": 0.62,
+     "bones": {
+      "paw_fl": {
+       "r": 14
+      },
+      "fore_l": {
+       "r": -6
+      }
+     },
+     "ease": "inout"
+    },
+    {
+     "t": 0.78,
+     "bones": {
+      "paw_fl": {
+       "r": -8
+      },
+      "fore_l": {
+       "r": 4
+      }
+     },
+     "ease": "inout"
+    },
+    {
+     "t": 0.94,
+     "bones": {
+      "paw_fl": {
+       "r": 12
+      },
+      "fore_l": {
+       "r": -5
+      }
+     },
+     "ease": "inout"
+    },
+    {
+     "t": 1.12,
+     "lean": -3,
+     "ease": "inout"
+    },
+    {
+     "t": 1.3,
+     "pose": "neutral",
+     "sq": -0.05,
+     "lean": 0,
+     "ease": "in"
+    },
+    {
+     "t": 1.42,
+     "sq": 0,
+     "ease": "out"
+    }
+   ]
+  },
+  "wave": {
+   "layer": "react",
+   "arms": true,
+   "dur": 0.8,
+   "fade": 0.06,
+   "keys": [
+    {
+     "t": 0,
+     "pose": "neutral",
+     "sq": 0
+    },
+    {
+     "t": 0.08,
+     "pose": "wave1",
+     "sq": -0.06,
+     "ease": "out"
+    },
+    {
+     "t": 0.2,
+     "pose": "wave2",
+     "sq": 0.04,
+     "bones": {
+      "arm_l": {
+       "r": -10
+      },
+      "paw_fl": {
+       "r": -8
+      }
+     },
+     "ease": "inout"
+    },
+    {
+     "t": 0.33,
+     "pose": "wave1",
+     "sq": 0,
+     "bones": {
+      "arm_l": {
+       "r": 10
+      },
+      "paw_fl": {
+       "r": 10
+      }
+     },
+     "ease": "inout"
+    },
+    {
+     "t": 0.46,
+     "pose": "wave2",
+     "sq": 0.03,
+     "bones": {
+      "arm_l": {
+       "r": -10
+      },
+      "paw_fl": {
+       "r": -8
+      }
+     },
+     "ease": "inout"
+    },
+    {
+     "t": 0.59,
+     "pose": "wave1",
+     "sq": 0,
+     "bones": {
+      "arm_l": {
+       "r": 8
+      },
+      "paw_fl": {
+       "r": 8
+      }
+     },
+     "ease": "inout"
+    },
+    {
+     "t": 0.7,
+     "pose": "neutral",
+     "sq": -0.05,
+     "ease": "in"
+    },
+    {
+     "t": 0.8,
+     "sq": 0,
+     "ease": "out"
+    }
+   ]
+  },
+  "blink": {
+   "layer": "react",
+   "blink": true,
+   "dur": 0.25,
+   "fade": 0,
+   "fadeOut": 0.01,
+   "note": "starts the blink (motion.blink) now; changes nothing else (w 0)",
+   "keys": [
+    {
+     "t": 0,
+     "pose": "neutral",
+     "w": 0,
+     "aw": 0
+    },
+    {
+     "t": 0.25
+    }
+   ]
+  }
+ },
+ "rigNote": "v3 (D-56): works on omnom_rig.json version 2 - arms = front paws (body > arm > fore > paw_fl / paw_fr; paw_f* take only r and a uniform s), legs = back lobes paw_bl / paw_br (the only dangle springs), hang = grip_l (child of arm_l) shown, arm_l / fore_l / paw_fl hidden; on the rope arm_l turns the grip along the rope (motion.hang) and anchors.hands.grip_l is pinned to the rope end. Pose patches hangRig / flyRig / flyWideRig / sadRig removed: rig v2 poses are used as is."
 }

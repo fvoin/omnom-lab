@@ -28,7 +28,7 @@
 "use strict";
 // ==== TUNE: главные числа — крутить здесь =====================================================
 // Поле 320×420 u; 1 u = 3,375 px при ширине 1080 → Ом Ном 72 u ≈ 243 px (как в играх). «Качели» — масштаб Rope'n'Fly v2: зум 0,5 (видно 640 u), Ом Ном ≈ 122 px.
-// Риг: assets/omnom-rig/omnom_rig.json (пути, кости, формы, позы), слои, клипы и пружины — assets/omnom-rig/omnom_clips.json (v2).
+// Риг: assets/omnom-rig/omnom_rig.json (данные рига v2 художника: руки = передние лапы, хват grip_l), слои, клипы и пружины — assets/omnom-rig/omnom_clips.json (v3, D-56).
 const W = 320, H = 420;
 const PX = 6.4024, K = 1 / PX;          // px холста рига (= холст кадров v2 525×506) на 1 u
 const DT = 1 / 60;
@@ -46,6 +46,8 @@ const TUNE = {
   eatDist: 14, magnet: 32,       // u: рот ловит конфету; ближе magnet — подтягивает
   openTau: 0.06,                 // open 0..1 по расстоянию конфета — рот: far — параметр игры (clips.json motion.open.far: рогатка 110, горка 140)
   joyDur: 0.9,                   // радость после конфеты в сценке (окна: 0,6 вехи «Коробки», 0,9 гол / запуск игры)
+  eatDur: 0.9, eatSeries: 0.65,  // D-56: ест ~0,9 с (смена жевания 0,125 с, глоток 0,16 с); конфета серии — 0,65 с, следующая — снова глоток
+  seriesGap: 0.32,               // с между конфетами «ест ×3» в пульте
   loop: 15,                      // с, сценка
   events: [[0.6, "aim", "hit"], [1.9, "antic"], [2.5, "launch"], [5.7, "reload"], [6.3, "aim", "miss"], [7.4, "antic"], [7.9, "launch"],
     [10.0, "reload"], [10.5, "reach"], [12.4, "wave"], [13.5, "shrug"]],
@@ -180,26 +182,28 @@ function morphPath(m, w) { let key = ""; for (let i = 0; i < w.length; i++) key 
   m.key = key; m.path = toPath(m.cmds, b); return m.path; }
 function polyArea(n) { let a = 0; const L = n.length - (n.length % 2); for (let i = 0; i < L; i += 2) { const j = (i + 2) % L; a += n[i] * n[j + 1] - n[j] * n[i + 1]; } return Math.abs(a) / 2; }
 
-const R = { J: null, parts: [], bi: {}, NB: 0, shapes: [], byId: {}, fam: {}, mouth: {}, poses: {}, mot: null, clips: {}, CP: null, list: [], arm: [], noAdd: [] };
-let HEAD, BODY, MOUTH, PUPL, PUPR, SPR1, SPR2, SPR3, HANDL, ROOT, SHADOW;
-let FEET, CENTER, MOUTH_O, MOUTH_PT, REST, TRAVEL, GRIP_HANG, SH_IMG = null;
-const ARM_IDS = ["arm_l", "fore_l", "hand_l", "arm_r", "fore_r", "hand_r"];
+const R = { J: null, parts: [], bi: {}, NB: 0, shapes: [], byId: {}, fam: {}, mouth: {}, poses: {}, mot: null, clips: {}, CP: null, list: [], arm: [], side: [], noAdd: [] };
+let HEAD, BODY, MOUTH, PUPL, PUPR, SPR1, SPR2, SPR3, GRIP, ARML, ROOT, SHADOW;
+let FEET, CENTER, MOUTH_O, MOUTH_PT, REST, TRAVEL, GRIP_HANG, GRIP_PT, GRIP_OFF = 0, SH_IMG = null;
+// руки = передние лапы (риг v2, D-56): цепочки body → arm → fore → paw_f*; задние доли paw_bl / paw_br — ноги
+const ARM_IDS = ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"];
 // какие руки реакция может взять у состояния тела: [левая, правая]; на верёвке левая держит верёвку
 const STATE_ARMS = { stand: [1, 1], hang: [0, 1], fly: [1, 1] };
 
 function rigBuild(J, CJ) {
   R.J = J; R.mot = CJ.motion;
-  J.parts.forEach((p, i) => { R.parts.push({ id: p.id, pi: p.parent ? R.bi[p.parent] : -1, pivot: p.pivot }); R.bi[p.id] = i; });
-  R.NB = R.parts.length;
-  [ROOT, BODY, HEAD, MOUTH, PUPL, PUPR, SPR1, SPR2, SPR3, HANDL, SHADOW] =
-    ["root", "body", "head", "mouth", "pupil_l", "pupil_r", "sprout1", "sprout2", "sprout3", "hand_l", "shadow"].map((n) => R.bi[n]);
+  J.parts.forEach((p, i) => { R.bi[p.id] = i; });   // в json v2 ребёнок может стоять раньше родителя (paw_fl → fore_l): индексы, потом родители, мир — по порядку обхода
+  J.parts.forEach((p) => R.parts.push({ id: p.id, pi: p.parent ? R.bi[p.parent] : -1, pivot: p.pivot }));
+  R.NB = R.parts.length; R.order = []; { const seen = new Set(), add = (i) => { if (seen.has(i)) return; const q = R.parts[i].pi; if (q >= 0) add(q); seen.add(i); R.order.push(i); }; for (let i = 0; i < R.NB; i++) add(i); }
+  [ROOT, BODY, HEAD, MOUTH, PUPL, PUPR, SPR1, SPR2, SPR3, GRIP, ARML, SHADOW] =
+    ["root", "body", "head", "mouth", "pupil_l", "pupil_r", "sprout1", "sprout2", "sprout3", "grip_l", "arm_l", "shadow"].map((n) => R.bi[n]);
   for (let i = 0; i < R.NB; i++) { const id = R.parts[i].id, a = ARM_IDS.indexOf(id);
-    R.arm[i] = a < 0 ? -1 : a < 3 ? 0 : 1; R.noAdd[i] = id === "root" || id === "shadow" || /^paw_/.test(id); }
+    R.arm[i] = a < 0 ? -1 : a < 3 ? 0 : 1; R.side[i] = id === "grip_l" ? 0 : R.arm[i]; R.noAdd[i] = id === "root" || id === "shadow" || id === "paw_bl" || id === "paw_br"; }
   FEET = J.anchors.feet; CENTER = [281.71, 300]; MOUTH_O = J.families.mouth.origin; MOUTH_PT = J.anchors.mouth.point;
   REST = J.anchors.pupils.rest; TRAVEL = J.anchors.pupils.travel;
   for (const fn of ["body", "eyes", "lids"]) { const F = J.families[fn]; R.fam[fn] = { members: F.members, slots: F.slots }; }
   J.shapes.forEach((s, i) => {
-    const o = { id: s.id, pi: R.bi[s.part], part: s.part, z: s.z, zFront: s.zFront, fill: s.fill, opacity: s.opacity, blur: s.blur,
+    const o = { id: s.id, pi: R.bi[s.part], part: s.part, z: shadeZ(J, s, "z"), zFront: shadeZ(J, s, "zFront"), fill: s.fill, opacity: s.opacity, blur: s.blur,
       clip: s.clip || null, hidden: !!s.hidden, fam: null, morph: null, path: null, ord: i, mouth: false, nums: null };
     let fam = null; for (const fn of ["body", "eyes", "lids"]) if (R.fam[fn].slots.includes(s.id)) fam = fn;
     if (fam) { o.fam = fam; const F = J.families[fam]; o.morph = makeMorph(F.members.map((m) => F.forms[m][s.id])); }
@@ -220,9 +224,11 @@ function rigBuild(J, CJ) {
     for (const f in c.forms || {}) P[f] = oneHot(R.fam[f].members.length, R.fam[f].members.indexOf(c.forms[f]));
     R.poses[n] = P; }
   R.CP = CJ; for (const n in CJ.clips) R.clips[n] = compileClip(CJ.clips[n]);
-  // точка хвата за верёвку: центр лапки в позе hangRig (px рига, от корня)
-  const hb = bbox(R.byId["hand_l.fill"].nums); const dsH = dsFromPose(R.poses.hangRig, mT(0, 0), true);
-  GRIP_HANG = map(dsH.world[HANDL], (hb[0] + hb[2]) / 2, (hb[1] + hb[3]) / 2);
+  // точка верёвки: anchors.hands.grip_l (кулак хвата, ребёнок arm_l) в позе hang — px рига от корня
+  GRIP_PT = J.anchors.hands.grip_l.point; const dsH = dsFromPose(R.poses.hang, mT(0, 0), true);
+  GRIP_HANG = map(dsH.world[GRIP], GRIP_PT[0], GRIP_PT[1]);
+  // в позе hang рука-хват поднята наискосок (как в кадре v2): угол «вверх» − «плечо → кулак» при наклоне 0; на верёвке он сохраняется
+  { const sp = map(dsH.world[ARML], R.parts[ARML].pivot[0], R.parts[ARML].pivot[1]); GRIP_OFF = -90 - Math.atan2(GRIP_HANG[1] - sp[1], GRIP_HANG[0] - sp[0]) / D2R; }
   // тень: размытие один раз в картинку (подсказка "blur" в json; ctx.filter есть не везде — берём shadowBlur)
   const sh = R.byId["shadow.shape"], b = bbox(sh.nums), m = sh.blur * 3;
   const cv2 = document.createElement("canvas"); cv2.width = Math.ceil(b[2] - b[0] + 2 * m); cv2.height = Math.ceil(b[3] - b[1] + 2 * m);
@@ -230,6 +236,11 @@ function rigBuild(J, CJ) {
   c2.shadowColor = sh.fill; c2.shadowBlur = sh.blur * 2; c2.shadowOffsetX = off; c2.translate(m - b[0] - off, m - b[1]); c2.fillStyle = sh.fill; c2.fill(sh.path);
   SH_IMG = { img: cv2, x: b[0] - m, y: b[1] - m, cx: (b[0] + b[2]) / 2, cy: (b[1] + b[3]) / 2 };
 }
+// тень части слитой группы (z 400–405: доли, росток) рисуется сразу за ЕЁ заливкой, а не после всех заливок группы:
+// иначе при повороте кости тень доли / ростка, ушедшей под заливку тела, всплывает пятном поверх тела (D-56 п. 4)
+function shadeZ(J, s, key) { const z = s[key]; if (z == null || !/\.shade\d+$/.test(s.id) || !s.clip || s.clip.length !== 1) return z;
+  const f = J.shapes.find((q) => q.id === s.clip[0]); if (!f || f.part !== s.part || f[key] == null) return z;
+  const zf = f[key]; return zf >= 200 && zf < 400 && z >= 400 && z < 500 ? zf + 0.5 : zf >= 850 && z > zf ? zf + 0.5 : z; }
 function bbox(n) { let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (let i = 0; i + 1 < n.length; i += 2) { x0 = Math.min(x0, n[i]); x1 = Math.max(x1, n[i]); y0 = Math.min(y0, n[i + 1]); y1 = Math.max(y1, n[i + 1]); } return [x0, y0, x1, y1]; }
 
 // ---- позы: кости (tx, ty, r, sx, sy), веса форм, группа рта, наборы show/hide/front -----------------
@@ -283,20 +294,22 @@ function compileKeys(keys) { const out = []; let pose = "neutral", sq = 0, lift 
   return out; }
 function compileClip(c) { const o = Object.assign({}, c);
   if (c.variants) { o.variants = {}; for (const v in c.variants) o.variants[v] = { dur: c.variants[v].dur, keys: compileKeys(c.variants[v].keys) }; o.vnames = Object.keys(o.variants); }
-  else if (c.intro) o.cache = {};
+  else if (c.intro) { o.cache = {}; if (c.replayIntro) o.cacheMore = {}; }
   else o.keys = compileKeys(c.keys);
   return o; }
 // длина и скорость клипа — от игры: intro + loop×n (растянут ровно под dur) + outro; n = 0 — короткая версия
-function clipKeys(def, opt) {
+// more — следующая конфета серии: вступление replayIntro (глоток с лапами у рта), та же длина
+function clipKeys(def, opt, more) {
   if (!def.intro) return { keys: def.keys, dur: def.dur, outroAt: def.dur, n: 0 };
   const dur = opt && opt.dur != null ? +opt.dur : def.dur, rate = opt && opt.rate != null ? +opt.rate : (def.rate || 1);
-  const ck = dur.toFixed(3) + "|" + rate.toFixed(3); if (def.cache[ck]) return def.cache[ck];
-  const raw = def.intro.map((k) => Object.assign({}, k)), iEnd = raw[raw.length - 1].t, oLen = def.outro[def.outro.length - 1].t;
+  const cache = more && def.cacheMore ? def.cacheMore : def.cache, intro = more && def.replayIntro ? def.replayIntro : def.intro;
+  const ck = dur.toFixed(3) + "|" + rate.toFixed(3); if (cache[ck]) return cache[ck];
+  const raw = intro.map((k) => Object.assign({}, k)), iEnd = raw[raw.length - 1].t, oLen = def.outro[def.outro.length - 1].t;
   const Lp = def.loop, c0 = Lp.cycle / rate, room = Math.max(0, dur - iEnd - oLen);
   const n = room >= c0 * 0.5 ? Math.max(1, Math.round(room / c0)) : 0, cyc = n ? room / n : 0;
   let t0 = iEnd; for (let i = 0; i < n; i++) { for (const k of Lp.keys) raw.push(Object.assign({}, k, { t: t0 + k.t / Lp.cycle * cyc })); t0 += cyc; }
   const outroAt = t0; for (const k of def.outro) raw.push(Object.assign({}, k, { t: t0 + k.t }));
-  return (def.cache[ck] = { keys: compileKeys(raw), dur: t0 + oLen, outroAt, n, cyc }); }
+  return (cache[ck] = { keys: compileKeys(raw), dur: t0 + oLen, outroAt, n, cyc, introEnd: iEnd }); }
 function sampleKeys(keys, t) { let i = 0; while (i < keys.length - 2 && t >= keys[i + 1].t - 1e-6) i++;
   const a = keys[i], b = keys[Math.min(i + 1, keys.length - 1)];
   let u0 = b.t > a.t ? clamp((t - a.t) / (b.t - a.t), 0, 1) : 1; if (t >= b.t - 1e-6) u0 = 1;   // 1e-6: сумма шагов 1/60 не дотягивает до ключа
@@ -317,6 +330,8 @@ function layerMerge(Bp, Rp, w, aw, mask, faceOnly) {
       if (a > 0) { for (let j = 0; j < 5; j++) { if (j === 2) { let d = Rp.b[k + 2] - Bp.b[k + 2]; d = ((d + 540) % 360) - 180; O.b[k + 2] = Bp.b[k + 2] + d * a; } else O.b[k + j] = lerp(Bp.b[k + j], Rp.b[k + j], a); } }
       continue; }
     if (R.noAdd[i] || w <= 0) continue;
+    // зрачки — не сумма, а смешивание: смещения позы полёта и лица реакции (рот по open, «вжух», ест) вместе уводили зрачок за белок (до 220 px)
+    if (i === PUPL || i === PUPR) { for (let j = 0; j < 5; j++) if (j !== 2) O.b[k + j] = lerp(Bp.b[k + j], Rp.b[k + j], w); continue; }
     O.b[k] += w * (Rp.b[k] - N[k]); O.b[k + 1] += w * (Rp.b[k + 1] - N[k + 1]);
     let d = Rp.b[k + 2] - N[k + 2]; d = ((d + 540) % 360) - 180; O.b[k + 2] += w * d;
     O.b[k + 3] *= 1 + w * (Rp.b[k + 3] / (N[k + 3] || 1) - 1); O.b[k + 4] *= 1 + w * (Rp.b[k + 4] / (N[k + 4] || 1) - 1); }
@@ -324,7 +339,13 @@ function layerMerge(Bp, Rp, w, aw, mask, faceOnly) {
   const take = w >= 0.5 && !(faceOnly && Rp.mg === "closed" && Bp.mg !== "closed");
   if (Bp.mg === Rp.mg) { const ww = take ? w : Math.min(w, 0.5); for (let i = 0; i < O.mw.length; i++) O.mw[i] = lerp(Bp.mw[i], Rp.mw[i], faceOnly ? w : ww); }
   else if (take) { O.mg = Rp.mg; O.mw = Rp.mw.slice(); }
-  if (!faceOnly && w >= 0.5) { O.show = Rp.show; O.hide = Rp.hide; }
+  if (!faceOnly && w >= 0.5) { O.show = Rp.show; O.hide = Rp.hide;
+    // лапа, которую состояние держит (на верёвке левая — хват grip_l), остаётся как у базы: её show / hide реакция не трогает
+    const held = (part) => { const sd = R.side[R.bi[part]]; return sd >= 0 && !(mask && aw * mask[sd] >= 0.5); };
+    if ([...Bp.show].some((id) => held(R.byId[id] ? R.byId[id].part : "")) || [...Bp.hide].some(held)) {
+      const sh = new Set([...Rp.show].filter((id) => !(R.byId[id] && held(R.byId[id].part)))), hd = new Set([...Rp.hide].filter((p) => !held(p)));
+      for (const id of Bp.show) if (R.byId[id] && held(R.byId[id].part)) sh.add(id); for (const p of Bp.hide) if (held(p)) hd.add(p);
+      O.show = sh.size ? sh : EMPTY; O.hide = hd.size ? hd : EMPTY; } }
   if (!faceOnly && mask && aw > 0) { const drv = (id) => ARM_IDS.includes(id) && aw * mask[R.arm[R.bi[id]]] >= 0.5; let ch = false;
     for (const id of ARM_IDS) if (drv(id) && Bp.front.has(id) !== Rp.front.has(id)) ch = true;
     if (ch) { const f = new Set(); for (const p of Bp.front) if (!drv(p)) f.add(p); for (const p of Rp.front) if (drv(p)) f.add(p); O.front = f; } }
@@ -347,7 +368,7 @@ function newDS() { const v = new Float64Array(R.NB * 5);
   return { v, over: new Array(R.NB).fill(null), world: Array.from({ length: R.NB }, () => [1, 0, 0, 1, 0, 0]), loc: [1, 0, 0, 1, 0, 0],
     body: Float64Array.of(1, 0, 0), eyes: Float64Array.of(1, 0, 0), lids: Float64Array.of(1, 0, 0, 0, 0, 0), mg: "closed", mw: Float64Array.of(1),
     show: EMPTY, hide: EMPTY, front: EMPTY, shadowA: 1, shadowS: 1, place: mT(0, 0) }; }
-function dsWorld(ds) { for (let i = 0; i < R.NB; i++) { const p = R.parts[i];
+function dsWorld(ds) { for (let j = 0; j < R.NB; j++) { const i = R.order[j], p = R.parts[i];
   const L = ds.over[i] || boneLocal(p.pivot, ds.v, i * 5, ds.loc);
   mmul(p.pi < 0 ? ds.place : ds.world[p.pi], L, ds.world[i]); } }
 function dsFromPose(P, place, noShadow) { const ds = newDS(); ds.v.set(P.b); ds.body.set(P.body); ds.eyes.set(P.eyes); ds.lids.set(P.lids);
@@ -394,7 +415,7 @@ function makeOm(seed) {
     blink: { next: 1.2, t0: -9 }, noAutoBlink: false,
     shown: { mg: "closed", mw: Float64Array.of(1) }, pend: null, mgB: "closed", mgX: null,
     simT: 0, rng: mulberry(seed || 7), place: { x: 160, y: 344, piv: FEET, rot: 0, flip: 1, fx: 1 },
-    ds: newDS(), pupilNorm: [0, 0], groupSwitches: 0, lastSq: 0, lastLift: 0, lastLean: 0, wR: 0, aw: 0, armMask: [1, 1], state: "stand", open: 0, stretch: 0, tremble: 0 };
+    ds: newDS(), pupilNorm: [0, 0], groupSwitches: 0, sv: [1, 0, 1], svOk: false, dm: [1, 0, 0, 1, 0, 0], axisDev: 0, rope: null, armRope: 0, armRopeLeft: 0, lastSq: 0, lastLift: 0, lastLean: 0, wR: 0, aw: 0, armMask: [1, 1], state: "stand", open: 0, stretch: 0, tremble: 0 };
   om.B.keys = om.B.def.variants.breath.keys;
   computePlace(om); om.ds = dsFromPose(R.poses.neutral, om.ds.place); return om;
 }
@@ -410,11 +431,13 @@ function omBase(om, name, opt) {
 function omReact(om, name, opt) {
   const def = R.clips[name]; if (!def || def.layer !== "react") return false; opt = opt || {};
   const cur = om.X, k = clipKeys(def, opt);
-  if (cur && cur.clip === name && def.replayFrom != null && cur.t < cur.outroAt) {   // поток конфет: сразу в глоток, руки остаются у рта
-    om.X = { clip: name, def, t: def.replayFrom, keys: k.keys, dur: k.dur, outroAt: k.outroAt, n: k.n, fadeIn: 0, then: opt.then || cur.then || null, opt, replays: (cur.replays || 0) + 1 };
+  if (cur && cur.clip === name && def.replayIntro && cur.t < cur.outroAt) {   // поток конфет: новый глоток (не короче 0,15 с), лапы остаются у рта
+    const km = clipKeys(def, opt, true); om.xf = { from: om.last, t: 0, dur: def.replayFade || 0.05 };
+    om.X = { clip: name, def, t: 0, keys: km.keys, dur: km.dur, outroAt: km.outroAt, n: km.n, cyc: km.cyc, introEnd: km.introEnd, fadeIn: 0,
+      then: opt.then || cur.then || null, opt, replays: (cur.replays || 0) + 1 };
     return true; }
   if (cur && !opt.noFade) om.xf = { from: om.last, t: 0, dur: def.fade || 0.04 };   // реакция сменяет реакцию — перетекание с текущей позы
-  om.X = { clip: name, def, t: 0, keys: k.keys, dur: k.dur, outroAt: k.outroAt, n: k.n, fadeIn: opt.noFade || cur ? 0 : (def.fade != null ? def.fade : 0.06),
+  om.X = { clip: name, def, t: 0, keys: k.keys, dur: k.dur, outroAt: k.outroAt, n: k.n, cyc: k.cyc, introEnd: k.introEnd, fadeIn: opt.noFade || cur ? 0 : (def.fade != null ? def.fade : 0.06),
     then: opt.then || null, opt, replays: 0, blinked: false };
   if (def.cancelBlink) om.blink.t0 = -9;   // вздрог: глаза распахиваются сразу, начатое моргание сбрасываем
   return true; }
@@ -437,7 +460,8 @@ function omStep(om, dt) {
   if (B.fade) { B.fade.t += dt; const u = clamp(B.fade.t / B.fade.dur, 0, 1); P = lerpPose(B.fade.from, P, smooth(u), "B"); if (u >= 1) B.fade = null; }
   om.lastBase = P;
   // руки, которые реакция может взять: маска состояния, смена — плавно за 0,1 с (повис посреди еды — левая рука уходит на верёвку, а не прыгает)
-  const am = STATE_ARMS[state]; for (let s = 0; s < 2; s++) om.armMask[s] += clamp(am[s] - om.armMask[s], -dt / 0.1, dt / 0.1);
+  // схватил верёвку — лапа уходит к ней за 0,04 с (иначе 2–3 кадра верёвка висит у тела, а хват ещё за ним); отпустил — 0,1 с
+  const am = STATE_ARMS[state]; for (let s = 0; s < 2; s++) om.armMask[s] += clamp(am[s] - om.armMask[s], -dt / 0.04, dt / 0.1);
   let sqK = Kb.sq, lift = Kb.lift, leanK = Kb.lean, glance = Kb.glance, wR = 0, aw = 0, Kr = null;
   // 2. реакция поверх базы
   let X = om.X;
@@ -457,7 +481,7 @@ function omStep(om, dt) {
   let keyed = false;
   if (Kr && wR >= 0.5) keyed = Kr.P.mg !== om.mgX && P.mg === Kr.P.mg && !om.xf;
   else if (!Kr) keyed = Kb.P.mg !== om.mgB && P.mg === Kb.P.mg && !B.fade && open <= 0.001;
-  om.mgX = Kr ? Kr.P.mg : null; om.mgB = Kb.P.mg;
+  om.mgX = Kr ? (wR >= 0.5 ? Kr.P.mg : om.mgX) : null; om.mgB = Kb.P.mg;   // ключ реакции, пришедший во время её проявления (w < 0,5), срабатывает сразу при w ≥ 0,5
   const GS = M.groupSwitch; let blip = 0;
   if (P.mg !== om.shown.mg) {
     if (keyed && !om.pend) { om.shown.mg = P.mg; om.shown.mw = P.mw.slice(); om.groupSwitches++; }
@@ -470,9 +494,11 @@ function omStep(om, dt) {
     if (bt >= 2 * half) om.pend = null; }
   else if (om.shown.mg === P.mg) om.shown.mw = P.mw.slice();
   // 4. числа: сжатие (+ дыхание, + дрожь предвкушения ~ open), наклон, подъём
-  let sqT = sqK + blip;
+  // на верёвке и в полёте (D-56 п. 2) ключевое сжатие реакций и «блип» смены рта — ×air.sqK, предел air.sqMax: сквош — только на земле (приземление, предвкушение)
+  const AIR = M.air, aK = lerp(1, AIR.sqK, air), aMax = lerp(M.squash.max, AIR.sqMax, air);
+  let sqT = (sqK + blip) * aK;
   if (B.def.breath) sqT += M.breath.sq * Math.sin(2 * Math.PI * om.simT / M.breath.periodS);
-  let sq = clamp(sodStep(om.sq, dt, sqT), -M.squash.max, M.squash.max);
+  let sq = clamp(sodStep(om.sq, dt, sqT), -aMax, aMax);
   let tremLean = 0; om.tremble = 0;
   if (B.def.tremble) { const T = M.tremble, a = (T.base + (1 - T.base) * clamp(om.p.open, 0, 1)) * (1 - wR); om.tremble = a;
     sq += T.sq * a * Math.sin(2 * Math.PI * T.hz * om.simT); tremLean = T.leanDeg * a * Math.sin(2 * Math.PI * T.hz2 * om.simT + 1); }
@@ -514,9 +540,15 @@ function omStep(om, dt) {
   // тело: сжатие от лап (в воздухе — от центра), растяжение по скорости, наклон, подъём
   const bv = ds.v, k = BODY * 5;
   const Q = [lerp(FEET[0], CENTER[0], air), lerp(FEET[1], CENTER[1], air)];
-  const st = M.speedStretch.max * clamp(om.p.speed, 0, 1); om.stretch = st; let ux = om.p.dir[0], uy = om.p.dir[1]; const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
-  const a = 1 + st, b = 1 / (1 + st);
-  const Sv = [a * ux * ux + b * uy * uy, (a - b) * ux * uy, (a - b) * ux * uy, a * uy * uy + b * ux * ux, 0, 0];
+  // растяжение вдоль скорости: ≤ speedStretch.max (объём сохраняется), сама матрица сглажена (τ) — без рывков при смене скорости и направления
+  const st = M.speedStretch.max * clamp(om.p.speed, 0, 1); let ux = om.p.dir[0], uy = om.p.dir[1]; const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
+  const a = 1 + st, b = 1 / (1 + st), SvT = [a * ux * ux + b * uy * uy, (a - b) * ux * uy, a * uy * uy + b * ux * ux];
+  const kS = om.svOk ? 1 - Math.exp(-dt / M.speedStretch.tau) : 1; om.svOk = true;
+  for (let i = 0; i < 3; i++) om.sv[i] += (SvT[i] - om.sv[i]) * kS;
+  const Sv = [om.sv[0], om.sv[1], om.sv[1], om.sv[2], 0, 0];
+  { const dm = mmul(mS(1 / (1 + sq), 1 + sq), Sv, om.dm), p0 = dm[0] * dm[0] + dm[1] * dm[1], q0 = dm[2] * dm[2] + dm[3] * dm[3], r0 = dm[0] * dm[2] + dm[1] * dm[3];
+    const m0 = (p0 + q0) / 2, d0 = Math.sqrt(Math.max(0, (p0 - q0) * (p0 - q0) / 4 + r0 * r0)); om.stretch = Math.sqrt(m0 + d0) - 1;
+    om.axisDev = Math.max(Math.sqrt(m0 + d0) - 1, 1 - Math.sqrt(Math.max(0, m0 - d0))); }
   ds.over[BODY] = chain(mT(bv[k], bv[k + 1] - lift), mT(FEET[0], FEET[1]), mR(bv[k + 2] + lean), mT(-FEET[0], -FEET[1]),
     mT(Q[0], Q[1]), mS(1 / (1 + sq), 1 + sq), Sv, mT(-Q[0], -Q[1]), mT(FEET[0], FEET[1]), mS(bv[k + 3], bv[k + 4]), mT(-FEET[0], -FEET[1]));
   // голова отстаёт от ускорения тела, росток и лапы — пружины (значения с прошлого шага)
@@ -527,6 +559,16 @@ function omStep(om, dt) {
   // 8. размещение и мир; разворот — зеркало за один кадр (голову в 3D не крутим), с тем же «блипом» сжатия
   if (om.place.fx !== om.place.flip) { om.place.fx = om.place.flip; om.flipT = 0; }
   computePlace(om); dsWorld(ds);
+  // на верёвке: тело качается под рукой — поворот arm_l на (угол верёвки − наклон тела), от −armMaxDeg до +armInDeg; рука сохраняет наклон позы hang
+  // относительно верёвки (GRIP_OFF), кулак (anchors.hands.grip_l) ровно в точке верёвки
+  om.armRope = 0;
+  if (om.rope && state === "hang" && ds.show.has("grip_l.fill")) { const H = M.hang, g = map(ds.world[GRIP], GRIP_PT[0], GRIP_PT[1]), sp = map(ds.world[ARML], R.parts[ARML].pivot[0], R.parts[ARML].pivot[1]);
+    const want = Math.atan2(om.rope.ay - om.rope.y, om.rope.ax - om.rope.x), have = Math.atan2(g[1] - sp[1], g[0] - sp[0]);
+    const Pm = ds.place, sg = Pm[0] * Pm[3] - Pm[1] * Pm[2] < 0 ? -1 : 1; let d = (want - have) / D2R - sg * GRIP_OFF; d = ((d + 540) % 360) - 180;
+    // локально «+» — кулак к голове: хват за телом, при повороте больше armInDeg он уходит за голову (верёвка тогда идёт за головой, как у кадров v2)
+    om.armRope = clamp(sg * d, -H.armMaxDeg, H.armInDeg); ds.v[ARML * 5 + 2] += om.armRope; dsWorld(ds);
+    const g2 = map(ds.world[GRIP], GRIP_PT[0], GRIP_PT[1]); ds.place[4] += om.rope.x - g2[0]; ds.place[5] += om.rope.y - g2[1]; dsWorld(ds);
+    om.armRopeLeft = Math.round(Math.abs(sg * d - om.armRope) * 100) / 100; }
   // 9. пружины вторичного движения (мир этого кадра → значения на следующий)
   secondary(om, dt, air);
   om.lastSq = sq; om.lastLift = lift; om.lastLean = lean; om.open = open;
@@ -537,8 +579,9 @@ function secondary(om, dt, air) {
   const hp = map(Wb, R.parts[HEAD].pivot[0], R.parts[HEAD].pivot[1]);
   if (om.hpPrev) { const vx = (hp[0] - om.hpPrev[0]) / dt, vy = (hp[1] - om.hpPrev[1]) / dt;
     if (om.hvPrev) { const ax = (vx - om.hvPrev[0]) / dt, ay = (vy - om.hvPrev[1]) / dt; const iv = minv(Wb); const al = [iv[0] * ax + iv[2] * ay, iv[1] * ax + iv[3] * ay];
-      const H = M.head, w = 2 * Math.PI * H.f; for (let i = 0; i < 2; i++) { const h = dt / 2; om.hjv += h * (-w * w * om.hj - 2 * H.zeta * w * om.hjv - H.gain * al[1]); om.hj += h * om.hjv; }
-      om.hj = clamp(om.hj, -H.maxPx, H.maxPx); }
+      const H = M.head, w = 2 * Math.PI * H.f, gk = lerp(1, M.air.headK, air), mx = lerp(H.maxPx, M.air.headMaxPx, air);   // в воздухе голова почти не «проседает» (D-56 п. 2)
+      for (let i = 0; i < 2; i++) { const h = dt / 2; om.hjv += h * (-w * w * om.hj - 2 * H.zeta * w * om.hjv - gk * H.gain * al[1]); om.hj += h * om.hjv; }
+      om.hj = clamp(om.hj, -mx, mx); }
     om.hvPrev = [vx, vy]; }
   om.hpPrev = hp;
   // росток: кончик — точка на пружине в мире; отклонение угла вокруг основания → три звена
@@ -553,13 +596,13 @@ function secondary(om, dt, air) {
   ptStep(pw, dt, pt[0], pt[1], Pw.f, Pw.zeta);
   const ql = map(minv(Wb), pw.x, pw.y); om.pawD = (ql[0] - Pw.point[0]);
 }
-function omSettle(om) { om.sq.yd = 0; om.lean.yd = 0; om.spr.ok = false; om.paw.ok = false; om.hj = om.hjv = 0; om.hpPrev = om.hvPrev = null; om.g = [0, 0]; om.pend = null; }
+function omSettle(om) { om.svOk = false; om.sq.yd = 0; om.lean.yd = 0; om.spr.ok = false; om.paw.ok = false; om.hj = om.hjv = 0; om.hpPrev = om.hvPrev = null; om.g = [0, 0]; om.pend = null; }
 
 // ==== Кадры v2 (как в играх): стоячие кадры — OMS выше, позы — картинки 640×608 (сдвиг 64 px) =========
 const V2P = {}, V2P_NAMES = ["hang", "fly", "fly_wide", "reach", "wave1", "wave2"];
 const v2Loaded = Promise.all(V2P_NAMES.map((n) => new Promise((res) => { const i = new Image(); V2P[n] = i; i.onload = i.onerror = res; i.src = "assets/omnom-rig/v2/" + n + ".png"; })));
 // какой кадр v2 показала бы игра в этот момент (смена кадров, без сквоша — как сейчас в играх)
-const V2_ALIAS = { hangRig: "pose:hang", flyRig: "pose:fly", flyWideRig: "pose:fly_wide", sadRig: "sad", chewA: "chew", chewB: "chew2", startle: "wide", eatOut: "half", joyOut: "half", sadOut: "half", shrug: "wide", shrugOut: "half", joyUp: "joy" };
+const V2_ALIAS = { hang: "pose:hang", fly: "pose:fly", fly_wide: "pose:fly_wide", chewA: "chew", chewB: "chew2", startle: "wide", eatOut: "half", joyOut: "half", sadOut: "half", shrug: "wide", shrugOut: "half", joyUp: "joy" };
 function v2Frame(om) {
   const B = om.B, X = om.X, st = B.def.state || "stand", o = om.open || 0;
   if (B.clip[0] === "@") { const n = B.clip.slice(1); return V2_ALIAS[n] || (OMS.img[n] ? n : V2P[n] ? "pose:" + n : "neutral"); }
@@ -567,7 +610,7 @@ function v2Frame(om) {
   if (st === "fly") return X && (X.clip === "whoosh" || X.clip === "eat") ? "pose:fly_wide" : "pose:fly";
   if (X) { const t = X.t;
     switch (X.clip) {
-      case "eat": return t < 0.05 && !X.replays ? "wide2" : t < X.outroAt + 0.05 ? (Math.floor(t * 12) % 2 ? "chew2" : "chew") : "neutral";
+      case "eat": { const i0 = X.introEnd || 0.1, h = (X.cyc || 0.27) / 2; return t < i0 * 0.55 ? "wide2" : t < X.outroAt + 0.07 ? (t > i0 && Math.floor((t - i0) / h) % 2 === 0 ? "chew2" : "chew") : "neutral"; }
       case "joy": return t >= 0.06 && t < X.dur - 0.09 ? "joy" : "neutral";
       case "oops": return t < 0.15 ? "wide" : t < 0.5 ? "sad" : "neutral";
       case "reach": return t >= 0.28 && t < 1.3 ? "pose:reach" : t >= 0.1 ? "ajar" : "neutral";
@@ -604,7 +647,7 @@ const S = { scene: "scene", view: "rig", game: "sling", t: 0, simT: 0, candy: nu
 let om = null, SW = null, SWPLAN = null;
 const RULES = {
   scene: "Сценка 15 с (рогатка): прицел — глаза на конфете, рот приоткрыт → предвкушение с дрожью → ест → радость; промах → «ой»; тянется, машет, пожимает плечами (тупик «Коробки»).",
-  swing: "Качели на числах Rope'n'Fly v2: верёвка к крыше под 55°, 350–1000 u/с, Ом Ном ≈ 122 px. Ест на верёвке и в полёте, «вжух» — широкий рот, в варенье — «ой» в позе полёта.",
+  swing: "Качели на числах Rope'n'Fly v2: верёвка к крыше под 55°, 350–1000 u/с, Ом Ном ≈ 122 px. Ест на верёвке и в полёте (доедает), «вжух» — широкий рот, в варенье — «ой» в позе полёта. Держит верёвку передней лапой; в воздухе почти не сжимается (≤ 2 %).",
   pult: "Пульт: верхний ряд — состояние тела, нижний — реакции поверх него (ест, радость, «ой»… в воздухе тоже). Ползунки: рот, скорость, взгляд; тап по полю — посмотреть туда.",
 };
 function openFar() { return R.mot.open.far[S.game] || 110; }
@@ -651,7 +694,7 @@ function sceneStep(dt) {
       openRaw = clamp((far - d) / (far - near), 0, 1);
       if (S.kind === "hit") {
         if (d < TUNE.magnet) { c.x += (m[0] - c.x) * 0.35; c.y += (m[1] - c.y) * 0.35; }
-        if (d < TUNE.eatDist) { c.st = "eaten"; c.t = 0; omBase(om, "idle"); omReact(om, "eat", { then: { clip: "joy", dur: TUNE.joyDur } }); }
+        if (d < TUNE.eatDist) { c.st = "eaten"; c.t = 0; omBase(om, "idle"); omReact(om, "eat", { dur: TUNE.eatDur, then: { clip: "joy", dur: TUNE.joyDur } }); }
       } else if (!S.oopsDone && c.x > om.place.x + 4) { S.oopsDone = true; omBase(om, "idle"); omReact(om, "oops"); }
       const fy = TUNE.floorY - TUNE.candyR;
       if (c.y > fy) { c.y = fy; c.vy = Math.abs(c.vy) > 60 ? -Math.abs(c.vy) * 0.38 : 0; c.vx *= 0.8; }
@@ -729,7 +772,7 @@ function swingInit() {
   SW = swNew(); SW.candies = SWPLAN.candies.map((c) => ({ x: c.p[0], y: c.p[1], fast: c.fast, st: "on", t: 0, rot: 0 })); SW.houses = SWPLAN.houses;
   SW.eats = 0; SW.oops = 0; SW.whoosh = 0; S.openS = 0; S.t = 0;
   const p = om.place; Object.assign(p, { x: SW.pl.x, y: SW.pl.y, rot: SW.pl.rot, piv: SW.pl.piv, flip: -1, fx: -1 });
-  omBase(om, "hang", { noFade: true }); om.p.air = 1; computePlace(om); S.candy = null; camUpdate(true);
+  omBase(om, "hang", { noFade: true }); om.p.air = 1; om.rope = { x: SW.pl.x, y: SW.pl.y, ax: SW.ax, ay: SW.ay }; computePlace(om); S.candy = null; camUpdate(true);
 }
 function toLocalDir(vx, vy) { const r = -om.place.rot * D2R, c = Math.cos(r), s = Math.sin(r); return [(vx * c - vy * s) * Math.sign(om.place.fx || 1), vx * s + vy * c]; }
 function camUpdate(snap) { const T = TUNE.swing, VW = W / T.zoom, VH = H / T.zoom, c = map(placeM(SW.pl), CENTER[0], CENTER[1]);
@@ -742,10 +785,12 @@ function swingStep(dt) {
   swStep(sw, dt);
   for (const e of sw.evNow) {
     if (e === "attach") omBase(om, "hang");
-    else if (e === "whoosh") { omBase(om, "fly"); omReact(om, "whoosh"); sw.whoosh = (sw.whoosh || 0) + 1; }
+    else if (e === "whoosh") { omBase(om, "fly"); sw.whoosh = (sw.whoosh || 0) + 1;   // ест — доедает (D-56: еда не обрывается), «вжух» лицом — только если рот свободен
+      if (!(om.X && om.X.clip === "eat" && om.X.t < om.X.outroAt)) omReact(om, "whoosh"); }
     else if (e === "release") omBase(om, "fly");
     else if (e === "bounce") { omReact(om, "oops"); sw.oops++; } }
   Object.assign(p, { x: sw.pl.x, y: sw.pl.y, rot: sw.pl.rot, piv: sw.pl.piv });
+  om.rope = sw.ph === "hang" ? { x: sw.pl.x, y: sw.pl.y, ax: sw.ax, ay: sw.ay } : null;
   om.p.air = 1; om.p.speed = clamp((sw.speed - R.mot.speedStretch.v0) / (R.mot.speedStretch.v1 - R.mot.speedStretch.v0), 0, 1);
   om.p.dir = sw.speed > 1 ? toLocalDir(sw.vel[0], sw.vel[1]) : [0, -1];
   // конфеты: рот открывается по расстоянию (far 140 u), ест на верёвке и в полёте; серия — быстрее и сразу в глоток
@@ -753,7 +798,7 @@ function swingStep(dt) {
   for (const c of sw.candies) { c.rot += dt * 3; if (c.st === "eaten") { c.t += dt; c.x = mw[0]; c.y = mw[1]; if (c.t > 0.08) c.st = "gone"; continue; } if (c.st !== "on") continue;
     const d = Math.hypot(c.x - mw[0], c.y - mw[1]);
     if (d < T.magnet) { c.x += (mw[0] - c.x) * 0.35; c.y += (mw[1] - c.y) * 0.35; }
-    if (d < T.eatDist) { c.st = "eaten"; c.t = 0; sw.eats++; omReact(om, "eat", c.fast ? { dur: 0.45, rate: 1.5 } : { dur: 0.6 }); continue; }
+    if (d < T.eatDist) { c.st = "eaten"; c.t = 0; sw.eats++; omReact(om, "eat", { dur: c.fast ? TUNE.eatSeries : TUNE.eatDur }); continue; }
     if (c.x > m[0] - 30 && d < bd) { bd = d; best = c; } }
   const openRaw = best ? clamp((T.openFar - bd) / (T.openFar - R.mot.open.near), 0, 1) : 0;
   S.openS += (openRaw - S.openS) * (1 - Math.exp(-dt / TUNE.openTau)); om.p.open = S.openS;
@@ -818,7 +863,7 @@ function drawAim(c) { const cd = S.candy; if (!cd || cd.st !== "aim") return;
   c.globalAlpha = 1; }
 function drawRope(c, x0, y0, x1, y1, w) { w = w || 3.6; c.lineCap = "round"; c.strokeStyle = C.cut; c.lineWidth = w; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke();
   c.strokeStyle = C.cream2; c.lineWidth = w * 0.45; c.setLineDash([w * 1.1, w * 0.85]); c.stroke(); c.setLineDash([]); }
-function handWorld() { const b = bbox(R.byId["hand_l.fill"].nums); return map(om.ds.world[HANDL], (b[0] + b[2]) / 2, (b[1] + b[3]) / 2); }
+function gripWorld() { return map(om.ds.world[GRIP], GRIP_PT[0], GRIP_PT[1]); }
 function drawSwingBack(c) {
   const x0 = om.place.x - 1800, T = TUNE.swing;
   c.fillStyle = C.sky; c.fillRect(x0, -3000, 3600, 3000 + T.jamY + 10);
@@ -830,7 +875,7 @@ function drawSwingBack(c) {
     c.fillStyle = C.cream2; for (let wy = h.top + 40; wy < y1 - 60; wy += 78) for (let wx = h.x0 + 24; wx < h.x0 + h.w - 40; wx += 64) c.fillRect(wx, wy, 34, 42);
     c.fillStyle = C.gold; c.strokeStyle = C.cut; c.lineWidth = 3; c.beginPath(); c.arc(h.anchor[0], h.anchor[1] - 6, 7, 0, 7); c.fill(); c.stroke(); }
   c.fillStyle = C.jam; c.fillRect(x0, T.jamY, 3600, 600); c.fillStyle = C.jam2; c.fillRect(x0, T.jamY, 3600, 7);
-  if (SW.ph === "hang") { const hw = handWorld(); drawRope(c, SW.ax, SW.ay - 6, hw[0], hw[1], 5); }
+  if (SW.ph === "hang") { const hw = gripWorld(); drawRope(c, SW.ax, SW.ay - 6, hw[0], hw[1], 5); }
 }
 function drawSwingFront(c) { for (const k of SW.candies) if (k.st === "on" || k.st === "eaten") drawCandy(c, k.x, k.y, k.rot, k.st === "eaten" ? Math.max(0, 1 - k.t / 0.08) : 1, TUNE.swing.candyR); }
 function drawOm(c, V, view) {
@@ -907,7 +952,7 @@ for (const [id, name, cls] of CLIP_BTNS) { if (id === "|") { const d = document.
   const b = document.createElement("button"); b.textContent = name; b.dataset.clip = id; if (cls) b.className = cls;
   b.addEventListener("click", () => { toPult();
     if (id === "reset") { S.P.open = 0; S.P.speed = 0; S.lookSlider = false; S.pultLook = null; syncSliders(); om.X = null; omBase(om, "idle"); return; }
-    if (id === "eat3") { omReact(om, "eat", { dur: 0.45, rate: 1.5 }); S.queue.push({ at: S.simT + 0.2, clip: "eat", opt: { dur: 0.45, rate: 1.5 } }, { at: S.simT + 0.4, clip: "eat", opt: { dur: 0.45, rate: 1.5 } }); return; }
+    if (id === "eat3") { const o = { dur: TUNE.eatSeries }, g = TUNE.seriesGap; omReact(om, "eat", o); S.queue.push({ at: S.simT + g, clip: "eat", opt: o }, { at: S.simT + 2 * g, clip: "eat", opt: o }); return; }
     const bp = BTN_PLAY[id]; if (bp) omReact(om, bp[0], bp[1]); else omPlay(om, id); });
   $("clips").appendChild(b); }
 new ResizeObserver(() => draw()).observe(stage);
@@ -967,7 +1012,7 @@ function pupilOutside(ds) {
   return { out, tot };
 }
 function gazeCheck(o) {
-  o = o || {}; const faces = o.faces || ["neutral", "ajar", "wide", "wide2", "half", "sadRig", "chewA", "chewB", "reach", "wave1", "startle", "shrug", "hangRig", "flyRig"],
+  o = o || {}; const faces = o.faces || ["neutral", "ajar", "wide", "wide2", "half", "sad", "chewA", "chewB", "reach", "wave1", "wave2", "joy", "startle", "shrug", "hang", "fly", "fly_wide"],
     dirs = o.dirs || 8, dist = o.dist || [400];
   const rows = []; let worst = 0;
   for (const f of faces) for (const D of dist) for (let k = 0; k < dirs; k++) {
@@ -1004,9 +1049,9 @@ window.__game = {
       blink: +(om.blinkE || 0).toFixed(3), lidsOpen: +(1 - ds.lids[R.fam.lids.members.indexOf("blink")]).toFixed(3), lids: Object.fromEntries(R.fam.lids.members.map((m, i) => [m, +ds.lids[i].toFixed(3)]).filter((q) => q[1] > 0)),
       swingTiltWant: SW && SW.ph === "hang" ? +clamp(-R.mot.tilt.hangK * SW.th / D2R, -40, 40).toFixed(3) : null,
       pupilNormL: +om.pupilNorm[0].toFixed(4), pupilNormR: +om.pupilNorm[1].toFixed(4), pupilsHidden: ds.hide.has("pupil_l"), pupilScale: +ds.v[PUPL * 5 + 3].toFixed(3),
-      squash: +om.lastSq.toFixed(4), stretch: +(om.stretch || 0).toFixed(4), lean: +om.lastLean.toFixed(3), lift: +om.lastLift.toFixed(2), tilt: +om.place.rot.toFixed(3), flip: om.place.flip,
+      squash: +om.lastSq.toFixed(4), stretch: +(om.stretch || 0).toFixed(4), axisDev: +(om.axisDev || 0).toFixed(4), armRope: +om.armRope.toFixed(2), armRopeLeft: om.armRopeLeft || 0, lean: +om.lastLean.toFixed(3), lift: +om.lastLift.toFixed(2), tilt: +om.place.rot.toFixed(3), flip: om.place.flip,
       x: +om.place.x.toFixed(2), y: +om.place.y.toFixed(2), look: om.p.look, front: [...ds.front], sproutDeg: +om.sprDeg.toFixed(2), headJiggle: +om.hj.toFixed(2),
-      armR: +ds.v[R.bi.arm_r * 5 + 2].toFixed(2), armL: +ds.v[R.bi.arm_l * 5 + 2].toFixed(2),
+      armR: +ds.v[R.bi.arm_r * 5 + 2].toFixed(2), armL: +ds.v[R.bi.arm_l * 5 + 2].toFixed(2), hidden: [...ds.hide], shown: [...ds.show],
       groupSwitches: om.groupSwitches, v2frame: v2Frame(om) }, mouthStats(ds));
     if (S.candy) st.candy = { x: +S.candy.x.toFixed(2), y: +S.candy.y.toFixed(2), st: S.candy.st };
     if (SW) st.swing = { ph: SW.ph, plan: SW.k, th: +(SW.th / D2R).toFixed(2), ropeDeg: +(SW.th / D2R).toFixed(2), L: SW.L, speed: Math.round(SW.speed), vel: SW.vel.map(Math.round),
