@@ -183,7 +183,7 @@ function morphPath(m, w) { let key = ""; for (let i = 0; i < w.length; i++) key 
 function polyArea(n) { let a = 0; const L = n.length - (n.length % 2); for (let i = 0; i < L; i += 2) { const j = (i + 2) % L; a += n[i] * n[j + 1] - n[j] * n[i + 1]; } return Math.abs(a) / 2; }
 
 const R = { J: null, parts: [], bi: {}, NB: 0, shapes: [], byId: {}, fam: {}, mouth: {}, poses: {}, mot: null, clips: {}, CP: null, list: [], arm: [], side: [], noAdd: [] };
-let HEAD, BODY, MOUTH, PUPL, PUPR, SPR1, SPR2, SPR3, GRIP, ARML, ROOT, SHADOW;
+let LEG_K = [], HEAD, BODY, MOUTH, PUPL, PUPR, SPR1, SPR2, SPR3, GRIP, ARML, ROOT, SHADOW;
 let FEET, CENTER, MOUTH_O, MOUTH_PT, REST, TRAVEL, GRIP_HANG, GRIP_PT, GRIP_OFF = 0, SH_IMG = null;
 // руки = передние лапы (риг v2, D-56): цепочки body → arm → fore → paw_f*; задние доли paw_bl / paw_br — ноги
 const ARM_IDS = ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"];
@@ -194,7 +194,7 @@ function rigBuild(J, CJ) {
   R.J = J; R.mot = CJ.motion;
   J.parts.forEach((p, i) => { R.bi[p.id] = i; });   // в json v2 ребёнок может стоять раньше родителя (paw_fl → fore_l): индексы, потом родители, мир — по порядку обхода
   J.parts.forEach((p) => R.parts.push({ id: p.id, pi: p.parent ? R.bi[p.parent] : -1, pivot: p.pivot }));
-  R.NB = R.parts.length; R.order = []; { const seen = new Set(), add = (i) => { if (seen.has(i)) return; const q = R.parts[i].pi; if (q >= 0) add(q); seen.add(i); R.order.push(i); }; for (let i = 0; i < R.NB; i++) add(i); }
+  R.NB = R.parts.length; LEG_K = ["paw_bl", "paw_br"].map((n) => R.bi[n] * 5); R.order = []; { const seen = new Set(), add = (i) => { if (seen.has(i)) return; const q = R.parts[i].pi; if (q >= 0) add(q); seen.add(i); R.order.push(i); }; for (let i = 0; i < R.NB; i++) add(i); }
   [ROOT, BODY, HEAD, MOUTH, PUPL, PUPR, SPR1, SPR2, SPR3, GRIP, ARML, SHADOW] =
     ["root", "body", "head", "mouth", "pupil_l", "pupil_r", "sprout1", "sprout2", "sprout3", "grip_l", "arm_l", "shadow"].map((n) => R.bi[n]);
   for (let i = 0; i < R.NB; i++) { const id = R.parts[i].id, a = ARM_IDS.indexOf(id);
@@ -323,7 +323,7 @@ function openPose(o) { const st = R.mot.open.stops; let i = 0; while (i < st.len
 // лицо и тело: база + w·(реакция − нейтральная поза) (t, r складываются, s умножается); формы — lerp; группа рта и show/hide — реакции при w ≥ 0,5;
 // руки — lerp(база, реакция, aw) только у рук, которые отпускает состояние (mask); лапы и корень — только база.
 // faceOnly (параметр open): руки не трогаем, show/hide базы, закрытый рот параметра не закрывает открытый рот базы (fly — ajar).
-function layerMerge(Bp, Rp, w, aw, mask, faceOnly) {
+function layerMerge(Bp, Rp, w, aw, mask, faceOnly, hold) {
   const O = clonePose(Bp), N = R.poses.neutral.b;
   for (let i = 0; i < R.NB; i++) { const k = i * 5, side = R.arm[i];
     if (side >= 0) { const a = mask ? aw * mask[side] : 0;
@@ -341,11 +341,14 @@ function layerMerge(Bp, Rp, w, aw, mask, faceOnly) {
   else if (take) { O.mg = Rp.mg; O.mw = Rp.mw.slice(); }
   if (!faceOnly && w >= 0.5) { O.show = Rp.show; O.hide = Rp.hide;
     // лапа, которую состояние держит (на верёвке левая — хват grip_l), остаётся как у базы: её show / hide реакция не трогает
-    const held = (part) => { const sd = R.side[R.bi[part]]; return sd >= 0 && !(mask && aw * mask[sd] >= 0.5); };
+    // hold — маска состояния без плавного перехода: схватил верёвку — хват виден с первого кадра, даже если лапа ещё у рта
+    const held = (part) => { const sd = R.side[R.bi[part]]; return sd >= 0 && (hold ? hold[sd] < 0.5 : !(mask && aw * mask[sd] >= 0.5)); };
     if ([...Bp.show].some((id) => held(R.byId[id] ? R.byId[id].part : "")) || [...Bp.hide].some(held)) {
       const sh = new Set([...Rp.show].filter((id) => !(R.byId[id] && held(R.byId[id].part)))), hd = new Set([...Rp.hide].filter((p) => !held(p)));
       for (const id of Bp.show) if (R.byId[id] && held(R.byId[id].part)) sh.add(id); for (const p of Bp.hide) if (held(p)) hd.add(p);
-      O.show = sh.size ? sh : EMPTY; O.hide = hd.size ? hd : EMPTY; } }
+      O.show = sh.size ? sh : EMPTY; O.hide = hd.size ? hd : EMPTY; }
+    // формы, скрытые состоянием (складки долей в висе и полёте), реакция не возвращает
+    if ([...Bp.hide].some((p) => p.includes("."))) { const hd = new Set(O.hide); for (const p of Bp.hide) if (p.includes(".")) hd.add(p); O.hide = hd; } }
   if (!faceOnly && mask && aw > 0) { const drv = (id) => ARM_IDS.includes(id) && aw * mask[R.arm[R.bi[id]]] >= 0.5; let ch = false;
     for (const id of ARM_IDS) if (drv(id) && Bp.front.has(id) !== Rp.front.has(id)) ch = true;
     if (ch) { const f = new Set(); for (const p of Bp.front) if (!drv(p)) f.add(p); for (const p of Rp.front) if (drv(p)) f.add(p); O.front = f; } }
@@ -381,7 +384,7 @@ function shapeM(s, ds, V, out) { mmul(V, ds.world[s.pi], out); if (s.mouth) { co
 const TM = [1, 0, 0, 1, 0, 0], TC = [1, 0, 0, 1, 0, 0];
 function drawRig(ctx, V, ds) {
   const list = R.list; list.length = 0;
-  for (const s of R.shapes) { if (s.hidden && !ds.show.has(s.id)) continue; if (ds.hide.has(s.part)) continue;
+  for (const s of R.shapes) { if (s.hidden && !ds.show.has(s.id)) continue; if (ds.hide.has(s.part) || ds.hide.has(s.id)) continue;   // hide: кости или отдельные формы (складки долей в hang / fly, риг 2.1)
     s.ez = s.zFront != null && ds.front.has(s.part) ? s.zFront : s.z; list.push(s); }
   for (const s of R.mouth[ds.mg].slots) { s.ez = s.z; list.push(s); }
   list.sort((a, b) => a.ez - b.ez || a.ord - b.ord);
@@ -457,7 +460,15 @@ function omStep(om, dt) {
   let open = 0;
   if (B.def.openParam) { open = Math.max(om.p.open, Kb.open, B.def.minOpen || 0);
     if (open > 0.001) P = layerMerge(P, openPose(open), clamp(open / 0.15, 0, 1), 0, null, true); }
-  if (B.fade) { B.fade.t += dt; const u = clamp(B.fade.t / B.fade.dur, 0, 1); P = lerpPose(B.fade.from, P, smooth(u), "B"); if (u >= 1) B.fade = null; }
+  if (B.fade) { B.fade.t += dt; const u = clamp(B.fade.t / B.fade.dur, 0, 1), F0 = B.fade.from, P1 = P; P = lerpPose(F0, P1, smooth(u), "B");
+    // ноги (задние доли) при смене состояния: выпускаем — сначала под тело по x, потом вниз; убираем — наоборот (риг 2.1: при общей
+    // линейной интерполяции нога на 0,25 перехода выходила сбоку из-под тела)
+    for (const k of LEG_K) { const dy = P1.b[k + 1] - F0.b[k + 1]; if (Math.abs(dy) < 1) continue;
+      const early = smooth(clamp(u / 0.55, 0, 1)), late = smooth(clamp((u - 0.25) / 0.75, 0, 1)), ex = dy > 0 ? early : late, ey = dy > 0 ? late : early;
+      P.b[k] = lerp(F0.b[k], P1.b[k], ex); P.b[k + 1] = lerp(F0.b[k + 1], P1.b[k + 1], ey);
+      let dr = P1.b[k + 2] - F0.b[k + 2]; dr = ((dr + 540) % 360) - 180; P.b[k + 2] = F0.b[k + 2] + dr * ey;
+      P.b[k + 3] = lerp(F0.b[k + 3], P1.b[k + 3], ey); P.b[k + 4] = lerp(F0.b[k + 4], P1.b[k + 4], ey); }
+    if (u >= 1) B.fade = null; }
   om.lastBase = P;
   // руки, которые реакция может взять: маска состояния, смена — плавно за 0,1 с (повис посреди еды — левая рука уходит на верёвку, а не прыгает)
   // схватил верёвку — лапа уходит к ней за 0,04 с (иначе 2–3 кадра верёвка висит у тела, а хват ещё за ним); отпустил — 0,1 с
@@ -472,7 +483,7 @@ function omStep(om, dt) {
     const fi = X.fadeIn > 0 ? smooth(clamp(X.t / X.fadeIn, 0, 1)) : 1;
     const fo = smooth(clamp((X.dur - X.t) / (X.def.fadeOut != null ? X.def.fadeOut : M.react.fadeOut), 0, 1));
     wR = clamp(Kr.w, 0, 1) * fi * fo; aw = X.def.arms ? clamp(Kr.aw, 0, 1) * fi * fo : 0;
-    P = layerMerge(P, Kr.P, wR, aw, om.armMask, false);
+    P = layerMerge(P, Kr.P, wR, aw, om.armMask, false, STATE_ARMS[state]);
     sqK += wR * Kr.sq; lift += wR * Kr.lift * (air ? 0 : 1); leanK += wR * Kr.lean;
     if (Kr.glance[0] || Kr.glance[1]) glance = Kr.glance; }
   if (om.xf) { om.xf.t += dt; const u = clamp(om.xf.t / om.xf.dur, 0, 1); P = lerpPose(om.xf.from, P, smooth(u), "B"); if (u >= 1) om.xf = null; }
@@ -589,7 +600,7 @@ function secondary(om, dt, air) {
   if (!sp.ok) { sp.x = tw[0]; sp.y = tw[1]; sp.vx = sp.vy = 0; sp.ok = true; }
   ptStep(sp, dt, tw[0], tw[1], S.f, S.zeta);
   const q = map(minv(Wh), sp.x, sp.y); let dA = Math.atan2(q[1] - B0[1], q[0] - B0[0]) - Math.atan2(S.tip[1] - B0[1], S.tip[0] - B0[0]);
-  dA = ((dA + 3 * Math.PI) % (2 * Math.PI)) - Math.PI; om.sprDeg = clamp(dA / D2R, -S.maxDeg, S.maxDeg);
+  dA = ((dA + 3 * Math.PI) % (2 * Math.PI)) - Math.PI; om.sprDeg = clamp(dA / D2R, S.minDeg != null ? S.minDeg : -S.maxDeg, S.maxDeg);   // риг 2.1: вниз-вправо (+) луковица уходит под голову — предел несимметричный
   // лапы: точка низа тела на пружине; боковое отставание → поворот долей (только в воздухе)
   const Pw = M.paws, pt = map(Wb, Pw.point[0], Pw.point[1]), pw = om.paw;
   if (!pw.ok) { pw.x = pt[0]; pw.y = pt[1]; pw.vx = pw.vy = 0; pw.ok = true; }
@@ -959,17 +970,18 @@ new ResizeObserver(() => draw()).observe(stage);
 window.addEventListener("orientationchange", () => draw());
 
 // ==== Проверки: позы с заморозкой, листы, зрачки, запаздывание ростка ===================================
-// pose {clip, t, base?, dur?, rate?, replayAt?}: свежий Ом Ном в пульте, база (по умолчанию idle/breath) + реакция с начала, t секунд, заморозка
+// pose {clip, t, base?, from?, dur?, rate?, replayAt?}: свежий Ом Ном в пульте, база (по умолчанию idle/breath) + реакция с начала, t секунд, заморозка
 function poseAt(clip, t, o) {
   o = o || {}; if (S.scene !== "pult") setScene("pult", true);
   freshOm(); placeGround(TUNE.pult); om.noAutoBlink = true; S.staticDS = null; S.queue = [];
   S.P.open = o.open || 0; S.P.speed = o.speed || 0; S.lookSlider = false; S.pultLook = o.look || null;
   const def = R.clips[clip]; if (!def) return false;
   const react = def.layer === "react";
-  omBase(om, react ? (o.base || "idle") : clip, { noFade: true, variant: o.variant || "breath", restart: true });
+  omBase(om, react ? (o.base || "idle") : (o.from || clip), { noFade: true, variant: o.variant || "breath", restart: true });
   if (react) omReact(om, clip, { dur: o.dur, rate: o.rate });
   const n = Math.round(t / DT); S.frozen = false;
   pultStep(); omStep(om, 1e-4); om.B.t = 0; if (om.X) om.X.t = 0; om.simT = 0; S.simT = 0; if (om.X && om.X.def.blink) om.blink.t0 = 0;
+  if (!react && o.from) omBase(om, clip);   // переход между состояниями тела (from → clip) с его fade
   const rp = o.replayAt == null ? [] : [].concat(o.replayAt);
   for (let i = 0; i < n; i++) { if (rp.some((r) => Math.abs((i + 1) * DT - r) < DT / 2)) omReact(om, clip, { dur: o.dur, rate: o.rate }); pultStep(); omStep(om, DT); }
   S.frozen = true; S.pose = { clip, t }; return true;

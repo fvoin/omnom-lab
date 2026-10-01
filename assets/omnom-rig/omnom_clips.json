@@ -44,10 +44,11 @@
    "zeta": 0.22,
    "gains": [0.28, 0.36, 0.46
    ],
-   "maxDeg": 40,
+   "maxDeg": 20,
    "tip": [316, 58
    ],
-   "note": "tip point on a spring in world space; deflection angle around sprout1 split over 3 links; lag 80-120 ms (D-51)"
+   "note": "tip point on a spring in world space; deflection angle around sprout1 split over 3 links (gains); lag 80-120 ms (D-51). Rig 2.1: asymmetric limit - bending down-right (+) the bulb reaches the head: the artist's limit +25, at +25 the bulb already touches the head outline in the lab render, so +20; up-left (-) to -40",
+   "minDeg": -40
   },
   "paws": {
    "f": 2.5,
