@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Конфетный ниндзя</title>
+<link rel="icon" href="data:,">
+<style>:root{--bg:#1d2333;--fg:#f3f5fa;--muted:#a9b1c6;--btn:#2f3854;--accent:#7bd35a}*{box-sizing:border-box}html,body{background:var(--bg);height:100%;color:var(--fg);touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none;margin:0;font:15px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}body{flex-direction:column;height:100dvh;display:flex}header{flex:none;padding:8px 16px 6px}.row{justify-content:space-between;align-items:center;gap:8px;display:flex}a.back{color:var(--muted);padding:6px 0;font-size:14px;text-decoration:none}button{font:inherit;background:var(--btn);color:var(--fg);cursor:pointer;border:0;border-radius:10px;padding:7px 14px;font-weight:600}h1{margin:2px 0 0;font-size:19px}.rule{color:var(--muted);margin:2px 0 4px;font-size:13px}.stats{font-variant-numeric:tabular-nums;font-size:16px;font-weight:700}#stage{flex:1;min-height:0;margin:0 16px 12px;position:relative}canvas{touch-action:none;border-radius:12px;display:block;position:absolute}#over{justify-content:center;align-items:center;display:none;position:absolute;inset:0}#over.show{display:flex}.card{text-align:center;background:#121622ed;border-radius:16px;min-width:230px;padding:22px 28px}.card .big{font-variant-numeric:tabular-nums;margin:6px 0;font-size:46px;font-weight:800}.card .sub{color:var(--muted);margin:4px 0}.card .rec{color:#ffd166;margin:8px 0 14px;font-weight:700}.card button{background:var(--accent);color:#10240a;padding:11px 28px;font-size:17px}</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <a class="back" href="index.html">← Лаборатория</a>
+    <span class="stats" id="stats">Счёт 0 · 75 с</span>
+    <button id="restart">Заново</button>
+  </div>
+  <h1>Конфетный ниндзя</h1>
+  <div class="rule">Режь верёвки росчерком — Ом Ном ловит конфеты. Пауков не режь!</div>
+</header>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div id="over"><div class="card">
+    <div>Раунд окончен</div>
+    <div class="big" id="oScore">0</div>
+    <div class="sub" id="oSub"></div>
+    <div class="rec" id="oRec"></div>
+    <button id="again">Ещё раз</button>
+  </div></div>
+</div>
+<script>
+"use strict";
+// ---- Ом Ном кадрами приложения (D-40, не рисунок кодом) ---------------------------
+// Кадры лежат в assets/omnom/ — одна папка на все прототипы; новую версию Ома Нома копируем поверх теми же именами.
+// Числа — из assets/omnom/omnom_frames.json: 6,4024 px на u, лапы = pivot, рот (кадр wide), зрачки — отдельным слоем.
+// В файлах Ом Ном смотрит ВЛЕВО от зрителя; flip = смотрит вправо. Кадр: p.mx, p.my — точка рта в игре (u), p.fy — лапы (по умолчанию рот + 20).
+const OMS = (() => {
+  const PX = 6.4024, PIV = [0.5366, 0.0253], MOUTH = [-2.08, -19.98];
+  const PUP = { // центр слоя зрачков и предел сдвига (u, оси кадра до зеркала): не больше — иначе глаза вылезают за белки
+    neutral: { c: [-6.13, -43.11], l: 7.03, r: 10.15, u: 5.0, d: 1.41 },
+    wide:    { c: [-6.83, -49.51], l: 3.9,  r: 1.72,  u: 2.66, d: 2.66 },
+    ajar:    { c: [-7.45, -46.39], l: 4.22, r: 2.19,  u: 3.59, d: 4.69 },
+    wide2:   { c: [-7.53, -50.53], l: 3.44, r: 1.56,  u: 2.34, d: 2.5 },
+  };
+  const NAMES = ["neutral", "neutral_pupils", "ajar", "ajar_pupils", "wide", "wide_pupils", "wide2", "wide2_pupils", "chew", "chew2", "sad", "joy", "blink", "half", "shadow"];
+  const img = {};
+  const waits = [];
+  for (const n of NAMES) {
+    const i = new Image(); img[n] = i;
+    waits.push(new Promise((res) => { i.onload = i.onerror = res; }));
+    i.src = "assets/omnom/" + n + ".png";
+  }
+  const ok = (i) => i && i.complete && i.naturalWidth > 0;
+  // p: { frame, mx, my, fy?, flip?, tx?, ty?, rot?, piv?, shadow?, alpha? }; st — объект вызывающего: плавный взгляд
+  function draw(ctx, p, st) {
+    let f = p.frame || "neutral";
+    if (f === "neutral" && (performance.now() + (p.blinkOff || 0)) % 3600 < 120) f = "blink";
+    const base = img[f]; if (!ok(base)) return;
+    const flip = p.flip ? -1 : 1, fx = p.mx - flip * MOUTH[0], fy = p.fy != null ? p.fy : p.my - MOUTH[1];
+    const pw = base.naturalWidth, ph = base.naturalHeight, k = 1 / PX;
+    ctx.save();
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+    if (p.alpha != null) ctx.globalAlpha = p.alpha;
+    if (p.shadow && ok(img.shadow)) ctx.drawImage(img.shadow, fx - 32, fy - 6, 64, 12);
+    ctx.translate(fx, p.piv ? fy - p.piv : fy); if (p.rot) ctx.rotate(p.rot); if (p.piv) ctx.translate(0, p.piv);
+    ctx.scale(flip * k, k);
+    ctx.drawImage(base, -PIV[0] * pw, -(1 - PIV[1]) * ph);
+    const pu = PUP[f];
+    if (pu && ok(img[f + "_pupils"])) {
+      let gx = 0, gy = 0;
+      if (p.tx != null) { // цель в системе кадра до зеркала; слой двигаем к ней в пределах белков
+        const pv = p.piv || 0;
+        let dx = p.tx - fx, dy = p.ty - (fy - pv);
+        if (p.rot) { const c = Math.cos(-p.rot), sn = Math.sin(-p.rot), qx = dx * c - dy * sn, qy = dx * sn + dy * c; dx = qx; dy = qy; }
+        dy -= pv; dx *= flip;
+        const ex = pu.c[0], ey = pu.c[1], vx = dx - ex, vy = dy - ey, L = Math.hypot(vx, vy) || 1, a = Math.min(1, L / 45);
+        const ux = vx / L * a, uy = vy / L * a;
+        gx = ux > 0 ? ux * pu.r : ux * pu.l; gy = uy > 0 ? uy * pu.d : uy * pu.u;
+      }
+      if (st) { st.x = st.x == null ? gx : st.x + (gx - st.x) * 0.35; st.y = st.y == null ? gy : st.y + (gy - st.y) * 0.35; gx = st.x; gy = st.y; }
+      ctx.drawImage(img[f + "_pupils"], -PIV[0] * pw + gx * PX, -(1 - PIV[1]) * ph + gy * PX);
+    }
+    ctx.restore();
+  }
+  return { draw, img, loaded: Promise.all(waits), ready: () => NAMES.every((n) => ok(img[n])) };
+})();
+// ---------- Главные числа (подбор для ощущения) ----------
+const TUNE = {
+  roundSec: 75,            // раунд: 3 волны по 25 с
+  waves: [                 // every — пауза между группами шариков, mix — доли [один, пара, тройка в ряд]
+    { until: 25, every: 1.7,  mix: [0.7, 0.3, 0.0], spider: 0.10 },
+    { until: 50, every: 1.3,  mix: [0.35, 0.4, 0.25], spider: 0.16 },
+    { until: 75, every: 1.0,  mix: [0.2, 0.4, 0.4],  spider: 0.22 },
+  ],
+  firstSpawn: 0.3,         // с
+  spiderFrom: 8,           // с — до этого пауков нет
+  rise: 100,               // u/с — скорость подъёма шарика
+  riseJitter: 15,          // ± u/с
+  riseLastWave: 1.15,      // множитель скорости в «метели»
+  wobble: 7,               // u — покачивание шарика вбок
+  ropeLen: 64,             // u — длина верёвки
+  linkLen: 8,              // u — длина звена (у CTR 35, здесь короче — мягче вид)
+  gravity: 784,            // u/с² — как в CTR
+  iterations: 24,          // проходов связей за тик (CTR 25)
+  damping: 0.995,          // гашение скорости узлов
+  ropeNodeWeight: 0.02,    // вес узла верёвки (CTR)
+  cutNodeWeight: 0.00001,  // вес узлов после среза (CTR) — обрывки не тянут конфету
+  balloonFlyAccel: 700,    // u/с² — шарик без груза улетает вверх
+  omSpeed: 430,            // u/с — бег Ома Нома
+  catchR: 26,              // u — полуширина «рта» по горизонтали
+  magnet: 170,             // u/с — срезанная конфета сама смещается к Ому Ному (иначе ×3 никогда не съесть целиком)
+  spiderHide: 1.0,         // с — Ом Ном в коробке после паука
+  swipeStart: 6,           // u — сдвиг пальца, после которого росчерк режет
+  pieceFade: 0.9,          // с — обрывки тают (≤ 1,5 с)
+  splatFade: 0.7,          // с — упавшая конфета тает
+  trailSec: 0.12,          // с — длина следа пальца
+};
+
+// ---------- Поле и константы ----------
+const FW = 320, FH = 480, DT = 1 / 60;
+const GROUND_Y = 452, OM_Y = 428, OM_R = 24, MOUTH_Y = 412, SPAWN_Y = 470;
+const COLORS = ["#ff6b6b", "#ffd166", "#4dabf7", "#b197fc", "#63e6be", "#ff922b"];
+
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const stage = document.getElementById("stage");
+const statsEl = document.getElementById("stats");
+const overEl = document.getElementById("over");
+
+function readBest() { try { return Number(localStorage.getItem("lab.best.ninja")) || 0; } catch (e) { return 0; } }
+function writeBest(v) { try { localStorage.setItem("lab.best.ninja", String(v)); } catch (e) {} }
+
+// ---------- Состояние ----------
+let G, balloons, ropes, items, popups, splats, trail, om, swipe, clock = 0, nextId = 1, hintShown = false;
+let rnd = Math.random;
+
+function reset() {
+  G = { scene: "play", t: 0, score: 0, caught: 0, missed: 0, dropped: 0, spiderHits: 0,
+        spawnT: TUNE.firstSpawn, lastCombo: 0, maxCombo: 0, best: readBest(), newRecord: false, cuts: 0, maxStretch: 0 };
+  balloons = []; ropes = []; items = []; popups = []; splats = []; trail = [];
+  om = { x: FW / 2, hide: 0, chew: 0, mouth: 0, look: 0 };
+  swipe = null;
+  overEl.classList.remove("show");
+  updateStats(true);
+}
+
+// ---------- Верле ----------
+function mkNode(x, y, w) { return { x, y, px: x, py: y, im: w > 0 ? 1 / w : 0, pinned: false, item: false }; }
+function integrate(n) {
+  const vx = (n.x - n.px) * TUNE.damping, vy = (n.y - n.py) * TUNE.damping;
+  n.px = n.x; n.py = n.y;
+  n.x += vx; n.y += vy + TUNE.gravity * DT * DT;
+}
+// Связь «не длиннее» (как в CTR): верёвка тянет, но не толкает — обрывки не бывают жёсткими палками.
+function solve(a, b, rest) {
+  const dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy);
+  if (d <= rest || d === 0) return;
+  const s = a.im + b.im; if (s === 0) return;
+  const k = (d - rest) / (d * s);
+  a.x += dx * k * a.im; a.y += dy * k * a.im;
+  b.x -= dx * k * b.im; b.y -= dy * k * b.im;
+}
+
+// ---------- Спавн ----------
+function waveIdx(t) { for (let i = 0; i < TUNE.waves.length; i++) if (t < TUNE.waves[i].until) return i; return TUNE.waves.length - 1; }
+function spawnGroup() {
+  const wi = waveIdx(G.t), w = TUNE.waves[wi];
+  let r = rnd(), kind = r < w.mix[0] ? 1 : r < w.mix[0] + w.mix[1] ? 2 : 3;
+  let xs;
+  if (kind === 1) xs = [40 + rnd() * 240];
+  else if (kind === 2) { const a = 45 + rnd() * 110; xs = [a, Math.min(280, a + 90 + rnd() * 50)]; }
+  else { const s = (rnd() - 0.5) * 70; xs = [70 + s, 160 + s, 250 + s].map(x => Math.max(35, Math.min(285, x))); }
+  const speed = (TUNE.rise + (rnd() * 2 - 1) * TUNE.riseJitter) * (wi === 2 ? TUNE.riseLastWave : 1);
+  let spiderAt = -1;
+  if (G.t > TUNE.spiderFrom && rnd() < w.spider) spiderAt = Math.floor(rnd() * xs.length);
+  xs.forEach((x, i) => addBalloon(x, SPAWN_Y + (kind === 3 ? 0 : rnd() * 14), speed, i === spiderAt ? "spider" : "candy"));
+}
+function addBalloon(x, y, speed, type) {
+  const b = { id: nextId++, x0: x, x, y, vy: -speed, r: 17, phase: rnd() * 6.28, color: COLORS[(rnd() * COLORS.length) | 0], cut: false };
+  const n = Math.round(TUNE.ropeLen / TUNE.linkLen);
+  const nodes = [], rest = [];
+  const anchor = mkNode(x, y + b.r + 2, 0); anchor.pinned = true; nodes.push(anchor);
+  for (let i = 1; i < n; i++) nodes.push(mkNode(x, anchor.y + i * TUNE.linkLen, TUNE.ropeNodeWeight));
+  const it = mkNode(x, anchor.y + n * TUNE.linkLen, 1); it.item = true; nodes.push(it);
+  for (let i = 0; i < n; i++) rest.push(TUNE.linkLen);
+  const rope = { nodes, rest, cutAt: -1, spider: type === "spider" };
+  b.anchor = anchor;
+  const item = { id: b.id, type, node: it, state: "hang", balloon: b, rope, swipe: null, t: 0 };
+  b.item = item;
+  balloons.push(b); ropes.push(rope); items.push(item);
+}
+
+// ---------- Срез ----------
+function segX(ax, ay, bx, by, cx, cy, dx, dy) {
+  const r1x = bx - ax, r1y = by - ay, r2x = dx - cx, r2y = dy - cy;
+  const den = r1x * r2y - r1y * r2x; if (den === 0) return false;
+  const t = ((cx - ax) * r2y - (cy - ay) * r2x) / den, u = ((cx - ax) * r1y - (cy - ay) * r1x) / den;
+  return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+}
+function cutSegment(ax, ay, bx, by) {
+  for (const rope of ropes.slice()) {
+    if (rope.cutAt >= 0) continue;
+    const ns = rope.nodes;
+    for (let i = 0; i < ns.length - 1; i++) {
+      if (segX(ax, ay, bx, by, ns[i].x, ns[i].y, ns[i + 1].x, ns[i + 1].y)) { cutRope(rope, i, (ax + bx) / 2, (ay + by) / 2); break; }
+    }
+  }
+}
+function cutRope(rope, k, cx, cy) {
+  const ns = rope.nodes, b = ns[k + 1];
+  const end = mkNode(b.x, b.y, TUNE.cutNodeWeight); end.px = b.px; end.py = b.py;
+  const upper = { nodes: [...ns.slice(0, k + 1), end], rest: rope.rest.slice(0, k + 1), cutAt: clock, spider: rope.spider };
+  const lower = { nodes: ns.slice(k + 1), rest: rope.rest.slice(k + 1), cutAt: clock, spider: rope.spider };
+  for (const p of [...upper.nodes, ...lower.nodes]) if (!p.pinned && !p.item) p.im = 1 / TUNE.cutNodeWeight;
+  ropes.splice(ropes.indexOf(rope), 1, upper, lower);
+  const it = items.find(i => i.rope === rope);
+  if (!it) return;
+  it.rope = null; it.state = "fall"; it.balloon.cut = true; it.swipe = swipe;
+  G.cuts++; hintShown = true;
+  if (it.type === "candy" && swipe) {
+    swipe.candyCuts++;
+    G.lastCombo = swipe.candyCuts; G.maxCombo = Math.max(G.maxCombo, swipe.candyCuts);
+    if (swipe.candyCuts >= 2) popups.push({ x: cx, y: cy, text: "×" + Math.min(3, swipe.candyCuts) + "!", t0: clock, col: "#ffd166", big: true });
+  }
+}
+function swipeBegin(x, y) { swipe = { x, y, sx: x, sy: y, armed: false, candyCuts: 0 }; trail.push({ x, y, t: clock, brk: true }); }
+function swipeMove(x, y) {
+  if (!swipe) return;
+  if (!swipe.armed && Math.hypot(x - swipe.sx, y - swipe.sy) >= TUNE.swipeStart) swipe.armed = true;
+  if (swipe.armed) cutSegment(swipe.x, swipe.y, x, y);
+  swipe.x = x; swipe.y = y;
+  trail.push({ x, y, t: clock });
+}
+function swipeEnd() { swipe = null; }
+
+// ---------- Шаг симуляции ----------
+function step() {
+  clock += DT;
+  if (G.scene === "play") {
+    G.t += DT;
+    if (G.t < TUNE.roundSec) { G.spawnT -= DT; if (G.spawnT <= 0) { spawnGroup(); G.spawnT += TUNE.waves[waveIdx(G.t)].every; } }
+  }
+  // шарики (кинематика)
+  for (const b of balloons) {
+    if (b.cut) b.vy -= TUNE.balloonFlyAccel * DT;
+    b.y += b.vy * DT;
+    b.x = b.x0 + Math.sin(clock * 1.4 + b.phase) * TUNE.wobble;
+    b.anchor.px = b.anchor.x; b.anchor.py = b.anchor.y;
+    b.anchor.x = b.x; b.anchor.y = b.y + b.r + 2;
+  }
+  // узлы
+  for (const r of ropes) for (const n of r.nodes) if (!n.pinned && !n.item) integrate(n);
+  for (const it of items) if (it.state === "hang" || it.state === "fall") integrate(it.node);
+  for (let k = 0; k < TUNE.iterations; k++)
+    for (const r of ropes) for (let i = 1; i < r.nodes.length; i++) solve(r.nodes[i - 1], r.nodes[i], r.rest[i - 1]);
+  for (const r of ropes) if (r.cutAt < 0) {
+    const a = r.nodes[0], z = r.nodes[r.nodes.length - 1];
+    G.maxStretch = Math.max(G.maxStretch, Math.hypot(z.x - a.x, z.y - a.y) - TUNE.ropeLen);
+  }
+  // Ом Ном выбирает цель
+  om.hide = Math.max(0, om.hide - DT); om.chew = Math.max(0, om.chew - DT);
+  let best = null, bt = 1e9;
+  if (om.hide <= 0) for (const it of items) {
+    if (it.type !== "candy" || it.state !== "fall" || it.node.y >= MOUTH_Y) continue;
+    const vy = (it.node.y - it.node.py) / DT, dy = MOUTH_Y - it.node.y, g = TUNE.gravity;
+    const tt = (-vy + Math.sqrt(vy * vy + 2 * g * dy)) / g;
+    const need = Math.abs(it.node.x - om.x) - TUNE.catchR * 0.5;
+    if (need <= (TUNE.omSpeed + TUNE.magnet) * tt && tt < bt) { bt = tt; best = it; }
+  }
+  if (best) { const d = best.node.x - om.x, mv = TUNE.omSpeed * DT; om.x += Math.max(-mv, Math.min(mv, d)); om.look = Math.sign(d); }
+  om.x = Math.max(OM_R + 2, Math.min(FW - OM_R - 2, om.x));
+  om.mouth = best && bt < 0.4 ? Math.min(1, om.mouth + 0.2) : Math.max(0, om.mouth - 0.1);
+  // предметы
+  for (const it of items.slice()) {
+    const n = it.node;
+    if (it.state === "hang") {
+      if (n.y < -20) { if (it.type === "candy") G.missed++; it.state = "gone"; }
+      continue;
+    }
+    if (it.state !== "fall") continue;
+    // смещение без накопления скорости: двигаем и x, и px (Верле)
+    let shift = 0;
+    if (it.type === "spider") shift = (om.x - n.x) * 0.05;
+    else if (om.hide <= 0) { const m = TUNE.magnet * DT; shift = Math.max(-m, Math.min(m, (om.x - n.x) * 0.08)); }
+    n.x += shift; n.px += shift;
+    const crossed = n.py < MOUTH_Y && n.y >= MOUTH_Y;
+    if (it.type === "candy" && crossed && om.hide <= 0 && Math.abs(n.x - om.x) < TUNE.catchR) {
+      const mult = it.swipe ? Math.min(3, Math.max(1, it.swipe.candyCuts)) : 1;
+      if (G.scene === "play") { G.score += mult; G.caught++; }
+      popups.push({ x: om.x, y: OM_Y - 44, text: "+" + mult, t0: clock, col: mult > 1 ? "#ffd166" : "#ffffff" });
+      om.chew = 0.35; it.state = "gone"; continue;
+    }
+    if (it.type === "spider" && crossed && Math.abs(n.x - om.x) < 30) {
+      if (om.hide <= 0 && G.scene === "play") G.spiderHits++;
+      om.hide = TUNE.spiderHide;
+      popups.push({ x: om.x, y: OM_Y - 50, text: "Ой!", t0: clock, col: "#ff8787" });
+      it.state = "gone"; continue;
+    }
+    if (n.y >= GROUND_Y - 6) {
+      if (it.type === "candy" && G.scene === "play") G.dropped++;
+      splats.push({ x: n.x, y: GROUND_Y - 3, t0: clock, spider: it.type === "spider" });
+      it.state = "gone";
+    }
+  }
+  // уборка
+  for (const it of items) if (it.state === "gone" && it.rope) { const i = ropes.indexOf(it.rope); if (i >= 0) ropes.splice(i, 1); it.rope = null; }
+  items = items.filter(i => i.state !== "gone");
+  ropes = ropes.filter(r => r.cutAt < 0 || clock - r.cutAt < TUNE.pieceFade);
+  balloons = balloons.filter(b => {
+    if (b.y > -90) return true;
+    if (b.item.rope) { const i = ropes.indexOf(b.item.rope); if (i >= 0) ropes.splice(i, 1); }
+    if (b.item.state === "hang") { if (b.item.type === "candy") G.missed++; b.item.state = "gone"; }
+    return false;
+  });
+  items = items.filter(i => i.state !== "gone");
+  splats = splats.filter(s => clock - s.t0 < TUNE.splatFade);
+  popups = popups.filter(p => clock - p.t0 < 0.8);
+  trail = trail.filter(p => clock - p.t < TUNE.trailSec);
+  // конец раунда
+  if (G.scene === "play" && G.t >= TUNE.roundSec) {
+    const falling = items.some(i => i.state === "fall" && i.type === "candy");
+    if (!falling || G.t >= TUNE.roundSec + 2) endRound();
+  }
+}
+
+function endRound() {
+  G.scene = "over"; swipe = null;
+  if (G.score > G.best) { G.best = G.score; G.newRecord = true; writeBest(G.score); }
+  document.getElementById("oScore").textContent = G.score;
+  document.getElementById("oSub").textContent = `Поймано ${G.caught} · уронил ${G.dropped} · лучший росчерк ×${Math.min(3, Math.max(1, G.maxCombo))}${G.maxCombo > 3 ? " (" + G.maxCombo + " верёвки)" : ""}`;
+  document.getElementById("oRec").textContent = G.newRecord ? "Новый рекорд!" : `Рекорд: ${G.best}`;
+  overEl.classList.add("show");
+  updateStats(true);
+}
+
+let lastStats = "";
+function updateStats(force) {
+  const left = Math.max(0, Math.ceil(TUNE.roundSec - G.t));
+  const s = `Счёт ${G.score} · ${left} с`;
+  if (force || s !== lastStats) { statsEl.textContent = s; lastStats = s; }
+}
+
+// ---------- Рисование ----------
+let view = { s: 1, dpr: 1, left: 0, top: 0 };
+function fit() {
+  const W = stage.clientWidth, H = stage.clientHeight;
+  if (W <= 0 || H <= 0) return;
+  const s = Math.min(W / FW, H / FH), dpr = Math.min(2, window.devicePixelRatio || 1);
+  const cw = Math.floor(FW * s), ch = Math.floor(FH * s);
+  if (s === view.s && dpr === view.dpr && cv.style.width === cw + "px") return;
+  cv.style.width = cw + "px"; cv.style.height = ch + "px";
+  cv.style.left = Math.floor((W - cw) / 2) + "px"; cv.style.top = "0px";
+  cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
+  view = { s: cw / FW, dpr };
+}
+new ResizeObserver(fit).observe(stage);
+window.addEventListener("resize", fit);
+window.addEventListener("orientationchange", fit);
+
+function drawRope(r) {
+  const a = r.cutAt < 0 ? 1 : Math.max(0, 1 - (clock - r.cutAt) / TUNE.pieceFade);
+  if (a <= 0 || r.nodes.length < 2) return;
+  ctx.globalAlpha = a;
+  ctx.strokeStyle = r.spider ? "#dfe3ea" : "#8a5a2b";
+  ctx.lineWidth = r.spider ? 1.3 : 2.6;
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.beginPath(); ctx.moveTo(r.nodes[0].x, r.nodes[0].y);
+  for (let i = 1; i < r.nodes.length; i++) ctx.lineTo(r.nodes[i].x, r.nodes[i].y);
+  ctx.stroke(); ctx.globalAlpha = 1;
+}
+function drawBalloon(b) {
+  ctx.fillStyle = b.color;
+  ctx.beginPath(); ctx.ellipse(b.x, b.y, b.r * 0.86, b.r, 0, 0, 6.283); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(b.x - 4, b.y + b.r + 3); ctx.lineTo(b.x + 4, b.y + b.r + 3); ctx.lineTo(b.x, b.y + b.r - 2); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,.45)";
+  ctx.beginPath(); ctx.ellipse(b.x - 5, b.y - 6, 3.5, 6, -0.4, 0, 6.283); ctx.fill();
+}
+function drawCandy(x, y) {
+  ctx.fillStyle = "#ff4f7b";
+  ctx.beginPath(); ctx.moveTo(x - 9, y); ctx.lineTo(x - 16, y - 6); ctx.lineTo(x - 16, y + 6); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x + 9, y); ctx.lineTo(x + 16, y - 6); ctx.lineTo(x + 16, y + 6); ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y, 10, 0, 6.283); ctx.fill();
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.arc(x, y, 5.5, 0.3, 3.6); ctx.stroke();
+}
+function drawSpider(x, y) {
+  ctx.strokeStyle = "#111"; ctx.lineWidth = 1.6;
+  for (let i = 0; i < 4; i++) {
+    const a = 0.5 + i * 0.55;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * 15, y + Math.sin(a) * 9 - 4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - Math.cos(a) * 15, y + Math.sin(a) * 9 - 4); ctx.stroke();
+  }
+  ctx.fillStyle = "#1a1a1a"; ctx.beginPath(); ctx.arc(x, y, 9, 0, 6.283); ctx.fill();
+  ctx.fillStyle = "#ff5a5a"; ctx.beginPath(); ctx.arc(x - 3.5, y - 2, 2, 0, 6.283); ctx.arc(x + 3.5, y - 2, 2, 0, 6.283); ctx.fill();
+}
+let omFrame = "neutral"; const omGaze = {};
+function drawOmNom() {
+  const x = om.x, y = OM_Y;
+  if (om.hide > 0) {
+    ctx.fillStyle = "#c58a4a"; ctx.fillRect(x - 28, y - 22, 56, 46);
+    ctx.strokeStyle = "#8c5a2a"; ctx.lineWidth = 2; ctx.strokeRect(x - 28, y - 22, 56, 46);
+    ctx.beginPath(); ctx.moveTo(x - 28, y - 8); ctx.lineTo(x + 28, y - 8); ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x - 8, y - 15, 3, 0, 6.283); ctx.arc(x + 8, y - 15, 3, 0, 6.283); ctx.fill();
+    return;
+  }
+  // Ом Ном кадрами приложения: рот чуть ниже линии поимки MOUTH_Y, лапы у заборчика
+  let tgt = null;
+  for (const it of items) if (it.type === "candy" && it.state === "fall" && (!tgt || it.node.y > tgt.node.y)) tgt = it;
+  omFrame = om.chew > 0 ? (Math.floor(om.chew * 18) % 2 ? "chew2" : "chew") : om.mouth > 0.6 ? "wide" : om.mouth > 0.1 ? "ajar" : "neutral";
+  OMS.draw(ctx, { frame: omFrame, mx: x, my: 0, fy: GROUND_Y - 4, flip: om.look > 0, shadow: true,
+    tx: tgt ? tgt.node.x : undefined, ty: tgt ? tgt.node.y : undefined }, omGaze);
+}
+function drawHint() {
+  if (hintShown || G.scene !== "play") return;
+  const it = items.find(i => i.type === "candy" && i.state === "hang" && i.balloon.y < 380 && i.balloon.y > 60);
+  if (!it) return;
+  const mid = it.rope.nodes[(it.rope.nodes.length / 2) | 0];
+  const ph = (clock % 1.3) / 1.3, x = mid.x - 55 + ph * 110, y = mid.y + 8 - ph * 16;
+  ctx.globalAlpha = Math.min(1, Math.sin(ph * Math.PI) * 1.6);
+  ctx.strokeStyle = "rgba(255,255,255,.8)"; ctx.lineWidth = 3; ctx.setLineDash([5, 5]);
+  ctx.beginPath(); ctx.moveTo(mid.x - 55, mid.y + 8); ctx.lineTo(x, y); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = "#fff"; ctx.strokeStyle = "#333"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(x, y + 14, 11, 0, 6.283); ctx.fill(); ctx.stroke();
+  ctx.fillRect(x - 3, y, 6, 14); ctx.strokeRect(x - 3, y, 6, 14);
+  ctx.globalAlpha = 1;
+}
+function draw() {
+  ctx.setTransform(view.s * view.dpr, 0, 0, view.s * view.dpr, 0, 0);
+  const g = ctx.createLinearGradient(0, 0, 0, FH);
+  g.addColorStop(0, "#8fd3ff"); g.addColorStop(1, "#d9f1ff");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, FW, FH);
+  for (const r of ropes) drawRope(r);
+  for (const b of balloons) drawBalloon(b);
+  for (const it of items) it.type === "spider" ? drawSpider(it.node.x, it.node.y) : drawCandy(it.node.x, it.node.y);
+  // заборчик
+  ctx.fillStyle = "#c58a4a"; ctx.fillRect(0, GROUND_Y, FW, FH - GROUND_Y);
+  ctx.fillStyle = "#a8743b"; for (let x = 6; x < FW; x += 22) ctx.fillRect(x, GROUND_Y + 4, 10, FH - GROUND_Y - 8);
+  for (const s of splats) {
+    ctx.globalAlpha = 1 - (clock - s.t0) / TUNE.splatFade;
+    ctx.fillStyle = s.spider ? "#222" : "#ff4f7b"; ctx.beginPath(); ctx.ellipse(s.x, s.y, 13, 4, 0, 0, 6.283); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  drawOmNom();
+  // след пальца
+  if (trail.length > 1) {
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    for (let i = 1; i < trail.length; i++) {
+      if (trail[i].brk) continue;
+      const a = 1 - (clock - trail[i].t) / TUNE.trailSec;
+      ctx.strokeStyle = `rgba(255,255,255,${Math.max(0, a) * 0.95})`; ctx.lineWidth = 2 + 5 * Math.max(0, a);
+      ctx.beginPath(); ctx.moveTo(trail[i - 1].x, trail[i - 1].y); ctx.lineTo(trail[i].x, trail[i].y); ctx.stroke();
+    }
+  }
+  for (const p of popups) {
+    const k = (clock - p.t0) / 0.8;
+    ctx.globalAlpha = 1 - k; ctx.fillStyle = p.col; ctx.strokeStyle = "rgba(0,0,0,.5)"; ctx.lineWidth = 3;
+    ctx.font = `800 ${p.big ? 24 : 18}px system-ui,sans-serif`; ctx.textAlign = "center";
+    ctx.strokeText(p.text, p.x, p.y - k * 24); ctx.fillText(p.text, p.x, p.y - k * 24);
+  }
+  ctx.globalAlpha = 1;
+  drawHint();
+}
+
+// ---------- Ввод (Pointer Events) ----------
+function toField(e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / view.s, y: (e.clientY - r.top) / view.s }; }
+cv.addEventListener("pointerdown", e => {
+  if (G.scene !== "play") return;
+  e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+  const p = toField(e); swipeBegin(p.x, p.y);
+});
+cv.addEventListener("pointermove", e => {
+  if (!swipe) return;
+  const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  for (const ev of (evs.length ? evs : [e])) { const p = toField(ev); swipeMove(p.x, p.y); }
+});
+cv.addEventListener("pointerup", swipeEnd);
+cv.addEventListener("pointercancel", swipeEnd);
+document.getElementById("restart").addEventListener("click", () => reset());
+document.getElementById("again").addEventListener("click", () => reset());
+
+// ---------- Цикл: фиксированный шаг 1/60 ----------
+let acc = 0, last = performance.now(), manual = false, frames = [];
+function frame(now) {
+  const d = Math.min(0.1, (now - last) / 1000); last = now;
+  if (!manual) { acc += d; let n = 0; while (acc >= DT && n < 4) { step(); acc -= DT; n++; } if (n === 4) acc = 0; }
+  if (G.scene === "play") updateStats(false);
+  draw();
+  frames.push(now); if (frames.length > 120) frames.shift();
+  requestAnimationFrame(frame);
+}
+
+// ---------- Тестовый API ----------
+window.__game = {
+  ready: false,
+  getState() {
+    const r = cv.getBoundingClientRect();
+    return {
+      scene: G.scene,
+      view: { left: r.left, top: r.top, scale: view.s },
+      ninja: {
+        t: +G.t.toFixed(2), timeLeft: Math.max(0, +(TUNE.roundSec - G.t).toFixed(2)), wave: waveIdx(G.t) + 1,
+        score: G.score, best: G.best, combo: G.lastCombo, maxCombo: G.maxCombo,
+        caught: G.caught, missed: G.missed, dropped: G.dropped, spiderHits: G.spiderHits, cuts: G.cuts,
+        om: { x: +om.x.toFixed(1), hidden: om.hide > 0 },
+        balloons: items.map(i => {
+          const mid = i.rope ? i.rope.nodes[(i.rope.nodes.length / 2) | 0] : null;
+          return { id: i.id, type: i.type, state: i.state, x: +i.node.x.toFixed(1), y: +i.node.y.toFixed(1),
+                   ropeMid: mid ? { x: +mid.x.toFixed(1), y: +mid.y.toFixed(1) } : null };
+        }),
+        ropes: { intact: ropes.filter(r => r.cutAt < 0).length, pieces: ropes.filter(r => r.cutAt >= 0).length },
+        maxStretch: +G.maxStretch.toFixed(2),
+      },
+    };
+  },
+  act(action, payload) {
+    if (action === "cut" && Array.isArray(payload) && payload.length > 1) {
+      swipeBegin(payload[0].x, payload[0].y);
+      for (let i = 1; i < payload.length; i++) swipeMove(payload[i].x, payload[i].y);
+      swipeEnd();
+    } else if (action === "restart") reset();
+    else if (action === "clock") manual = !!(payload && payload.manual);
+    else if (action === "step") { for (let i = 0; i < (payload || 1); i++) step(); draw(); }
+  },
+  metrics() {
+    const n = frames.length; const fps = n > 1 ? Math.round((n - 1) * 1000 / (frames[n - 1] - frames[0])) : 0;
+    return { fps, frameMsP95: -1, drawCalls: -1 };
+  },
+};
+
+reset(); fit(); draw();
+OMS.loaded.then(() => { window.__game.ready = true; });
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

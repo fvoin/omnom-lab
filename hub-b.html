@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Главный экран B — Дом этажами</title>
+<link rel="icon" href="data:,">
+<style>:root{--ink:#5a3414;--paper:#fbeed2;--paper2:#f3dfb8;--edge:#b98244;--dark:#3d2410}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{overscroll-behavior:none;-webkit-user-select:none;user-select:none;background:#2b1d12;height:100%;margin:0;font-family:ui-rounded,SF Pro Rounded,Nunito,Trebuchet MS,system-ui,sans-serif;overflow:hidden}#stage{touch-action:none;position:fixed;inset:0}#phone{transform-origin:0 0;background:#a8733f;border-radius:18px;width:390px;height:844px;position:absolute;top:0;left:0;overflow:hidden;box-shadow:0 10px 40px #00000080}img{-webkit-user-drag:none;user-drag:none}#bld{will-change:transform;background:#b97b40 url(./assets/hub/cardboard_tile.png) 0 0/192px 192px;width:344px;position:absolute;top:0;left:46px}.floor{width:344px;position:absolute;left:0}.box{border-radius:10px;width:270px;position:absolute;left:3px;box-shadow:inset 0 3px 8px #3c1e0a59,inset 0 0 0 2px #5a321440}.slab{background:url(./assets/hub/floor_ledge.png) 0 0/344px 18px no-repeat;width:344px;height:18px;position:absolute;left:0}.fhead{width:256px;height:24px;color:var(--dark);align-items:center;gap:6px;font-size:14px;font-weight:800;display:flex;position:absolute;left:10px}.fhead .ic{border-radius:50%;flex:none;justify-content:center;align-items:center;width:22px;height:22px;display:flex;box-shadow:inset 0 -2px #0003}.fhead .ic svg{width:18px;height:14px}.fhead .sub{opacity:.7;font-size:11px;font-weight:700}.fhead .num{background:var(--paper);border:1.5px solid var(--edge);border-radius:9px;margin-left:auto;padding:1px 7px;font-size:11px;font-weight:800}.door{width:84px;height:66px;position:absolute}.door .win{border-radius:25% 25% 0 0/32% 32% 0 0;justify-content:center;align-items:center;width:81.4%;height:60.5%;display:flex;position:absolute;top:13.3%;left:8.75%;overflow:hidden}.door .win:after{content:"";background:radial-gradient(at 50% 20%,#ffffff59,#fff0 60%);position:absolute;inset:0}.door .win svg{filter:drop-shadow(0 1.5px #0000002e);width:70%;height:84%}.door .win img.pic{object-fit:cover;width:100%;height:100%}.door .frame{pointer-events:none;width:100%;height:100%;position:absolute;inset:0}.door .nm{height:19.5%;color:var(--ink);white-space:nowrap;letter-spacing:-.1px;justify-content:center;align-items:center;font-size:10.5px;font-weight:800;display:flex;position:absolute;top:76.4%;left:6%;right:5%;overflow:hidden}.door .dot{pointer-events:none;width:19px;height:19px;position:absolute;top:-4px;right:-5px}.door.press{transform:scale(.94)}.door.found{border-radius:10px;animation:.6s ease-in-out infinite alternate found}@keyframes found{0%{box-shadow:0 0 0 2px #fff6,0 0 10px 3px #ffd84d}to{box-shadow:0 0 0 3px #fff,0 0 18px 7px #ffd84d}}.slot-empty{color:#46280f8c;border:2px dashed #5a321459;border-radius:20px 20px 6px 6px;justify-content:center;align-items:center;width:84px;height:66px;font-size:10px;font-weight:800;display:flex;position:absolute}.scaf{pointer-events:none;position:absolute;inset:0}.pole{background:linear-gradient(90deg,#6f7c88,#c6d0d8 45%,#7d8995);border-radius:2px;width:5px;position:absolute}.plank{background:linear-gradient(#d9a066,#a8692f);border-radius:2px;height:6px;position:absolute;box-shadow:0 1px #00000040}.brace{transform-origin:0;background:#8d99a6;border-radius:2px;height:3px;position:absolute}.sign{color:#3a2a10;background:repeating-linear-gradient(-45deg,#ffcf3a 0 8px,#2d2418 8px 14px);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:900;position:absolute;box-shadow:0 1px 2px #0000004d}.sign span{background:#ffcf3a;border-radius:3px;padding:0 5px}.room h2{color:var(--dark);margin:0;font-size:17px;font-weight:900;position:absolute;left:10px}.sect{letter-spacing:.6px;text-transform:uppercase;color:#3d2410bf;font-size:11px;font-weight:900;position:absolute;left:10px}.daily{background:var(--paper);border:2px solid var(--edge);border-radius:14px;width:264px;padding:6px 8px 4px;position:absolute;left:6px;box-shadow:0 2px #5a321459}.daily .t{color:var(--dark);align-items:center;gap:6px;height:22px;font-size:13px;font-weight:900;display:flex}.daily .t small{opacity:.6;margin-left:auto;font-size:10px;font-weight:700}.drow{border-top:1.5px dashed #b9824480;align-items:center;gap:8px;height:42px;display:flex}.drow .mini{border-radius:12px 12px 4px 4px;flex:none;justify-content:center;align-items:center;width:42px;height:32px;display:flex;overflow:hidden;box-shadow:inset 0 0 0 2px #0000001f}.drow .mini svg{width:80%;height:80%}.drow .mini img{object-fit:cover;width:100%;height:100%}.drow .tx{flex:1;min-width:0;line-height:1.1}.drow .tx small{color:#a0622a;font-size:10px;font-weight:800;display:block}.drow .tx b{color:var(--dark);white-space:nowrap;font-size:13.5px}.drow .ck{border:2px solid var(--edge);color:#fff;border-radius:50%;flex:none;justify-content:center;align-items:center;width:22px;height:22px;font-size:14px;font-weight:900;display:flex}.drow .ck.on{background:#f08a1c;border-color:#c46a0c}.ph{text-align:center;color:#3d241099;border:2px dashed #5a321459;border-radius:12px;justify-content:center;align-items:center;width:264px;height:66px;padding:0 18px;font-size:12px;font-weight:800;display:flex;position:absolute;left:6px}.garland{background:url(./assets/hub/garland_wire.png) 0 0/344px 40px no-repeat;width:344px;height:40px;position:absolute;left:0}.bulb{width:12px;height:17px;position:absolute}.skywin{background:url(./assets/hub/window_sky.png) 50%/cover;border:4px solid #8a5326;border-radius:6px;width:62px;height:48px;position:absolute;box-shadow:inset 0 0 0 1px #0003}.shaft{background:#3c200c38;width:68px;position:absolute;left:276px;box-shadow:inset 3px 0 6px #32190859,inset -3px 0 6px #32190859}.rail{background:linear-gradient(90deg,#d8b384,#8a5a2c);width:3px;position:absolute;top:0;bottom:0}.lnd{background:#7b4b22;border-radius:2px;width:64px;height:6px;position:absolute;left:278px}.lnum{color:#fbeed2;text-align:center;width:12px;font-size:9px;font-weight:900;position:absolute;left:324px}.pulley{background:radial-gradient(circle,#8a5a2c 0 3px,#e7c08a 4px 7px,#7b4b22 8px);border-radius:50%;width:24px;height:24px;position:absolute;top:40px;left:298px;box-shadow:0 1px 2px #0006}#rope{background:repeating-linear-gradient(170deg,#7a4a1e 0 3px,#b07a40 3px 6px);width:3px;position:absolute;top:52px;left:308.5px}#lift{will-change:transform;width:0;height:0;position:absolute;top:0;left:310px}#liftIn{transform-origin:0 -118px;position:absolute;top:0;left:0}#lift svg.back,#lift svg.front{width:80px;height:122px;position:absolute;top:-120px;left:-40px;overflow:visible}#om{width:80px;height:77px;position:absolute;top:-93px;left:-43px}#om img{pointer-events:none;width:80px;height:77px;display:none;position:absolute;top:0;left:0}#om img.on{display:block}#omHit{width:72px;height:80px;position:absolute;top:-92px;left:-36px}#panel{background:linear-gradient(90deg,#7c4c22,#93602f 70%,#6e421d);width:46px;height:800px;position:absolute;top:44px;left:0;box-shadow:inset -2px 0 4px #00000059}.pb{flex-direction:column;justify-content:center;align-items:center;gap:3px;width:46px;height:80px;display:flex;position:absolute;left:0}.pb .c{border:2px solid #f3dfb8;border-radius:50%;justify-content:center;align-items:center;width:34px;height:34px;transition:transform .12s;display:flex;box-shadow:inset 0 -3px #00000040,0 2px #00000059}.pb .c svg{width:24px;height:18px}.pb .l{color:#fbeed2;white-space:nowrap;letter-spacing:-.2px;font-size:9px;font-weight:900}.pb.on .c{border-color:#ffe066;transform:scale(1.08);box-shadow:0 0 0 2px #ffe066,0 0 10px 3px #ffe066cc}.pb.on .l{color:#ffe066}.pb.press .c{transform:scale(.9)}#bar{z-index:5;background:linear-gradient(#7a4a20,#5f3816);align-items:center;gap:8px;width:390px;height:44px;padding:0 8px;display:flex;position:absolute;top:0;left:0;box-shadow:0 2px 6px #0006}#lab{color:var(--dark);background:var(--paper);border:2px solid var(--edge);border-radius:14px;flex:none;padding:4px 10px;font-size:13px;font-weight:900;text-decoration:none}#title{text-align:center;color:#fbeed2;white-space:nowrap;text-overflow:ellipsis;flex:1;font-size:15px;font-weight:900;overflow:hidden}#title.task{color:#3d2410;background:#ffd84d;border-radius:12px;padding:4px 8px;font-size:14px;box-shadow:inset 0 -2px #00000026}#cnt{background:var(--paper);border:2px solid var(--edge);color:var(--dark);border-radius:14px;flex:none;align-items:center;gap:3px;padding:2px 8px 2px 4px;font-size:13px;font-weight:900;display:flex}#cnt img{width:26px;height:16px}#timer{color:#ffd84d;text-align:right;font-variant-numeric:tabular-nums;flex:none;min-width:44px;font-size:14px;font-weight:900}#toast{color:#fbeed2;white-space:nowrap;opacity:0;pointer-events:none;z-index:9;background:#2d1a0aeb;border-radius:14px;padding:8px 14px;font-size:13px;font-weight:800;transition:opacity .2s;position:absolute;bottom:28px;left:50%;transform:translate(-50%)}#toast.on{opacity:1}#modal{z-index:8;background:#1e10068c;justify-content:center;align-items:center;display:none;position:absolute;inset:0}#modal.on{display:flex}.card{background:var(--paper);border:3px solid var(--edge);text-align:center;width:300px;color:var(--dark);border-radius:20px;padding:14px 16px 16px;box-shadow:0 6px #5a321473}.card .big{width:168px;height:132px;margin:0 auto 6px;position:relative}.card .big .door{transform-origin:0 0;transform:scale(2)}.card h3{margin:6px 0 4px;font-size:20px;font-weight:900}.card p{color:#6b4220;margin:4px 0 12px;font-size:14px;font-weight:700;line-height:1.35}.btn{color:#fff;background:#f08a1c;border-radius:16px;margin:0 4px;padding:10px 22px;font-size:16px;font-weight:900;display:inline-block;box-shadow:inset 0 -4px #0003}.btn.alt{background:#c9a06a}#res{z-index:6;background:var(--paper);color:var(--dark);border:3px solid #f0a81c;border-radius:16px;align-items:center;gap:8px;padding:8px 10px;display:none;position:absolute;top:50px;left:52px;right:8px;box-shadow:0 4px #5a321466}#res.on{display:flex}#res .rt{flex:1;font-size:14px;font-weight:900;line-height:1.2}#res .rt small{color:#8a5a2c;font-size:11px;font-weight:800;display:block}#res .btn{margin:0;padding:7px 14px;font-size:14px}</style>
+</head>
+<body>
+<div id="stage"><div id="phone">
+  <div id="bld"></div>
+  <div id="panel"></div>
+  <div id="bar">
+    <a id="lab" href="index.html" data-tap="lab">← Лаборатория</a>
+    <div id="title">Дом Ома Нома</div>
+    <div id="timer" style="display:none"></div>
+    <div id="cnt"><img src="./assets/hub/candy.png" alt="">125</div>
+  </div>
+  <div id="res"><div class="rt"></div><div class="btn" data-tap="again">Ещё</div></div>
+  <div id="modal" data-tap="modalBg"><div class="card" data-tap="card"></div></div>
+  <div id="toast"></div>
+</div></div>
+<script>
+"use strict";
+/* =====================================================================
+   Вариант B «Дом этажами». Грубый прототип главного экрана на 100 игр.
+   Логическое поле 390×844, вписано в окно. Ввод: мышь, палец, колесо.
+   ===================================================================== */
+const W = 390, H = 844, BAR = 44, PANEL_W = 46;
+const TAP_SLOP = 12;          // px экрана: сдвиг пальца, который отменяет тап и начинает прокрутку
+const CENTER_Y = BAR + (H - BAR) / 2;   // линия центра экрана (логич.)
+const ROOM_H = 520, FLOOR_H = 210, BASE_H = 300;
+const DOOR_X = [6, 96, 186], DOOR_W = 84, DOOR_H = 66;
+const OM_K = 80 / 82;         // px на логическую единицу кадра Ома Нома
+const qs = new URLSearchParams(location.search);
+const TASK = qs.get("task") === "1";
+const SEED = Number(qs.get("seed") || 30);
+const LS = "hubB.";
+
+/* ---------- storage (try/catch) ---------- */
+function load(k, def) { try { const v = localStorage.getItem(LS + k); return v === null ? def : JSON.parse(v); } catch (e) { return def; } }
+function save(k, v) { try { localStorage.setItem(LS + k, JSON.stringify(v)); } catch (e) {} }
+
+/* ---------- seeded rng ---------- */
+function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function hashStr(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function shuffle(arr, r) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+/* ---------- silhouettes (viewBox 0 0 60 44, fill white; holes = currentColor) ---------- */
+const SIL = {
+  candy: '<circle cx="30" cy="22" r="11"/><path d="M20 22 9 13v18zM40 22l11-9v18z"/>',
+  lolly: '<circle cx="30" cy="15" r="11"/><rect x="28" y="24" width="4" height="18" rx="2"/><path d="M30 8a7 7 0 0 1 0 14" fill="none" stroke="currentColor" stroke-width="2.5"/>',
+  puzzle: '<path d="M15 11h9a6 6 0 1 1 12 0h9v10a6 6 0 1 1 0 12v8H15z"/>',
+  key: '<circle cx="19" cy="22" r="10"/><circle cx="19" cy="22" r="4" fill="currentColor"/><rect x="27" y="19" width="22" height="6"/><rect x="41" y="25" width="4" height="7"/><rect x="47" y="25" width="3" height="5"/>',
+  ball: '<circle cx="30" cy="22" r="16"/><path d="M14 22h32M30 6v32M19 10q8 12 0 24M41 10q-8 12 0 24" fill="none" stroke="currentColor" stroke-width="2"/>',
+  cup: '<path d="M20 6h20v9a10 10 0 0 1-20 0z"/><path d="M20 9h-5a5 6 0 0 0 5 9M40 9h5a5 6 0 0 1-5 9" fill="none" stroke="#fff" stroke-width="3"/><rect x="27" y="24" width="6" height="9"/><rect x="21" y="33" width="18" height="5" rx="1.5"/>',
+  bricks: '<rect x="8" y="8" width="21" height="8" rx="1"/><rect x="31" y="8" width="21" height="8" rx="1"/><rect x="8" y="18" width="10" height="8" rx="1"/><rect x="20" y="18" width="21" height="8" rx="1"/><rect x="43" y="18" width="9" height="8" rx="1"/><rect x="8" y="28" width="21" height="8" rx="1"/><rect x="31" y="28" width="21" height="8" rx="1"/>',
+  crane: '<rect x="15" y="7" width="5" height="31"/><rect x="9" y="7" width="40" height="5"/><rect x="42" y="12" width="2" height="12"/><rect x="38" y="24" width="10" height="7" rx="1"/><rect x="8" y="36" width="20" height="5" rx="1"/>',
+  house: '<path d="M30 5 49 22h-5v17H16V22h-5z"/><rect x="26" y="27" width="8" height="12" fill="currentColor"/>',
+  cupcake: '<path d="M18 24h24l-4 15H22z"/><path d="M15 25a15 13 0 0 1 30 0z"/><circle cx="30" cy="8" r="3.5"/>',
+  mug: '<rect x="15" y="11" width="23" height="26" rx="4"/><path d="M38 16h4a6 6 0 0 1 0 13h-4" fill="none" stroke="#fff" stroke-width="4"/>',
+  car: '<path d="M8 31v-9l9-2 7-9h14l8 9h6v11z"/><circle cx="18" cy="32" r="5.5"/><circle cx="42" cy="32" r="5.5"/><circle cx="18" cy="32" r="2" fill="currentColor"/><circle cx="42" cy="32" r="2" fill="currentColor"/>',
+  flag: '<rect x="15" y="5" width="3.5" height="35" rx="1.5"/><path d="M18 6h25l-6 7.5 6 7.5H18z"/>',
+  rocket: '<path d="M30 3c9 7 10 19 6 28H24c-4-9-3-21 6-28z"/><path d="M24 25l-7 11h9zM36 25l7 11h-9z"/><circle cx="30" cy="15" r="3.5" fill="currentColor"/><path d="M27 33h6l-3 8z"/>',
+  star: '<path d="M30 4l5.5 11.5 12.5 1.7-9.1 8.8 2.2 12.5L30 32.6 18.9 38.5l2.2-12.5L12 17.2l12.5-1.7z"/>',
+  planet: '<circle cx="30" cy="22" r="11"/><ellipse cx="30" cy="22" rx="21" ry="5.5" fill="none" stroke="#fff" stroke-width="3" transform="rotate(-15 30 22)"/>',
+  note: '<ellipse cx="21" cy="33" rx="8" ry="6"/><rect x="26.5" y="7" width="3.5" height="27"/><path d="M26.5 7 45 12v8l-18.5-5z"/><ellipse cx="40" cy="29" rx="6" ry="4.5"/><rect x="42.5" y="12" width="2.5" height="17"/>',
+  drum: '<ellipse cx="30" cy="15" rx="15" ry="5.5"/><path d="M15 16v15a15 5.5 0 0 0 30 0V16a15 5.5 0 0 1-30 0z"/><path d="M18 3l10 9M42 3 32 12" stroke="#fff" stroke-width="2.5"/>',
+  hat: '<path d="M11 31a19 19 0 0 1 38 0z"/><rect x="7" y="30" width="46" height="6" rx="3"/><rect x="27" y="10" width="6" height="12" rx="2" fill="currentColor"/>',
+};
+/* real lab games: colored icons */
+const CANDY = '<g><circle cx="0" cy="0" r="7" fill="#fff"/><path d="M0-7a7 7 0 0 1 6 10L0 0zM-6-3.5A7 7 0 0 1 0-7L0 0zM-6 3.5a7 7 0 0 1-0-7L0 0z" fill="#e2483b"/><path d="M6 3.5A7 7 0 0 1 0 7L0 0zM0 7a7 7 0 0 1-6-3.5L0 0z" fill="#e2483b" opacity=".0"/><circle r="7" fill="none" stroke="#9b2a1f" stroke-width="1"/><path d="M-7 0l-6-5v10zM7 0l6-5v10z" fill="#ffd23f" stroke="#c48a0a" stroke-width=".8"/></g>';
+const REAL_ICON = {
+  hook: `<rect x="29" y="0" width="2.5" height="13" fill="#7a4a1e"/><path d="M30 13a7 7 0 1 1-7 7" fill="none" stroke="#5c5f66" stroke-width="3.2" stroke-linecap="round"/><g transform="translate(37 33) rotate(-15)">${CANDY}</g>`,
+  sling: `<path d="M30 42V27L19 10M31 27l11-17" fill="none" stroke="#7a4a1e" stroke-width="5" stroke-linecap="round"/><path d="M19 10q11 14 23 0" fill="none" stroke="#e2483b" stroke-width="2"/><g transform="translate(30 17)">${CANDY}</g>`,
+  slide: `<path d="M4 9c14 0 18 27 52 27" fill="none" stroke="#7a4a1e" stroke-width="4.5" stroke-linecap="round"/><path d="M4 9c14 0 18 27 52 27" fill="none" stroke="#e8b46a" stroke-width="1.6" stroke-dasharray="3 3"/><g transform="translate(22 14) rotate(30)">${CANDY}</g>`,
+};
+function silSvg(name, color) { return `<svg viewBox="0 0 60 44" fill="#fff" style="color:${color}">${SIL[name]}</svg>`; }
+
+/* ---------- catalog: 100 games, generator with seed ---------- */
+const THEMES = [
+  { key:"candy",  name:"Конфеты", color:"#e2483b", icon:"candy",  sil:["candy","lolly","star"],
+    pool:["Леденцы","Карамелька","Мармелад","Ириски","Зефирки","Шоколадка","Сахарок","Пряники","Конфетопад","Фантики","Сладкоежка","Лакрица","Тянучки","Драже"] },
+  { key:"logic",  name:"Логика",  color:"#3a86d1", icon:"puzzle", sil:["puzzle","key","star"],
+    pool:["Пазл-сад","Кубики","Лабиринт","Мостики","Тени","Шестерёнки","Ключики","Трубы","Узелки","Плитки","Сундук","Зеркала","Стрелки","Замок-код"] },
+  { key:"sport",  name:"Спорт",   color:"#f08a1c", icon:"ball",   sil:["ball","cup","flag"],
+    pool:["Футбол","Баскет","Боулинг","Гольф","Теннис","Прыгалки","Батут","Скейт","Дартс","Лыжи","Серфинг","Пинг-понг","Керлинг","Городки"] },
+  { key:"build",  name:"Стройка", color:"#e9b31c", icon:"bricks", sil:["bricks","crane","house"],
+    pool:["Кран","Кирпичики","Небоскрёб","Мост","Домино","Бульдозер","Пирамида","Башенка","Экскаватор","Балки","Песочница","Каменщик","Шалаш","Плотник"] },
+  { key:"food",   name:"Кухня",   color:"#ec6f9b", icon:"cupcake",sil:["cupcake","mug","lolly"],
+    pool:["Блинчики","Пицца","Суп-повар","Пончики","Мороженое","Смузи","Вафли","Кексы","Бутерброд","Лимонад","Омлет","Печенье","Варенье","Желе"] },
+  { key:"race",   name:"Гонки",   color:"#1fa9b8", icon:"car",    sil:["car","flag","cup"],
+    pool:["Картинг","Тележка","Самокат","Велик","Трасса","Дрифт","Грузовик","Монстр-трак","Багги","Мотоцикл","Лодки","Паровозик","Сани","Ралли"] },
+  { key:"space",  name:"Космос",  color:"#34508f", icon:"rocket", sil:["rocket","star","planet"],
+    pool:["Ракета","Луноход","Звездопад","Комета","Орбита","Марсоход","Спутник","Астероиды","НЛО","Планеты","Метеор","Телескоп","Невесомость","Галактика"] },
+  { key:"music",  name:"Музыка",  color:"#7d8fa6", icon:"note",   sil:["note","drum","star"],
+    pool:["Барабаны","Пианино","Ксилофон","Дудочка","Караоке","Ритм","Гитара","Оркестр","Нотки","Эхо","Бубен","Колокольчик","Танцы","Скрипка"] },
+];
+const REAL = [
+  { name:"Крючки",     theme:"candy", kind:"html", href:"hook.html",  icon:"hook" },
+  { name:"Рогатка",    theme:"candy", kind:"html", href:"sling.html", icon:"sling" },
+  { name:"Горка",      theme:"candy", kind:"html", href:"slide.html", icon:"slide" },
+  { name:"Коробка",    theme:"logic", kind:"app",  pic:"assets/hub/door_pic_candy_box.png" },
+  { name:"Хоккей",     theme:"sport", kind:"app",  pic:"assets/hub/door_pic_candy_hockey.png" },
+  { name:"Торт-башня", theme:"build", kind:"app",  pic:"assets/hub/door_pic_cake_tower.png" },
+];
+function buildCatalog(seed) {
+  const r = rng(seed);
+  // 6 new games come from 6 different themes; theme sizes 13×6 + 12 + 10 = 100 → every theme keeps 12 on its floors (one keeps 10)
+  const order = shuffle(THEMES.map((t, i) => i), r);
+  const newThemes = new Set(order.slice(0, 6)), shortTheme = order[7];
+  const games = [];
+  THEMES.forEach((t, ti) => {
+    const reals = REAL.filter(g => g.theme === t.key);
+    const total = (newThemes.has(ti) ? 13 : 12) - (ti === shortTheme ? 2 : 0);
+    const names = shuffle(t.pool, r).slice(0, total - reals.length);
+    for (const g of reals) games.push({ ...g, themeIdx: ti, real: true });
+    names.forEach((n, k) => games.push({ name: n, themeIdx: ti, kind: "stub", sil: t.sil[Math.floor(r() * t.sil.length)], real: false }));
+  });
+  games.forEach((g, i) => { g.id = i; g.isNew = false; g.added = "2026-0" + (1 + Math.floor(r() * 8)) + "-" + String(1 + Math.floor(r() * 28)).padStart(2, "0"); });
+  for (const ti of newThemes) {
+    const cand = games.filter(g => g.themeIdx === ti && !g.real);
+    const g = cand[Math.floor(r() * cand.length)]; g.isNew = true; g.added = "2026-09-" + String(20 + Math.floor(r() * 10)).padStart(2, "0");
+  }
+  return games;
+}
+const GAMES = buildCatalog(SEED);
+
+/* ---------- floors ---------- */
+const FLOORS = [];
+FLOORS.push({ kind: "room", top: 0, h: ROOM_H, games: [] });
+FLOORS.push({ kind: "new", top: ROOM_H, h: FLOOR_H, games: GAMES.filter(g => g.isNew).map(g => g.id) });
+let y = ROOM_H + FLOOR_H;
+THEMES.forEach((t, ti) => {
+  const ids = GAMES.filter(g => g.themeIdx === ti && !g.isNew).map(g => g.id);
+  const parts = Math.ceil(ids.length / 6);
+  for (let p = 0; p < parts; p++) { FLOORS.push({ kind: "theme", themeIdx: ti, part: p, parts, top: y, h: FLOOR_H, games: ids.slice(p * 6, p * 6 + 6) }); y += FLOOR_H; }
+});
+const BLD_H = y + BASE_H;
+const MAX_SCROLL = BLD_H - H;
+const parkY = f => f.top + f.h - 18;  // basket bottom = slab top
+
+/* panel buttons: home, new, 8 themes */
+const BUTTONS = [{ key: "home", label: "Ом Ном", color: "#7a4a20", icon: "house", floors: [0] }, { key: "new", label: "Новое", color: "#ffb21c", icon: "hat", floors: [1] }]
+  .concat(THEMES.map((t, ti) => ({ key: t.key, label: t.name, color: t.color, icon: t.icon, floors: FLOORS.map((f, i) => f.themeIdx === ti ? i : -1).filter(i => i >= 0) })));
+const btnOfFloor = i => BUTTONS.findIndex(b => b.floors.includes(i));
+
+/* ---------- state ---------- */
+const st = {
+  scroll: 0, mode: "idle", vel: 0, anim: null, wheelTo: null,
+  lift: { y: parkY(FLOORS[0]), v: 0, target: 0, swing: 0, swingV: 0, moving: false },
+  centerFloor: 0, modal: null,
+  opened: new Set(load("opened", [])), recent: load("recent", []),
+  task: null, taps: 0,
+  om: { frame: "neutral", px: 0, py: 0, lookX: 0, lookY: 0, lookUntil: 0, nextBlink: 1500, blinkUntil: 0, joyUntil: 0, waveUntil: 0, nextGlance: 2000 },
+};
+const today = (() => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();
+function makeDaily() {
+  let d = load("daily", null);
+  if (d && d.date === today && Array.isArray(d.ids) && d.ids.length === 3) return d;
+  const r = rng(hashStr(today) ^ SEED);
+  const untried = GAMES.filter(g => !g.real && !st.opened.has(g.id));
+  const a = (untried.length ? untried : GAMES)[Math.floor(r() * (untried.length || GAMES.length))];
+  const realG = GAMES.filter(g => g.real); const b = realG[Math.floor(r() * realG.length)];
+  const rest = GAMES.filter(g => g.id !== a.id && g.id !== b.id && !g.real); const c = rest[Math.floor(r() * rest.length)];
+  d = { date: today, ids: [a.id, b.id, c.id], done: [] }; save("daily", d); return d;
+}
+st.daily = makeDaily();
+
+/* ---------- DOM ---------- */
+const $ = s => document.querySelector(s);
+const phone = $("#phone"), bld = $("#bld"), panel = $("#panel");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function winInner(g) {
+  const t = THEMES[g.themeIdx];
+  if (g.pic) return `<img class="pic" src="${g.pic}" alt="">`;
+  if (g.icon) return `<svg viewBox="0 0 60 44">${REAL_ICON[g.icon]}</svg>`;
+  return silSvg(g.sil, t.color);
+}
+function winBg(g) { const c = THEMES[g.themeIdx].color; return g.icon ? `linear-gradient(#bfe6ff, #8ccdf5)` : c; }
+function doorHTML(g, x, y, extra = "") {
+  const dot = g.isNew && !st.opened.has(g.id) ? `<img class="dot" src="assets/hub/badge_dot.png" alt="">` : "";
+  return `<div class="door ${extra}" data-tap="g${g.id}" data-gid="${g.id}" style="left:${x}px;top:${y}px">
+    <div class="win" style="background:${winBg(g)}">${winInner(g)}</div>
+    <img class="frame" src="assets/hub/door_frame.png" alt=""><div class="nm">${esc(g.name)}</div>${dot}</div>`;
+}
+function fitNames(root) {
+  for (const el of root.querySelectorAll(".nm")) { let fs = 10.5; el.style.fontSize = fs + "px";
+    while (el.scrollWidth > el.clientWidth + 0.5 && fs > 8) { fs -= 0.5; el.style.fontSize = fs + "px"; } }
+}
+function iconCircle(icon, color) { return `<div class="ic" style="background:${color}">${silSvg(icon, color)}</div>`; }
+
+function buildBuilding() {
+  let h = "";
+  // shaft below the room, rails, landings
+  h += `<div class="shaft" style="top:${ROOM_H - 18}px;height:${BLD_H - BASE_H - ROOM_H + 18}px"><div class="rail" style="left:4px"></div><div class="rail" style="right:4px"></div></div>`;
+  FLOORS.forEach((f, i) => {
+    if (f.kind === "room") { h += `<div class="floor room" id="room" style="top:0;height:${ROOM_H}px"></div>`; return; }
+    const t = f.kind === "theme" ? THEMES[f.themeIdx] : null;
+    const tint = t ? t.color : "#ffcf3a";
+    h += `<div class="floor" style="top:${f.top}px;height:${f.h}px">`;
+    h += `<div class="box" style="top:4px;height:${f.h - 22}px;background:linear-gradient(${tint}55,${tint}28)"></div>`;
+    if (f.kind === "new") h += `<div class="fhead" style="top:8px">${iconCircle("hat", "#ffb21c")}Новое</div>`;
+    else h += `<div class="fhead" style="top:8px">${iconCircle(t.icon, t.color)}${t.name}<span class="sub">· ${f.part + 1} из ${f.parts}</span><span class="num">${i}</span></div>`;
+    f.games.forEach((gid, k) => { h += doorHTML(GAMES[gid], DOOR_X[k % 3], 36 + Math.floor(k / 3) * 76); });
+    for (let k = f.games.length; k < 6; k++) h += `<div class="slot-empty" style="left:${DOOR_X[k % 3]}px;top:${36 + Math.floor(k / 3) * 76}px">скоро</div>`;
+    if (f.kind === "new") {
+      h += `<div class="scaf">`;
+      for (const x of [0, 91, 181, 270]) h += `<div class="pole" style="left:${x}px;top:2px;height:${f.h - 20}px"></div>`;
+      for (const yy of [31, 105, 181]) h += `<div class="plank" style="left:-2px;width:280px;top:${yy}px"></div>`;
+      h += ``;
+      h += `<div class="sign" style="left:120px;top:8px"><span>ИДЁТ СТРОЙКА · НОВЫЕ ИГРЫ</span></div></div>`;
+    }
+    h += `<div class="slab" style="top:${f.h - 18}px"></div>`;
+    h += `<div class="lnd" style="top:${f.h - 22}px"></div><div class="lnum" style="top:${8}px">${i}</div>`;
+    h += `</div>`;
+  });
+  // basement
+  h += `<div class="floor" style="top:${BLD_H - BASE_H}px;height:${BASE_H}px;background:linear-gradient(#8a5a2c,#5b3818 60%,#4a2e14)">
+    <div style="position:absolute;left:14px;top:40px;width:250px;color:#f3dfb8;font-weight:800;font-size:13px;line-height:1.35;opacity:.85">Фундамент. Новые этажи достраиваются наверху — под лесами.</div>
+    <div style="position:absolute;left:0;right:0;bottom:0;height:60px;background:repeating-linear-gradient(90deg,#6d4521 0 30px,#5f3b1b 30px 60px)"></div></div>`;
+  // rope & lift
+  h += `<div class="pulley"></div><div id="rope"></div>
+  <div id="lift"><div id="liftIn">
+    <svg class="back" viewBox="-40 -120 80 122"><path d="M0-118L-28-30M0-118L28-30" stroke="#6b3f17" stroke-width="2.2" fill="none"/><circle cx="0" cy="-118" r="4" fill="none" stroke="#5c5f66" stroke-width="2.5"/>
+      <path d="M-30-30h60l-3 6h-54z" fill="#6b3f17"/></svg>
+    <div id="om"></div><div id="omHit" data-tap="om"></div>
+    <svg class="front" viewBox="-40 -120 80 122"><defs><pattern id="weave" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#b77b3d"/><path d="M0 4h8M4 0v8" stroke="#8a5424" stroke-width="2"/><path d="M0 0l8 8" stroke="#d9a464" stroke-width="1"/></pattern></defs>
+      <path d="M-31-26h62l-6 24q-1 4-6 4h-38q-5 0-6-4z" fill="url(#weave)" stroke="#5e3713" stroke-width="2"/>
+      <rect x="-33" y="-30" width="66" height="7" rx="3.5" fill="#d9a464" stroke="#5e3713" stroke-width="2"/></svg>
+  </div></div>`;
+  bld.style.height = BLD_H + "px";
+  bld.innerHTML = h;
+  // Om Nom frames stack
+  const om = $("#om");
+  for (const f of ["neutral", "wide", "blink", "joy", "wave1", "wave2"]) {
+    const im = new Image(); im.src = `assets/hub/omnom_${f}.png`; im.dataset.f = f; im.alt = ""; om.appendChild(im);
+    if (f === "neutral" || f === "wide") { const p = new Image(); p.src = `assets/hub/omnom_${f}_pupils.png`; p.dataset.f = f + "_pupils"; p.alt = ""; om.appendChild(p); }
+  }
+  renderRoom();
+  fitNames(bld);
+}
+
+function renderRoom() {
+  const room = $("#room");
+  let h = `<div class="box" style="top:46px;height:${ROOM_H - 64}px;background:linear-gradient(rgba(255,214,140,.35),rgba(255,214,140,.12))"></div>`;
+  h += `<div class="garland" style="top:46px"></div>`;
+  for (let i = 0; i < 9; i++) h += `<img class="bulb" data-bulb="${i}" src="assets/hub/bulb.png" alt="" style="left:${14 + i * 38}px;top:${55 + Math.round(Math.sin((i + .5) / 9 * Math.PI) * 13)}px">`;
+  h += `<div class="skywin" style="left:279px;top:118px"></div>`;
+  h += `<h2 style="top:76px">Что сыграть сейчас</h2>`;
+  // daily set
+  const dd = st.daily;
+  const labels = ["Новая для тебя", "Игра дня", "Сыграй разок"];
+  h += `<div class="daily" style="top:104px"><div class="t">${iconCircle("star", "#f08a1c")}Набор дня<small>${dd.done.length} из 3</small></div>`;
+  dd.ids.forEach((gid, k) => {
+    const g = GAMES[gid], done = dd.done.includes(gid);
+    h += `<div class="drow" data-tap="g${gid}" data-gid="${gid}"><div class="mini" style="background:${winBg(g)}">${winInner(g)}</div>
+      <div class="tx"><small>${labels[k]}</small><b>«${esc(g.name)}»</b></div><div class="ck ${done ? "on" : ""}">${done ? "✓" : ""}</div></div>`;
+  });
+  h += `</div>`;
+  h += `<div class="sect" style="top:272px">Недавние</div>`;
+  const rec = st.recent.slice(0, 3);
+  if (rec.length) rec.forEach((gid, k) => { h += doorHTML(GAMES[gid], DOOR_X[k], 290); });
+  else h += `<div class="ph" style="top:290px">Пока пусто — открой любую игру, и она будет здесь</div>`;
+  h += `<div class="sect" style="top:368px">Новое</div>`;
+  const nw = GAMES.filter(g => g.isNew).sort((a, b) => (st.opened.has(a.id) - st.opened.has(b.id)) || b.added.localeCompare(a.added)).slice(0, 3);
+  nw.forEach((g, k) => { h += doorHTML(g, DOOR_X[k], 386); });
+  h += `<div class="slab" style="top:${ROOM_H - 18}px"></div>`;
+  room.innerHTML = h;
+  fitNames(room);
+}
+
+function buildPanel() {
+  let h = "";
+  BUTTONS.forEach((b, i) => {
+    h += `<div class="pb" data-tap="b${i}" style="top:${i * 80}px"><div class="c" style="background:${b.color}">${silSvg(b.icon, b.color)}</div><div class="l">${b.label}</div></div>`;
+  });
+  panel.innerHTML = h;
+}
+
+/* ---------- fit to window ---------- */
+let scale = 1;
+function fit() {
+  const w = window.innerWidth, hh = window.innerHeight; if (!w || !hh) return;
+  scale = Math.min(w / W, hh / H);
+  phone.style.transform = `translate(${(w - W * scale) / 2}px, ${(hh - H * scale) / 2}px) scale(${scale})`;
+}
+window.addEventListener("resize", fit); window.addEventListener("orientationchange", fit);
+
+/* ---------- scrolling ---------- */
+const clampS = v => Math.max(0, Math.min(MAX_SCROLL, v));
+function scrollAnim(to) {
+  to = clampS(to); const d = Math.abs(to - st.scroll);
+  st.mode = "anim"; st.anim = { from: st.scroll, to, t: 0, dur: 0.3 + Math.min(0.7, d / 3500) };
+}
+function goButton(i) {
+  const b = BUTTONS[i]; if (!b) return;
+  // repeated tap on the same theme → its next floor
+  let fi = b.floors[0];
+  if (b.floors.includes(st.centerFloor) && Math.abs(st.scroll - centerScrollFor(st.centerFloor)) < 4) fi = b.floors[(b.floors.indexOf(st.centerFloor) + 1) % b.floors.length];
+  scrollAnim(centerScrollFor(fi));
+}
+function centerScrollFor(fi) { const f = FLOORS[fi]; return f.kind === "room" ? 0 : clampS(f.top + f.h / 2 - CENTER_Y); }
+function floorAt(by) { for (let i = FLOORS.length - 1; i >= 0; i--) if (by >= FLOORS[i].top) return i; return 0; }
+
+/* ---------- input: one pointer, tap cancelled by ≥ TAP_SLOP px ---------- */
+const ptr = { id: null, x0: 0, y0: 0, x: 0, y: 0, moved: false, tapEl: null, drag: false, samples: [] };
+function tapTarget(el) { return el && el.closest ? el.closest("[data-tap]") : null; }
+function toLogical(cx, cy) { const r = phone.getBoundingClientRect(); return { x: (cx - r.left) / scale, y: (cy - r.top) / scale }; }
+const stage = $("#stage");
+stage.addEventListener("pointerdown", e => {
+  if (ptr.id !== null) return;
+  ptr.id = e.pointerId; ptr.x0 = ptr.x = e.clientX; ptr.y0 = ptr.y = e.clientY; ptr.moved = false;
+  ptr.tapEl = tapTarget(e.target);
+  ptr.drag = !st.modal && !e.target.closest("#panel,#bar,#res");
+  ptr.samples = [{ t: performance.now(), y: e.clientY }];
+  if (ptr.drag) { st.mode = "drag"; st.vel = 0; st.anim = null; st.wheelTo = null; }
+  if (ptr.tapEl) ptr.tapEl.classList.add("press");
+  try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  const p = toLogical(e.clientX, e.clientY); lookAtScreen(p.x, p.y, 1500);
+});
+stage.addEventListener("pointermove", e => {
+  const p = toLogical(e.clientX, e.clientY);
+  if (e.pointerType === "mouse" && ptr.id === null) { lookAtScreen(p.x, p.y, 1200); return; }
+  if (e.pointerId !== ptr.id) return;
+  const dyPx = e.clientY - ptr.y;
+  ptr.x = e.clientX; ptr.y = e.clientY;
+  if (!ptr.moved && Math.hypot(ptr.x - ptr.x0, ptr.y - ptr.y0) >= TAP_SLOP) {
+    ptr.moved = true; if (ptr.tapEl) ptr.tapEl.classList.remove("press");
+  }
+  if (ptr.drag && ptr.moved) {
+    st.scroll = clampS(st.scroll - dyPx / scale);
+    const now = performance.now(); ptr.samples.push({ t: now, y: e.clientY }); while (ptr.samples.length > 2 && now - ptr.samples[0].t > 90) ptr.samples.shift();
+  }
+  lookAtScreen(p.x, p.y, 1500);
+});
+function endPointer(e, cancel) {
+  if (e.pointerId !== ptr.id) return;
+  if (ptr.tapEl) ptr.tapEl.classList.remove("press");
+  const upEl = tapTarget(document.elementFromPoint(e.clientX, e.clientY));
+  if (!cancel && !ptr.moved && ptr.tapEl && upEl === ptr.tapEl) handleTap(ptr.tapEl.dataset.tap, ptr.tapEl);
+  if (ptr.drag) {
+    const s = ptr.samples, a = s[0], b = s[s.length - 1], dt = (b.t - a.t) / 1000;
+    st.vel = ptr.moved && dt > 0.01 && performance.now() - b.t < 80 ? -(b.y - a.y) / dt / scale : 0;
+    st.mode = Math.abs(st.vel) > 30 ? "fling" : "idle";
+  }
+  ptr.id = null; ptr.tapEl = null; ptr.drag = false;
+}
+stage.addEventListener("pointerup", e => endPointer(e, false));
+stage.addEventListener("pointercancel", e => endPointer(e, true));
+stage.addEventListener("wheel", e => {
+  e.preventDefault(); if (st.modal) return;
+  const k = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? H : 1;
+  st.wheelTo = clampS((st.mode === "wheel" && st.wheelTo !== null ? st.wheelTo : st.scroll) + e.deltaY * k);
+  st.mode = "wheel"; st.anim = null; st.vel = 0;
+}, { passive: false });
+document.addEventListener("click", e => { if (e.target.closest("#lab")) e.preventDefault(); });
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+function handleTap(key, el) {
+  st.taps++;
+  if (key === "lab") { location.href = "index.html"; return; }
+  if (key === "modalBg") { closeModal(); return; }
+  if (key === "card" || key === "cardx") { if (el.dataset.tap === "cardx") closeModal(); return; }
+  if (key === "again") { newTask(); return; }
+  if (key === "om") { st.om.joyUntil = now() + 400; st.om.waveUntil = now() + 1300; return; }
+  if (key[0] === "b") { goButton(Number(key.slice(1))); return; }
+  if (key[0] === "g") openGame(Number(key.slice(1)), el);
+}
+
+/* ---------- games ---------- */
+function openGame(id, el) {
+  const g = GAMES[id]; if (!g) return { error: "unknown" };
+  if (el) { const r = el.getBoundingClientRect(); const p = toLogical(r.left + r.width / 2, r.top + r.height / 2); lookAtScreen(p.x, p.y, 1600); }
+  if (st.task && !st.task.done) {
+    if (id === st.task.target) return finishTask(el);
+    toast(`Это «${g.name}». Ищем «${GAMES[st.task.target].name}»`); return { wrong: true };
+  }
+  st.opened.add(id); save("opened", [...st.opened]);
+  st.recent = [id, ...st.recent.filter(x => x !== id)].slice(0, 6); save("recent", st.recent);
+  if (st.daily.ids.includes(id) && !st.daily.done.includes(id)) { st.daily.done.push(id); save("daily", st.daily); }
+  for (const d of document.querySelectorAll(`.door[data-gid="${id}"] .dot`)) d.remove();
+  st.om.joyUntil = now() + 700;
+  if (g.kind === "html") { setTimeout(() => { renderRoom(); location.href = g.href; }, 260); return { nav: g.href }; }
+  renderRoom();
+  showModal(g); return { modal: g.kind };
+}
+function showModal(g) {
+  const t = THEMES[g.themeIdx];
+  const txt = g.kind === "app" ? `Эта игра — из приложения. В лаборатории её нет: сыграй в неё в Unity-сборке.` : `Заглушка: одна из 100 игр каталога (тема «${t.name}»). Тут будет игра.`;
+  const card = $("#modal .card");
+  card.innerHTML = `<div class="big">${doorHTML(g, 0, 0)}</div><h3>${esc(g.name)}</h3><p>${txt}</p><div class="btn" data-tap="cardx">Понятно</div>`;
+  card.querySelector(".door").removeAttribute("data-tap"); fitNames(card);
+  $("#modal").classList.add("on"); st.modal = g.kind;
+}
+function closeModal() { $("#modal").classList.remove("on"); st.modal = null; }
+let toastT = 0;
+function toast(s) { const t = $("#toast"); t.textContent = s; t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 1500); }
+
+/* ---------- self-check mode ?task=1 ---------- */
+function newTask() {
+  const onTop = new Set([...st.daily.ids, ...st.recent.slice(0, 3), ...GAMES.filter(g => g.isNew).map(g => g.id)]);
+  const forced = qs.get("target"); let tg = forced ? GAMES.find(g => g.name === forced) : null;
+  if (!tg) { const pool = GAMES.filter(g => !onTop.has(g.id) && (!st.task || g.id !== st.task.target)); tg = pool[Math.floor(Math.random() * pool.length)]; }
+  st.task = { target: tg.id, t0: now(), done: false, timeSec: null, taps: 0 }; st.taps = 0;
+  for (const d of document.querySelectorAll(".door.found")) d.classList.remove("found");
+  $("#res").classList.remove("on");
+  st.scroll = 0; st.mode = "idle"; st.vel = 0; st.lift.y = parkY(FLOORS[0]); st.lift.v = 0;
+  $("#title").className = "task"; $("#title").textContent = `Найди: «${tg.name}»`;
+  $("#timer").style.display = ""; $("#cnt").style.display = "none";
+}
+function finishTask(el) {
+  const tk = st.task; tk.done = true; tk.timeSec = (now() - tk.t0) / 1000; tk.taps = st.taps;
+  if (el) el.classList.add("found");
+  const ok = tk.timeSec <= 10;
+  $("#res .rt").innerHTML = `Нашёл «${esc(GAMES[tk.target].name)}» за ${tk.timeSec.toFixed(1).replace(".", ",")} с<small>${ok ? "в норме: ≤ 10 с" : "дольше 10 с"} · тапов: ${tk.taps}</small>`;
+  $("#res").classList.add("on"); $("#timer").textContent = tk.timeSec.toFixed(1).replace(".", ",") + " с";
+  st.om.joyUntil = now() + 900; st.om.waveUntil = now() + 900;
+  return { found: true, timeSec: tk.timeSec };
+}
+
+/* ---------- Om Nom: alive (blinks, looks) ---------- */
+const PUP = { neutral: { c: [-6.13, -43.11], l: 7.03, r: 10.15, u: 5.0, d: 1.41 }, wide: { c: [-6.83, -49.51], l: 3.9, r: 1.72, u: 2.66, d: 2.66 } };
+function eyeScreen() { // eye point in screen-logical coords
+  return { x: PANEL_W + 310 - 43 + 0.5366 * 80 + PUP.neutral.c[0] * OM_K, y: st.lift.y - 18 + PUP.neutral.c[1] * OM_K - st.scroll };
+}
+function lookAtScreen(x, y, ms) { st.om.lookX = x; st.om.lookY = y; st.om.lookUntil = now() + ms; }
+let clock0 = performance.now();
+const now = () => performance.now() - clock0;
+
+/* ---------- main loop ---------- */
+const meter = []; let lastT = performance.now();
+let shown = { frame: "", pupils: "", tf: "", liftTf: "", rope: -1, swing: 99, btn: -1 };
+const omImgs = {};
+function frame(t) {
+  const dt = Math.min(0.05, (t - lastT) / 1000); lastT = t; meter.push(dt * 1000); if (meter.length > 120) meter.shift();
+  const T = now();
+  // scroll modes
+  if (st.mode === "fling") { st.scroll += st.vel * dt; st.vel *= Math.exp(-dt * 3.2); const c = clampS(st.scroll); if (c !== st.scroll) { st.scroll = c; st.vel = 0; } if (Math.abs(st.vel) < 15) st.mode = "idle"; }
+  else if (st.mode === "anim") { const a = st.anim; a.t += dt; const u = Math.min(1, a.t / a.dur); const e = u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; st.scroll = a.from + (a.to - a.from) * e; if (u >= 1) { st.mode = "idle"; st.anim = null; } }
+  else if (st.mode === "wheel") { st.scroll += (st.wheelTo - st.scroll) * (1 - Math.exp(-dt * 14)); if (Math.abs(st.wheelTo - st.scroll) < 0.5) { st.scroll = st.wheelTo; st.mode = "idle"; } }
+  // which floor is in the centre → lift target
+  st.centerFloor = st.scroll <= 0.5 ? 0 : floorAt(st.scroll + CENTER_Y);
+  const L = st.lift; const tgtY = parkY(FLOORS[st.centerFloor]); L.target = st.centerFloor;
+  const dy = tgtY - L.y; const want = Math.max(-2600, Math.min(2600, dy * 7));
+  const acc = Math.max(-9000, Math.min(9000, (want - L.v) * 12)); L.v += acc * dt; L.y += L.v * dt;
+  if (Math.abs(dy) < 0.8 && Math.abs(L.v) < 25) { L.y = tgtY; L.v = 0; }
+  const wasMoving = L.moving; L.moving = Math.abs(L.v) > 40;
+  if (wasMoving && !L.moving) { st.om.joyUntil = T + 450; if (st.centerFloor === 0) st.om.waveUntil = T + 1100; }
+  // swing (pendulum driven by acceleration)
+  L.swingV += (-L.swing * 40 - L.swingV * 3.5 - acc * 0.0012) * dt; L.swing += L.swingV * dt; L.swing = Math.max(-8, Math.min(8, L.swing));
+  // Om Nom frame
+  const om = st.om;
+  if (T > om.nextBlink) { om.blinkUntil = T + 130; om.nextBlink = T + 2200 + Math.random() * 3300; if (Math.random() < .2) om.nextBlink = T + 260; }
+  if (T > om.lookUntil && T > om.nextGlance) { // idle glances: at doors, up, down, at you
+    const e = eyeScreen(); const opts = [[e.x - 200, e.y], [e.x - 150, e.y - 120], [e.x - 160, e.y + 140], [e.x, e.y + 400], [e.x - 1, e.y]];
+    const o = opts[Math.floor(Math.random() * opts.length)]; om.glX = o[0]; om.glY = o[1]; om.nextGlance = T + 1400 + Math.random() * 2200;
+  }
+  let f = "neutral";
+  if (T < om.waveUntil) f = (Math.floor(T / 200) % 2) ? "wave1" : "wave2";
+  else if (T < om.joyUntil) f = "joy";
+  else if (L.moving) f = "wide";
+  else if (T < om.blinkUntil) f = "blink";
+  om.frame = f;
+  let tx = 0, ty = 0;
+  if (f === "neutral" || f === "wide") {
+    const P = PUP[f], e = eyeScreen();
+    let lx, ly;
+    if (f === "wide") { lx = e.x - 30; ly = e.y + Math.sign(L.v) * 200; }
+    else if (T < om.lookUntil) { lx = om.lookX; ly = om.lookY; } else { lx = om.glX ?? e.x - 1; ly = om.glY ?? e.y; }
+    const vx = lx - e.x, vy = ly - e.y, len = Math.hypot(vx, vy) || 1, near = Math.min(1, len / 60);
+    const nx = vx / len * near, ny = vy / len * near;
+    tx = (nx < 0 ? nx * P.l : nx * P.r) * OM_K; ty = (ny < 0 ? ny * P.u : ny * P.d) * OM_K;
+  }
+  om.px += (tx - om.px) * Math.min(1, dt * 14); om.py += (ty - om.py) * Math.min(1, dt * 14);
+  // render
+  const tf = `translateY(${-st.scroll.toFixed(1)}px)`; if (tf !== shown.tf) { bld.style.transform = tf; shown.tf = tf; }
+  const ltf = `translate(0px,${L.y.toFixed(1)}px)`; if (ltf !== shown.liftTf) { $("#lift").style.transform = ltf; shown.liftTf = ltf; }
+  const bob = 1 + Math.sin(T / 520) * 0.012;
+  $("#liftIn").style.transform = `rotate(${L.swing.toFixed(2)}deg)`;
+  $("#om").style.transform = `scale(${bob.toFixed(4)},${(2 - bob).toFixed(4)})`;
+  const ropeH = Math.round(L.y - 118 - 52); if (ropeH !== shown.rope) { $("#rope").style.height = Math.max(0, ropeH) + "px"; shown.rope = ropeH; }
+  if (f !== shown.frame) {
+    for (const im of $("#om").children) im.classList.toggle("on", im.dataset.f === f || im.dataset.f === f + "_pupils");
+    shown.frame = f;
+  }
+  if (f === "neutral" || f === "wide") { const p = $(`#om img[data-f="${f}_pupils"]`); if (p) p.style.transform = `translate(${om.px.toFixed(2)}px,${om.py.toFixed(2)}px)`; }
+  const bi = btnOfFloor(st.centerFloor);
+  if (bi !== shown.btn) { panel.querySelectorAll(".pb").forEach((el, i) => el.classList.toggle("on", i === bi)); shown.btn = bi; }
+  // garland twinkle (cheap opacity)
+  if (st.scroll < ROOM_H) { const bs = document.querySelectorAll(".bulb"); bs.forEach((b, i) => { b.style.opacity = (0.75 + 0.25 * Math.sin(T / 400 + i * 1.7)).toFixed(2); }); }
+  if (st.task && !st.task.done) $("#timer").textContent = ((T - st.task.t0) / 1000).toFixed(1).replace(".", ",") + " с";
+  requestAnimationFrame(frame);
+}
+
+/* ---------- test API ---------- */
+function rectOf(sel) { const el = document.querySelector(sel); if (!el) return null; const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height }; }
+window.__game = {
+  ready: false,
+  getState() {
+    const vis = []; const top = st.scroll, bot = st.scroll + H;
+    FLOORS.forEach((f, i) => { if (f.top + f.h > top + BAR && f.top < bot) vis.push(i); });
+    return {
+      scene: st.modal ? "modal" : "hub", scroll: Math.round(st.scroll), maxScroll: MAX_SCROLL, mode: st.mode,
+      centerFloor: st.centerFloor, visibleFloors: vis, activeButton: BUTTONS[btnOfFloor(st.centerFloor)].key,
+      lift: { y: Math.round(st.lift.y), floor: st.lift.target, moving: st.lift.moving, parkedAt: st.lift.moving ? null : FLOORS.findIndex(f => Math.abs(parkY(f) - st.lift.y) < 1) },
+      omnom: { frame: st.om.frame, pupils: [+st.om.px.toFixed(2), +st.om.py.toFixed(2)] },
+      catalog: { total: GAMES.length, real: GAMES.filter(g => g.real).map(g => g.name), newIds: GAMES.filter(g => g.isNew).map(g => g.id),
+        themes: THEMES.map((t, ti) => ({ key: t.key, name: t.name, color: t.color, count: GAMES.filter(g => g.themeIdx === ti).length })) },
+      floors: FLOORS.map((f, i) => ({ i, kind: f.kind, theme: f.kind === "theme" ? THEMES[f.themeIdx].key : null, top: f.top, h: f.h, games: f.games.map(id => GAMES[id].name) })),
+      buttons: BUTTONS.map(b => ({ key: b.key, floors: b.floors })),
+      opened: [...st.opened], recent: st.recent.map(id => GAMES[id].name), daily: { ids: st.daily.ids, names: st.daily.ids.map(id => GAMES[id].name), done: st.daily.done },
+      newDots: [...document.querySelectorAll(".door .dot")].length,
+      modal: st.modal, task: st.task ? { target: GAMES[st.task.target].name, targetId: st.task.target, done: st.task.done, timeSec: st.task.timeSec, taps: st.task.taps,
+        targetFloor: FLOORS.findIndex(f => f.games.includes(st.task.target)), targetButton: btnOfFloor(FLOORS.findIndex(f => f.games.includes(st.task.target))) } : null,
+      gameIndex: GAMES.map(g => ({ id: g.id, name: g.name, theme: THEMES[g.themeIdx].key, kind: g.kind, isNew: g.isNew })),
+      tapSlopPx: TAP_SLOP, scale,
+    };
+  },
+  act(action, p) {
+    switch (action) {
+      case "button": goButton(typeof p === "number" ? p : BUTTONS.findIndex(b => b.key === p)); return;
+      case "scrollTo": st.mode = "idle"; st.scroll = clampS(+p); return;
+      case "scrollBy": st.mode = "idle"; st.scroll = clampS(st.scroll + +p); return;
+      case "open": return openGame(typeof p === "number" ? p : (GAMES.find(g => g.name === p) || {}).id, document.querySelector(`.door[data-gid="${typeof p === "number" ? p : (GAMES.find(g => g.name === p) || {}).id}"]`));
+      case "closeModal": closeModal(); return;
+      case "newTask": newTask(); return;
+      case "tapOm": handleTap("om"); return;
+      case "rect": return rectOf(p);        // screen rect of a selector (for real-mouse tests)
+      case "doorRect": { const els = [...document.querySelectorAll(`#bld .floor:not(.room) .door[data-gid="${p}"]`)]; if (!els.length) return null; const r = els[0].getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }
+      case "resetStorage": try { for (const k of Object.keys(localStorage)) if (k.startsWith(LS)) localStorage.removeItem(k); } catch (e) {} return;
+      default: return { error: "unknown action " + action };
+    }
+  },
+  metrics() { const a = meter.slice().sort((x, y) => x - y); const avg = a.reduce((s, v) => s + v, 0) / (a.length || 1);
+    return { fps: Math.round(1000 / (avg || 16.7)), frameMsP95: +(a[Math.floor(a.length * 0.95)] || 0).toFixed(1), drawCalls: -1 }; },
+};
+
+buildBuilding(); buildPanel(); fit();
+if (TASK) newTask();
+requestAnimationFrame(t => { lastT = t; requestAnimationFrame(frame); window.__game.ready = true; });
+</script>
+</body>
+</html>

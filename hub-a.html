@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Главный экран A — Комната + полки</title>
+<link rel="icon" href="data:,">
+<style>:root{--ink:#4a2a10;--edge:#5a3415;--paper:#fbf1dc;--card:#c98e4f}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;color:var(--ink);-webkit-user-select:none;user-select:none;background:#2b1c10;margin:0;font:16px/1.25 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}img{-webkit-user-drag:none;user-drag:none;pointer-events:none}#stage{transform-origin:0 0;touch-action:none;background:#a8692f url(./assets/hub/cardboard_tile.png) 0 0/192px 192px;width:390px;height:844px;position:absolute;top:0;left:0;overflow:hidden}#content{will-change:transform;width:390px;padding-bottom:110px;position:absolute;top:0;left:0}.sec-title{color:#fff6e4;text-shadow:0 2px #3c1e0899;letter-spacing:.2px;padding:14px 16px 8px;font-size:17px;font-weight:900}.cards{gap:8px;padding:0 13px;display:flex}.card{border:18px solid #0000;border-image:url(./assets/hub/cell.png) 90 fill/18px;flex-direction:column;align-items:center;width:116px;height:164px;padding:0;display:flex;position:relative}.card .ct{text-align:center;color:#b0561c;text-transform:uppercase;letter-spacing:.4px;font-size:12px;font-weight:900;position:absolute;top:-6px;left:-8px;right:-8px}.card .cw{border:3px solid var(--edge);border-radius:10px;justify-content:center;align-items:center;height:78px;display:flex;position:absolute;top:12px;left:-6px;right:-6px;overflow:hidden}.card .cn{text-align:center;font-size:14px;font-weight:900;line-height:1.1;position:absolute;top:94px;left:-10px;right:-10px}.card .cs{text-align:center;color:#8a5a2b;font-size:11px;font-weight:700;position:absolute;top:112px;left:-10px;right:-10px}.card .dot{width:22px;height:22px;position:absolute;top:4px;right:-14px}.daily-ticks{gap:6px;margin-top:4px;display:flex}.tick{border:2.5px solid var(--edge);background:#fff;border-radius:50%;width:16px;height:16px}.tick.done{background:#f39a3b}.shelf-head{align-items:center;gap:8px;padding:16px 14px 8px;display:flex}.plate{border:3px solid var(--edge);color:#fff;text-shadow:0 2px #28140573;border-radius:12px;align-items:center;gap:6px;padding:5px 12px 6px;font-size:16px;font-weight:900;display:inline-flex;box-shadow:0 3px #28140559}.plate small{opacity:.9;font-size:12px;font-weight:800}.tab{border:3px solid var(--edge);color:var(--ink);background:#e9cfa2;border-radius:12px;padding:5px 12px 6px;font-size:15px;font-weight:900}.tab.on{background:#fff3d6;box-shadow:0 3px #28140559}.tab:not(.on){opacity:.75}.theme{margin-top:2px}.theme-back{border-radius:14px;margin:0 8px;padding:4px 0 2px}.row{z-index:1;align-items:flex-end;gap:10px;height:128px;padding:0 13px;display:flex;position:relative}.plank{z-index:0;background:url(./assets/hub/floor_ledge.png) 0 0/100% 100%;border-radius:3px;height:18px;margin:-6px 6px 10px;position:relative;box-shadow:0 5px #28140547}.hint{text-align:center;color:#fff3dc;text-shadow:0 1px #28140599;justify-content:center;align-items:center;height:128px;padding:0 30px;font-size:14px;font-weight:800;display:flex}.box{border:16px solid #0000;border-image:url(./assets/hub/panel_cardboard.png) 80 fill/16px;flex:none;width:112px;height:124px;position:relative}.box .win{border:3px solid var(--edge);border-radius:10px;justify-content:center;align-items:center;height:70px;display:flex;position:absolute;top:-4px;left:-4px;right:-4px;overflow:hidden;box-shadow:inset 0 4px #0000002e}svg.sil{fill:#2d16068c}.box .win svg.sil{width:46px;height:46px}.card .cw svg.sil{width:52px;height:52px}.box .nm{text-align:center;white-space:nowrap;text-overflow:ellipsis;color:#fff4df;text-shadow:0 1.5px #321905b3;font-size:13px;font-weight:900;line-height:1.05;position:absolute;top:70px;left:-12px;right:-12px;overflow:hidden}.box .dot{width:22px;height:22px;position:absolute;top:-14px;right:-14px}.box .fav{fill:#e8423a;stroke:#fff;stroke-width:2.5px;paint-order:stroke;width:20px;height:20px;position:absolute;top:-12px;left:-12px}.pressed{filter:brightness(.92);transform:translateY(2px)scale(.97)}.box.hit{outline-offset:2px;border-radius:16px;outline:4px solid #ffd23f}.win img.pic,.cw img.pic{object-fit:cover;width:100%;height:100%}.win .om,.cw .om{width:58px;position:absolute;bottom:-6px;right:2px}.win .om.l,.cw .om.l{left:2px;right:auto}.sheet .big .om{right:10px}.sheet .big .om.l{left:10px;right:auto}#room{z-index:5;width:390px;height:330px;position:absolute;top:0;left:0;overflow:hidden}#scene{will-change:transform;width:390px;height:372px;position:absolute;top:0;left:0}#scene .wall{width:390px;height:372px;position:absolute;top:-42px;left:0}#scene .sky{width:122px;height:92px;position:absolute;top:129px;left:196px}#scene .wire{width:390px;height:58px;position:absolute;top:20px;left:0}.bulb{width:13px;height:18px;margin-left:-6.5px;position:absolute}.glow{opacity:0;width:44px;height:44px;margin:-12px 0 0 -22px;position:absolute}.glow.on{opacity:.9}#scene .jar{width:52px;height:85px;position:absolute;top:224px;left:28px}#omnom{will-change:transform;width:115px;height:111px;position:absolute;top:0;left:0}#omnom img{width:115px;height:111px;position:absolute;top:0;left:0}#omnom .tapzone{border-radius:40px;width:84px;height:88px;position:absolute;top:20px;left:18px}#ledge{background:url(./assets/hub/floor_ledge.png) 0 0/100% 100%;height:26px;position:absolute;bottom:0;left:-4px;right:-4px}#shade{z-index:4;background:linear-gradient(#28140573,#28140500);width:390px;height:12px;position:absolute;left:0}#back{z-index:20;color:#fff3dc;background:#2816089e;border-radius:14px;padding:6px 12px 7px;font-size:14px;font-weight:800;text-decoration:none;position:absolute;top:10px;left:10px}#task{z-index:20;border:3px solid var(--edge);background:var(--paper);text-align:center;border-radius:14px;width:max-content;max-width:370px;padding:6px 12px 7px;font-size:16px;font-weight:900;display:none;position:absolute;top:48px;left:50%;transform:translate(-50%);box-shadow:0 4px #28140566}#task.on{display:block}#task .t{font-variant-numeric:tabular-nums;color:#b0561c;margin-left:6px}#task .sub{color:#8a5a2b;margin-top:2px;font-size:12px;font-weight:700}#task .btn{vertical-align:middle;margin-left:8px;padding:4px 12px 5px;font-size:13px}#task.bad{background:#ffd9cc}#panel{z-index:10;border-top:4px solid var(--edge);background:#b77a3c url(./assets/hub/cardboard_tile.png) 0 0/192px 192px;align-items:center;height:86px;padding:0 84px 6px 6px;display:flex;position:absolute;bottom:0;left:0;right:0;box-shadow:0 -4px #28140540}.pbtn{flex-direction:column;flex:1;align-items:center;gap:2px;padding-top:4px;display:flex}.pbtn img{object-fit:contain;width:46px;height:46px}.pbtn span{color:#fff4df;text-shadow:0 1.5px #321905b3;font-size:12px;font-weight:900}.pbtn .dot{position:absolute}#shop{z-index:11;flex-direction:column;align-items:center;width:80px;height:96px;display:flex;position:absolute;bottom:12px;right:6px}#shop img{object-fit:contain;width:74px;height:72px}#shop span{color:#fff4df;text-shadow:0 1.5px #321905b3;margin-top:-2px;font-size:12px;font-weight:900}#modal{z-index:30;background:#1e0f0580;justify-content:center;align-items:center;display:none;position:absolute;inset:0}#modal.on{display:flex}.sheet{text-align:center;border:22px solid #0000;border-image:url(./assets/hub/cell.png) 90 fill/22px;width:330px;padding:0 2px}.sheet h3{margin:0 0 6px;font-size:20px;font-weight:900}.sheet p{color:#6b4220;margin:0 0 12px;font-size:14px;font-weight:600}.sheet .big{border:3px solid var(--edge);border-radius:12px;justify-content:center;align-items:center;width:150px;height:110px;margin:0 auto 10px;display:flex;position:relative;overflow:hidden}.sheet .big svg.sil{fill:#2d16068c;width:70px;height:70px}.sheet .big .om{width:80px;position:absolute;bottom:-8px}.btns{flex-wrap:wrap;justify-content:center;gap:8px;display:flex}.btn{border:3px solid var(--edge);color:#fff;text-shadow:0 1.5px #50230599;background:#f6a640;border-radius:14px;padding:9px 18px 10px;font-size:15px;font-weight:900;display:inline-block;box-shadow:0 3px #28140566}.btn.sec{color:var(--ink);text-shadow:none;background:#efdcb8}.task-row{text-align:left;background:#f3e1bd;border:2.5px solid #c99a5e;border-radius:12px;align-items:center;gap:10px;margin:0 0 6px;padding:8px;display:flex}.task-row .tw{border:2.5px solid var(--edge);border-radius:8px;flex:none;justify-content:center;align-items:center;width:46px;height:38px;display:flex;position:relative;overflow:hidden}.task-row .tw svg.sil{fill:#2d16068c;width:26px;height:26px}.task-row .tw .om{width:34px;position:absolute;bottom:-4px}.task-row .tx{flex:1;font-size:14px;font-weight:800}.task-row .tx small{color:#8a5a2b;font-size:11px;font-weight:700;display:block}.task-row .tick{flex:none;width:22px;height:22px}#toast{z-index:40;color:#fff3dc;white-space:nowrap;opacity:0;pointer-events:none;background:#281608d9;border-radius:14px;padding:8px 14px;font-size:14px;font-weight:800;transition:opacity .2s;position:absolute;top:96px;left:50%;transform:translate(-50%)}#toast.on{opacity:1}</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content"></div>
+  <div id="room">
+    <div id="scene">
+      <img class="sky" src="./assets/hub/window_sky.png" alt="">
+      <img class="wall" src="./assets/hub/room_wall_780.png" alt="">
+      <img class="wire" src="./assets/hub/garland_wire.png" alt="">
+      <div id="bulbs"></div>
+      <img class="jar" src="./assets/hub/prop_jar_1.png" alt="">
+    </div>
+    <div id="omnom" data-act="omnom">
+      <img id="omShadow" src="./assets/hub/omnom_shadow.png" alt="" style="display:none">
+      <img id="omFrame" src="./assets/hub/omnom_neutral.png" alt="">
+      <img id="omPupils" src="./assets/hub/omnom_neutral_pupils.png" alt="">
+      <div class="tapzone"></div>
+    </div>
+    <div id="ledge"></div>
+  </div>
+  <div id="shade"></div>
+  <a id="back" href="index.html" data-act="back">← Лаборатория</a>
+  <div id="task"></div>
+  <div id="panel">
+    <div class="pbtn" data-act="panel" data-k="costumes"><img src="./assets/hub/costumes.png" alt=""><span>Костюмы</span></div>
+    <div class="pbtn" data-act="panel" data-k="daily" style="position:relative"><img src="./assets/hub/daily.png" alt=""><span>Набор дня</span></div>
+    <div class="pbtn" data-act="panel" data-k="album"><img src="./assets/hub/album.png" alt=""><span>Альбом</span></div>
+  </div>
+  <div id="shop" data-act="panel" data-k="shop"><img src="./assets/hub/store.png" alt=""><span>Лавочка</span></div>
+  <div id="modal" data-act="close"><div class="sheet" id="sheet"></div></div>
+  <div id="toast"></div>
+</div>
+<script>
+"use strict";
+// ================= constants =================
+const W = 390, H = 844;
+const ROOM_FULL = 330, ROOM_MIN = 200, PANEL_H = 86;
+const COLLAPSE = ROOM_FULL - ROOM_MIN;      // scroll px over which the room shrinks
+const SCENE_SHIFT = 40;                      // scene moves up by this much when collapsed
+const TAP_SLOP = 12;                         // tap is cancelled by a move >= 12 px (D-30)
+const LONG_PRESS_MS = 450;                   // hold a game -> favourite
+const OM = { w:115, h:111, feetX:61.6, feetY:107.8, ppu:115/82 }; // display px per logical unit ~1.4
+const OM_FEET_FULL = { x:140, y:310 };       // screen, room expanded
+const OM_PEEK = 16;                          // collapsed: feet this far below the room edge
+const PUP = { neutral:{ c:[-6.13,-43.11], l:7.03, r:10.15, u:5.0, d:1.41 }, wide:{ c:[-6.83,-49.51], l:3.9, r:1.72, u:2.66, d:2.66 } };
+const LS = "lab.hubA.";
+const qs = new URLSearchParams(location.search);
+const SEED = Number(qs.get("seed") || 7) >>> 0;
+const TASK_MODE = qs.get("task") === "1";
+let noNav = qs.get("nonav") === "1";
+
+// ================= storage (try/catch) =================
+function load(k, def) { try { const v = localStorage.getItem(LS + k); return v === null ? def : JSON.parse(v); } catch (e) { return def; } }
+function save(k, v) { try { localStorage.setItem(LS + k, JSON.stringify(v)); } catch (e) {} }
+
+// ================= catalogue generator =================
+function rngOf(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function hashStr(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+const SHAPES = {
+  star:  '<path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6z"/>',
+  ball:  '<circle cx="12" cy="12" r="9"/>',
+  target:'<path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20zm0 4a6 6 0 1 1 0 12a6 6 0 1 1 0-12zm0 3a3 3 0 1 0 0 6a3 3 0 1 0 0-6z"/>',
+  drop:  '<path d="M12 2C9 7 5 11 5 15a7 7 0 0 0 14 0c0-4-4-8-7-13z"/>',
+  fish:  '<path d="M2 12c3-5 9-6 14-3l5-4v14l-5-4c-5 3-11 2-14-3z"/>',
+  moon:  '<path d="M15 2a10 10 0 1 0 7 15A8 8 0 0 1 15 2z"/>',
+  heart: '<path d="M12 21l-1.5-1.3C5 15 2 12 2 8.5A5 5 0 0 1 12 6a5 5 0 0 1 10 2.5c0 3.5-3 6.5-8.5 11.2z"/>',
+  cloud: '<path d="M6 19a5 5 0 0 1-.5-10A6 6 0 0 1 17 8a4.5 4.5 0 0 1 1 11z"/>',
+  rocket:'<path d="M12 2c4 3 5 8 4 13H8C7 10 8 5 12 2zM8 13l-3 6 4-2zm8 0l3 6-4-2zM10 17h4l-2 5z"/>',
+  bolt:  '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  car:   '<path d="M2 16v-4l4-5h9l4 5h3v4z"/><circle cx="7" cy="17" r="2.6"/><circle cx="17" cy="17" r="2.6"/>',
+  flag:  '<path d="M5 2h2v20H5zM7 3h12l-3 4 3 4H7z"/>',
+  key:   '<circle cx="7" cy="12" r="5"/><path d="M11 10.5h11v3h-2v3h-3v-3h-6z"/>',
+  puzzle:'<path d="M4 4h6a2 2 0 1 1 4 0h6v6a2 2 0 1 0 0 4v6h-6a2 2 0 1 0-4 0H4z"/>',
+  house: '<path d="M12 3l9 8h-3v10H6V11H3z"/>',
+  cake:  '<path d="M5 12h14l-2 9H7z"/><path d="M4 12a8 7 0 0 1 16 0z"/>',
+  candy: '<circle cx="12" cy="12" r="5"/><path d="M8 12L2 8v8zM16 12l6-4v8z"/>',
+  note:  '<path d="M9 4l11-2v13h-2V6l-7 1.3V18H9z"/><circle cx="7" cy="18" r="3"/><circle cx="16" cy="15.5" r="3"/>',
+  wave:  '<path d="M2 13c3-4 6-4 10 0s7 4 10 0v9H2z"/>',
+};
+const THEMES = [
+  { id:"jump",  name:"Прыжки",      color:"#f6c445", shapes:["cloud","rocket","star","heart"],
+    games:["Крючки","Батут","Лягушка","Облака","Пружинка","Лиана","Скакалка","Ракета","Шарики вверх","Кенгуру","Лестница","Прыг-скок","Попрыгунчик","Кузнечик"] },
+  { id:"aim",   name:"Меткость",    color:"#f2795e", shapes:["target","ball","star","candy"],
+    games:["Рогатка","Пушка-шлёп","Кольцеброс","Снежки","Баскетбол","Мыльный тир","Бумеранг","Лук и яблоко","Метатель","Пузыри-бум","Боулинг","Попади в рот","Мини-гольф","Ловушка"] },
+  { id:"think", name:"Головоломки", color:"#5aa7e8", shapes:["puzzle","key","house"],
+    games:["Горка","Коробка","Пазл-конфета","Трубы","Лабиринт","Три в ряд","Шестерёнки","Зеркала","Мосты","Ключики","Тени","Плитки","Сортировка","Домино","Цвета"] },
+  { id:"speed", name:"Скорость",    color:"#f39a3b", shapes:["car","bolt","flag"],
+    games:["Хоккей","Гонки","Самокат","Сани","Беги-беги","Тележка","Скейт","Поезд","Пинг-понг","Футбол","Ралли","Догонялки","Регби","Велосипед"] },
+  { id:"water", name:"Вода",        color:"#3fb6c4", shapes:["fish","drop","wave"],
+    games:["Рыбалка","Кораблик","Подлодка","Капли","Серфинг","Пузырьки","Утята","Ныряльщик","Медуза","Дождик","Плот","Краб","Аквариум","Брызги"] },
+  { id:"food",  name:"Кухня",       color:"#f08cb0", shapes:["cake","candy","heart"],
+    games:["Торт-башня","Пицца","Блинчики","Мороженое","Пончики","Повар Ом Ном","Лимонад","Печенье","Варенье","Попкорн","Желе","Кексы","Леденцы","Сэндвич"] },
+  { id:"night", name:"Ночь",        color:"#4a5f8f", shapes:["moon","star","cloud","note"],
+    games:["Звёзды","Светлячки","Фонарик","Совёнок","Луна","Сны","Прятки","Созвездия","Комета","Ночной поезд","Сова и мышь","Сверчок","Колыбельная","Метеоры","Лунатик"] },
+];
+const REAL = {
+  "Крючки":     { kind:"lab", href:"hook.html",  om:"wave1", prop:"hook" },
+  "Рогатка":    { kind:"lab", href:"sling.html", om:"wide",  prop:"sling" },
+  "Горка":      { kind:"lab", href:"slide.html", om:"joy",   prop:"slide" },
+  "Торт-башня": { kind:"app", pic:"door_pic_cake_tower" },
+  "Коробка":    { kind:"app", pic:"door_pic_candy_box" },
+  "Хоккей":     { kind:"app", pic:"door_pic_candy_hockey" },
+};
+const PROPS = {
+  hook:  '<svg viewBox="0 0 88 64" style="position:absolute;inset:0;width:100%;height:100%"><line x1="22" y1="14" x2="52" y2="40" stroke="#5a3415" stroke-width="2.5" stroke-dasharray="4 3"/><circle cx="20" cy="13" r="7" fill="#fff" stroke="#5a3415" stroke-width="3"/></svg>',
+  sling: '<svg viewBox="0 0 88 64" style="position:absolute;inset:0;width:100%;height:100%"><path d="M8 18 Q22 30 36 18" fill="none" stroke="#5a3415" stroke-width="2.5"/><circle cx="22" cy="24" r="6" fill="#e8423a" stroke="#5a3415" stroke-width="2"/></svg>',
+  slide: '<svg viewBox="0 0 88 64" style="position:absolute;inset:0;width:100%;height:100%"><line x1="84" y1="6" x2="38" y2="40" stroke="#7a4a1d" stroke-width="4" stroke-linecap="round"/><circle cx="74" cy="10" r="5" fill="#e8423a" stroke="#5a3415" stroke-width="2"/></svg>',
+};
+function buildCatalogue(seed) {
+  const rnd = rngOf(seed), games = [];
+  for (const th of THEMES) for (const name of th.games) {
+    const real = REAL[name];
+    games.push({ id: games.length, name, theme: th.id, color: th.color, kind: real ? real.kind : "stub",
+      href: real && real.href || null, pic: real && real.pic || null, om: real && real.om || null, prop: real && real.prop || null,
+      shape: th.shapes[Math.floor(rnd() * th.shapes.length)], rel: 0, isNew: false });
+  }
+  const order = games.map(g => g.id);
+  for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+  order.forEach((id, i) => games[id].rel = i);           // release index: higher = newer
+  for (const g of games) g.isNew = g.rel >= games.length - 6;
+  return games;
+}
+const GAMES = buildCatalogue(SEED);
+const byName = n => GAMES.find(g => g.name === n);
+const themeOf = g => THEMES.find(t => t.id === g.theme);
+const shelfOrder = th => GAMES.filter(g => g.theme === th.id).sort((a, b) => b.rel - a.rel);   // newest first
+
+// ================= persistent state =================
+const st = {
+  seen: new Set(load("seen", [])),
+  recent: load("recent", []),
+  fav: load("fav", []),
+  topTab: null,          // 'fav' | 'recent' ; null = auto
+  daily: null,
+};
+function today() { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+function makeDaily() {
+  const day = today(), saved = load("daily", null);
+  const rnd = rngOf(SEED ^ hashStr(day));
+  const reals = GAMES.filter(g => g.kind !== "stub");
+  const t1 = reals[Math.floor(rnd() * reals.length)];
+  const untried = GAMES.filter(g => !st.seen.has(g.id) && g.id !== t1.id && !st.recent.includes(g.id));
+  const t2 = (untried.length ? untried : GAMES)[Math.floor(rnd() * (untried.length || GAMES.length))];
+  const th = THEMES.filter(t => t.id !== t1.theme && t.id !== t2.theme)[Math.floor(rnd() * 5)];
+  const pool = GAMES.filter(g => g.theme === th.id && g.id !== t2.id);
+  const t3 = pool[Math.floor(rnd() * pool.length)];
+  if (saved && saved.day === day && saved.seed === SEED) return saved;
+  const d = { day, seed: SEED, tasks: [
+    { gid: t1.id, text: "Сыграй в «" + t1.name + "»", sub: "любимая классика" },
+    { gid: t2.id, text: "Попробуй новую: «" + t2.name + "»", sub: "ты в неё ещё не играл" },
+    { gid: t3.id, text: "Тема «" + th.name + "»: «" + t3.name + "»", sub: "загляни на другую полку" },
+  ], done: [] };
+  save("daily", d); return d;
+}
+st.daily = makeDaily();
+
+// ================= DOM refs & helpers =================
+const $ = id => document.getElementById(id);
+const stage = $("stage"), content = $("content"), room = $("room"), scene = $("scene"), omEl = $("omnom");
+const omFrame = $("omFrame"), omPupils = $("omPupils"), shade = $("shade"), taskEl = $("task");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const svgSil = (shape) => '<svg class="sil" viewBox="0 0 24 24">' + SHAPES[shape] + '</svg>';
+const HEART = '<svg class="fav" viewBox="0 0 24 24"><path d="M12 21l-1.5-1.3C5 15 2 12 2 8.5A5 5 0 0 1 12 6a5 5 0 0 1 10 2.5c0 3.5-3 6.5-8.5 11.2z"/></svg>';
+function windowInner(g, big) {
+  if (g.pic) return '<img class="pic" src="assets/hub/' + g.pic + '.png" alt="">';
+  if (g.om) return PROPS[g.prop] + '<img class="om' + (g.prop === "slide" ? " l" : "") + '" src="assets/hub/omnom_' + (g.om === "wave1" ? "neutral" : g.om) + '.png" alt="">';
+  return svgSil(g.shape);
+}
+const isNewDot = g => g.isNew && !st.seen.has(g.id);
+function boxHtml(g) {
+  return '<div class="box" data-act="game" data-id="' + g.id + '">' +
+    '<div class="win" style="background:' + g.color + '">' + windowInner(g) + '</div>' +
+    '<div class="nm">' + esc(g.name) + '</div>' +
+    (isNewDot(g) ? '<img class="dot" src="assets/hub/badge_dot.png" alt="">' : '') +
+    (st.fav.includes(g.id) ? HEART : '') + '</div>';
+}
+function rowsHtml(list, max) {
+  let h = "";
+  for (let i = 0; i < list.length && i < max; i += 3) {
+    h += '<div class="row">' + list.slice(i, i + 3).map(boxHtml).join("") + '</div><div class="plank"></div>';
+  }
+  return h;
+}
+
+// ================= "play now" cards =================
+function newestUnseen() {
+  const l = GAMES.filter(isNewDot).sort((a, b) => b.rel - a.rel);
+  return l[0] || GAMES.slice().sort((a, b) => b.rel - a.rel)[0];
+}
+function cardsModel() {
+  const last = st.recent.length ? GAMES[st.recent[0]] : byName("Крючки");
+  return { daily: st.daily, recent: last, recentLabel: st.recent.length ? "Ещё раз" : "Начни с", fresh: newestUnseen() };
+}
+function cardsHtml() {
+  const m = cardsModel(), done = m.daily.done.length;
+  const ticks = m.daily.tasks.map(t => '<div class="tick' + (m.daily.done.includes(t.gid) ? " done" : "") + '"></div>').join("");
+  return '<div class="sec-title">Что сыграть сейчас</div><div class="cards">' +
+    '<div class="card" data-act="card" data-k="daily"><div class="ct">Набор дня</div>' +
+      '<div class="cw" style="background:#ffe6b0"><img src="assets/hub/daily.png" style="width:66px" alt=""></div>' +
+      '<div class="cn">' + done + ' из 3</div><div class="cs"><div class="daily-ticks" style="justify-content:center">' + ticks + '</div></div></div>' +
+    '<div class="card" data-act="card" data-k="recent" data-id="' + m.recent.id + '"><div class="ct">' + m.recentLabel + '</div>' +
+      '<div class="cw" style="background:' + m.recent.color + '">' + windowInner(m.recent) + '</div>' +
+      '<div class="cn">' + esc(m.recent.name) + '</div><div class="cs">' + esc(themeOf(m.recent).name) + '</div></div>' +
+    '<div class="card" data-act="card" data-k="new" data-id="' + m.fresh.id + '"><div class="ct">Новое</div>' +
+      '<div class="cw" style="background:' + m.fresh.color + '">' + windowInner(m.fresh) + '</div>' +
+      '<div class="cn">' + esc(m.fresh.name) + '</div><div class="cs">' + esc(themeOf(m.fresh).name) + '</div>' +
+      (isNewDot(m.fresh) ? '<img class="dot" src="assets/hub/badge_dot.png" alt="">' : '') + '</div>' +
+    '</div>';
+}
+
+// ================= render =================
+let layout = { boxes: [], height: 0 };
+function topTab() { return st.topTab || (st.fav.length ? "fav" : "recent"); }
+function render() {
+  const tab = topTab();
+  let h = cardsHtml();
+  h += '<div class="shelf-head"><span class="tab' + (tab === "fav" ? " on" : "") + '" data-act="tab" data-k="fav">Любимые</span>' +
+       '<span class="tab' + (tab === "recent" ? " on" : "") + '" data-act="tab" data-k="recent">Недавние</span></div>';
+  const list = (tab === "fav" ? st.fav : st.recent).map(id => GAMES[id]);
+  if (list.length) h += '<div class="theme-back" style="background:rgba(255,240,210,.18)">' + rowsHtml(list, tab === "fav" ? 6 : 3) + '</div>';
+  else h += '<div class="hint">' + (tab === "fav" ? "Подержи палец на игре — она ляжет сюда" : "Здесь будут игры, в которые ты играл") + '</div><div class="plank"></div>';
+  for (const th of THEMES) {
+    const list = shelfOrder(th);
+    h += '<div class="theme" data-theme="' + th.id + '"><div class="shelf-head"><span class="plate" style="background:' + th.color + '">' +
+      esc(th.name) + ' <small>· ' + list.length + '</small></span></div>' +
+      '<div class="theme-back" style="background:' + th.color + '2e">' + rowsHtml(list, 99) + '</div></div>';
+  }
+  content.innerHTML = h;
+  // panel daily dot
+  const pd = document.querySelector('.pbtn[data-k="daily"]');
+  const dot = pd.querySelector(".dot");
+  if (st.daily.done.length < 3 && !dot) pd.insertAdjacentHTML("beforeend", '<img class="dot" src="assets/hub/badge_dot.png" style="width:18px;height:18px;right:28%;top:2px" alt="">');
+  if (st.daily.done.length >= 3 && dot) dot.remove();
+  measure();
+  if (taskState) markTarget();
+}
+function measure() {
+  layout.height = content.offsetHeight;
+  layout.boxes = [...content.querySelectorAll(".box, .card[data-id]")].map(el => {
+    let y = 0, x = 0, n = el; while (n && n !== content) { y += n.offsetTop; x += n.offsetLeft; n = n.offsetParent; }
+    return { id: Number(el.dataset.id), el, x, y, w: el.offsetWidth, h: el.offsetHeight, card: el.classList.contains("card") };
+  });
+  maxScroll = Math.max(0, layout.height + ROOM_FULL - (H - PANEL_H) - 0);
+  setScroll(scroll);
+}
+
+// ================= scroll & room =================
+let scroll = 0, maxScroll = 0, vel = 0, collapse = 0;
+function setScroll(y) {
+  scroll = Math.max(0, Math.min(maxScroll, y));
+  collapse = Math.min(1, scroll / COLLAPSE);
+  const roomH = ROOM_FULL - COLLAPSE * collapse;
+  content.style.transform = "translate3d(0," + (ROOM_FULL - scroll) + "px,0)";
+  room.style.height = roomH + "px";
+  scene.style.transform = "translate3d(0," + (-SCENE_SHIFT * collapse) + "px,0)";
+  shade.style.top = roomH + "px";
+  shade.style.opacity = collapse > 0.02 ? 1 : 0;
+  placeOmnom(roomH);
+}
+let omFeet = { x: OM_FEET_FULL.x, y: OM_FEET_FULL.y };
+function placeOmnom(roomH) {
+  const peekY = roomH + OM_PEEK;
+  omFeet = { x: OM_FEET_FULL.x, y: OM_FEET_FULL.y + (peekY - OM_FEET_FULL.y) * collapse };
+  omEl.style.transform = "translate3d(" + (omFeet.x - OM.feetX) + "px," + (omFeet.y - OM.feetY) + "px,0)";
+}
+
+// ================= garland =================
+const BULBS = 9, bulbEls = [];
+(function buildGarland() {
+  const box = $("bulbs"); let h = "";
+  for (let i = 0; i < BULBS; i++) {
+    const x = 18 + i * (354 / (BULBS - 1));
+    const u = x / 390 * 600, yc = 10 + 57.5 * (1 - Math.pow((u - 300) / 300, 2));
+    const y = 20 + yc * 0.65 + 1;
+    h += '<img class="glow" src="assets/hub/bulb_glow.png" style="left:' + x + 'px;top:' + (y + 6) + 'px" alt="">' +
+         '<img class="bulb" src="assets/hub/bulb.png" style="left:' + x + 'px;top:' + y + 'px" alt="">';
+  }
+  box.innerHTML = h;
+  box.querySelectorAll(".glow").forEach(e => bulbEls.push(e));
+})();
+
+// ================= Om Nom: blink, look, moods =================
+const om = { frame: "neutral", blinkAt: 1200, blinkUntil: 0, moodUntil: 0, mood: null,
+  look: { x: 0, y: 0 }, lookGoal: { x: 0, y: 0 }, nextGlance: 0, pointer: null, pointerAt: -1e9 };
+const FRAME_SRC = {}; ["neutral","blink","joy","wide","wave1","chew"].forEach(f => FRAME_SRC[f] = "assets/hub/omnom_" + f + ".png");
+function setFrame(f) {
+  if (om.frame === f) return; om.frame = f;
+  omFrame.src = FRAME_SRC[f];
+  const pup = f === "neutral" ? "neutral" : f === "wide" ? "wide" : null;
+  omPupils.style.display = pup ? "" : "none";
+  if (pup) omPupils.src = "assets/hub/omnom_" + pup + "_pupils.png";
+}
+function omMood(f, ms) { om.mood = f; om.moodUntil = now + ms; }
+function updateOmnom(t, dt) {
+  // blink
+  if (t >= om.blinkAt) { om.blinkUntil = t + 130; om.blinkAt = t + 1800 + Math.random() * 3200; if (Math.random() < 0.2) om.blinkAt = t + 260; }
+  let f = "neutral";
+  if (om.mood && t < om.moodUntil) f = om.mood;
+  else if (t < om.blinkUntil) f = "blink";
+  setFrame(f);
+  // gaze target (screen coords): pointer if recent, else glances; scrolling -> look down at shelves
+  const eye = { x: omFeet.x + PUP.neutral.c[0] * OM.ppu, y: omFeet.y + PUP.neutral.c[1] * OM.ppu };
+  let goal;
+  if (om.pointer && t - om.pointerAt < 2500) goal = { x: om.pointer.x - eye.x, y: om.pointer.y - eye.y };
+  else if (Math.abs(vel) > 0.15 || dragging) goal = { x: 0, y: 200 };
+  else {
+    if (t > om.nextGlance) { om.nextGlance = t + 1400 + Math.random() * 2600;
+      const pts = [{ x:-120, y:-10 }, { x:-150, y:40 }, { x:150, y:-80 }, { x:0, y:200 }, { x:60, y:150 }, { x:-60, y:-60 }];
+      om.lookGoal = pts[Math.floor(Math.random() * pts.length)]; }
+    goal = om.lookGoal;
+  }
+  const len = Math.hypot(goal.x, goal.y) || 1, nx = goal.x / len, ny = goal.y / len, k = Math.min(1, len / 60);
+  const p = om.frame === "wide" ? PUP.wide : PUP.neutral;
+  const tx = (nx < 0 ? p.l : p.r) * nx * k * OM.ppu, ty = (ny < 0 ? p.u : p.d) * ny * k * OM.ppu;
+  const a = 1 - Math.exp(-dt / 70);
+  om.look.x += (tx - om.look.x) * a; om.look.y += (ty - om.look.y) * a;
+  omPupils.style.transform = "translate(" + om.look.x.toFixed(2) + "px," + om.look.y.toFixed(2) + "px)";
+}
+
+// ================= actions =================
+let modal = null;
+function toast(text) { const e = $("toast"); e.textContent = text; e.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove("on"), 1600); }
+function markOpened(g) {
+  st.seen.add(g.id); save("seen", [...st.seen]);
+  st.recent = [g.id, ...st.recent.filter(i => i !== g.id)].slice(0, 9); save("recent", st.recent);
+  if (st.daily.tasks.some(t => t.gid === g.id) && !st.daily.done.includes(g.id)) { st.daily.done.push(g.id); save("daily", st.daily); }
+}
+let lastLaunch = null;
+function openGame(id, via) {
+  const g = GAMES[id];
+  if (taskState && !taskState.found) { taskTap(g); return; }
+  markOpened(g);
+  lastLaunch = { id, name: g.name, kind: g.kind, via: via || "tap", href: g.href };
+  omMood("joy", 900);
+  if (g.kind === "lab") {
+    render();
+    if (!noNav) setTimeout(() => { location.href = g.href; }, 220);
+    else toast("Запуск: " + g.href);
+  } else if (g.kind === "app") {
+    showSheet("app", g);
+  } else {
+    showSheet("stub", g);
+  }
+}
+function toggleFav(id) {
+  const g = GAMES[id];
+  if (st.fav.includes(id)) { st.fav = st.fav.filter(i => i !== id); toast("«" + g.name + "» убрана из любимых"); }
+  else { st.fav = [id, ...st.fav].slice(0, 6); toast("«" + g.name + "» — в любимых"); st.topTab = "fav"; omMood("wide", 700); }
+  save("fav", st.fav); render();
+}
+function bigWin(g) { return '<div class="big" style="background:' + g.color + '">' + windowInner(g) + '</div>'; }
+function showSheet(kind, g) {
+  let h = "";
+  if (kind === "app") {
+    h = bigWin(g) + '<h3>' + esc(g.name) + '</h3><p>Эта игра — из приложения. В лаборатории её нет, она уже сделана в Unity.</p>';
+  } else if (kind === "stub") {
+    h = bigWin(g) + '<h3>' + esc(g.name) + '</h3><p>Заглушка: тут будет одна из 100 игр (тема «' + esc(themeOf(g).name) + '»).</p>';
+  } else if (kind === "daily") {
+    h = '<h3>Набор дня</h3><p>Три игры на сегодня. Сделай все — получишь подарок.</p>' +
+      st.daily.tasks.map(t => { const tg = GAMES[t.gid];
+        return '<div class="task-row" data-act="game" data-id="' + tg.id + '"><div class="tw" style="background:' + tg.color + '">' +
+          (tg.pic ? '<img class="pic" src="assets/hub/' + tg.pic + '.png" style="width:100%;height:100%;object-fit:cover" alt="">' :
+           tg.om ? '<img class="om" src="assets/hub/omnom_' + (tg.om === "wave1" ? "neutral" : tg.om) + '.png" alt="">' : svgSil(tg.shape)) +
+          '</div><div class="tx">' + esc(t.text) + '<small>' + esc(t.sub) + '</small></div><div class="tick' + (st.daily.done.includes(t.gid) ? " done" : "") + '"></div></div>'; }).join("");
+  } else {
+    const names = { costumes: "Костюмы", album: "Альбом", shop: "Лавочка" };
+    const pics = { costumes: "costumes", album: "album", shop: "store" };
+    h = '<img src="assets/hub/' + pics[kind] + '.png" style="width:90px;height:90px;object-fit:contain" alt=""><h3>' + names[kind] +
+      '</h3><p>В прототипе главного экрана этот раздел не сделан.</p>';
+  }
+  const favBtn = g ? '<span class="btn sec" data-act="favbtn" data-id="' + g.id + '">' + (st.fav.includes(g.id) ? "Убрать из любимых" : "В любимые") + '</span>' : "";
+  h += '<div class="btns">' + favBtn + '<span class="btn" data-act="close">Понятно</span></div>';
+  $("sheet").innerHTML = h; $("modal").classList.add("on"); modal = { kind, id: g ? g.id : null };
+}
+function closeSheet() { $("modal").classList.remove("on"); modal = null; render(); }
+
+function doAct(el) {
+  const a = el.dataset.act, id = el.dataset.id !== undefined ? Number(el.dataset.id) : null;
+  if (a === "close") { if (el.id !== "modal" || true) closeSheet(); return; }
+  if (modal && a !== "game" && a !== "favbtn") return;
+  if (a === "game") { if (modal) { $("modal").classList.remove("on"); modal = null; } openGame(id, "tap"); }
+  else if (a === "card") { if (el.dataset.k === "daily") showSheet("daily"); else openGame(id, "card-" + el.dataset.k); }
+  else if (a === "tab") { st.topTab = el.dataset.k; render(); }
+  else if (a === "favbtn") { toggleFav(id); showSheet(modal.kind, GAMES[id]); }
+  else if (a === "panel") { showSheet(el.dataset.k === "daily" ? "daily" : el.dataset.k); }
+  else if (a === "omnom") { omMood(Math.random() < 0.5 ? "wave1" : "joy", 800); }
+  else if (a === "back") { if (!noNav) location.href = "index.html"; }
+  else if (a === "task-next") { newTarget(); }
+}
+
+// ================= input: drag-scroll, tap with 12 px slop, long press, wheel =================
+let ptr = null, dragging = false, fitK = 1, fitX = 0, fitY = 0;
+const toStage = e => ({ x: (e.clientX - fitX) / fitK, y: (e.clientY - fitY) / fitK });
+stage.addEventListener("pointerdown", e => {
+  if (e.button > 0 || ptr) return;
+  const p = toStage(e), actEl = e.target.closest("[data-act]");
+  const inScroll = !modal && !e.target.closest("#panel,#shop,#back,#task,#modal");
+  ptr = { id: e.pointerId, x0: p.x, y0: p.y, actEl, inScroll, moved: false, long: false, s0: scroll, anchor: 0, samples: [[performance.now(), p.y]] };
+  vel = 0; dragging = false;
+  if (actEl && actEl.id !== "modal") actEl.classList.add("pressed");
+  if (actEl && actEl.dataset.act === "game" && !modal) ptr.lp = setTimeout(() => { if (ptr && !ptr.moved) { ptr.long = true; actEl.classList.remove("pressed"); toggleFav(Number(actEl.dataset.id)); } }, LONG_PRESS_MS);
+  om.pointer = p; om.pointerAt = now;
+  try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  if (e.target.closest("a")) e.preventDefault();
+});
+stage.addEventListener("pointermove", e => {
+  const p = toStage(e);
+  if (e.pointerType === "mouse" || ptr) { om.pointer = p; om.pointerAt = now; }
+  if (!ptr || e.pointerId !== ptr.id) return;
+  const d = Math.hypot(p.x - ptr.x0, p.y - ptr.y0);
+  if (!ptr.moved && d >= TAP_SLOP) {
+    ptr.moved = true; clearTimeout(ptr.lp);
+    if (ptr.actEl) ptr.actEl.classList.remove("pressed");
+    if (ptr.inScroll) { dragging = true; ptr.anchor = p.y; ptr.s0 = scroll; }
+  }
+  if (dragging) {
+    setScroll(ptr.s0 - (p.y - ptr.anchor));
+    ptr.samples.push([performance.now(), p.y]); if (ptr.samples.length > 8) ptr.samples.shift();
+  }
+});
+function endPtr(e, cancelled) {
+  if (!ptr || e.pointerId !== ptr.id) return;
+  clearTimeout(ptr.lp);
+  if (ptr.actEl) ptr.actEl.classList.remove("pressed");
+  if (dragging) {
+    const s = ptr.samples, tNow = performance.now();
+    let i = s.length - 1; while (i > 0 && tNow - s[i - 1][0] < 90) i--;
+    const dt = tNow - s[i][0];
+    vel = dt > 8 ? -(s[s.length - 1][1] - s[i][1]) / dt : 0;     // px per ms, scroll direction
+    if (tNow - s[s.length - 1][0] > 80) vel = 0;                   // finger stopped before lifting
+  } else if (!cancelled && !ptr.moved && !ptr.long && ptr.actEl) {
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const upEl = under && under.closest("[data-act]");
+    if (upEl === ptr.actEl) doAct(ptr.actEl);
+  }
+  ptr = null; dragging = false;
+}
+stage.addEventListener("pointerup", e => endPtr(e, false));
+stage.addEventListener("pointercancel", e => endPtr(e, true));
+stage.addEventListener("click", e => { if (e.target.closest("a")) e.preventDefault(); });
+stage.addEventListener("wheel", e => {
+  e.preventDefault(); if (modal) return;
+  vel = 0; setScroll(scroll + e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 600 : 1) / fitK);
+}, { passive: false });
+stage.addEventListener("contextmenu", e => e.preventDefault());
+
+// ================= fit 390x844 into the window =================
+function fit() {
+  const w = window.innerWidth, h = window.innerHeight; if (!w || !h) return;
+  fitK = Math.min(w / W, h / H); fitX = (w - W * fitK) / 2; fitY = (h - H * fitK) / 2;
+  stage.style.transform = "translate(" + fitX + "px," + fitY + "px) scale(" + fitK + ")";
+}
+window.addEventListener("resize", fit); window.addEventListener("orientationchange", fit); fit();
+
+// ================= self-test mode ?task=1 =================
+let taskState = null;
+function visibleIds() {
+  const top = ROOM_FULL - COLLAPSE * collapse, bottom = H - PANEL_H, off = ROOM_FULL - scroll;
+  return layout.boxes.filter(b => b.y + off + b.h > top && b.y + off < bottom).map(b => b.id);
+}
+function newTarget() {
+  const rnd = rngOf((Date.now() & 0xffffff) ^ SEED);
+  const onStart = new Set(layout.boxes.filter(b => b.y + ROOM_FULL < H - PANEL_H).map(b => b.id));
+  const pool = GAMES.filter(g => !onStart.has(g.id) && (!taskState || g.id !== taskState.target));
+  const g = pool[Math.floor(rnd() * pool.length)];
+  taskState = { target: g.id, t0: now, taps: 0, found: false, sec: null, results: taskState ? taskState.results : [], flash: 0, wrong: null };
+  taskEl.classList.add("on"); markTarget(); drawTask();
+}
+function taskTap(g) {
+  taskState.taps++;
+  if (g.id === taskState.target) {
+    taskState.found = true; taskState.sec = (now - taskState.t0) / 1000;
+    taskState.results.push({ name: g.name, sec: +taskState.sec.toFixed(1), taps: taskState.taps });
+    omMood("joy", 1200); markTarget(); drawTask();
+  } else { taskState.wrong = g.name; taskState.flash = now + 1200; omMood("wide", 500); drawTask(); }
+}
+function markTarget() {
+  content.querySelectorAll(".box.hit").forEach(e => e.classList.remove("hit"));
+  if (taskState && taskState.found) content.querySelectorAll('.box[data-id="' + taskState.target + '"]').forEach(e => e.classList.add("hit"));
+}
+function fmt(s) { return s.toFixed(1).replace(".", ","); }
+let taskDrawn = "";
+function drawTask() {
+  if (!taskState) return;
+  const g = GAMES[taskState.target]; let h, bad = false;
+  if (taskState.found) {
+    const ok = taskState.sec <= 10;
+    h = 'Нашёл «' + esc(g.name) + '» за<span class="t">' + fmt(taskState.sec) + ' с</span><span class="btn" data-act="task-next">Дальше</span>' +
+      '<div class="sub">' + (ok ? "в норме: ≤ 10 с" : "дольше нормы 10 с") + ' · тапов: ' + taskState.taps + ' · найдено: ' + taskState.results.length + '</div>';
+  } else if (now < taskState.flash) {
+    bad = true; h = 'Это «' + esc(taskState.wrong) + '». Найди: «' + esc(g.name) + '»<span class="t">' + fmt((now - taskState.t0) / 1000) + ' с</span>';
+  } else h = 'Найди: «' + esc(g.name) + '»<span class="t">' + fmt((now - taskState.t0) / 1000) + ' с</span>';
+  if (h !== taskDrawn) { taskEl.innerHTML = h; taskDrawn = h; }
+  taskEl.classList.toggle("bad", bad);
+}
+
+// ================= main loop =================
+let now = 0, last = 0, frames = [], ready = false, glowStep = 0;
+function frame(t) {
+  now = t; const dt = Math.min(50, last ? t - last : 16); last = t;
+  frames.push(dt); if (frames.length > 120) frames.shift();
+  if (!dragging && Math.abs(vel) > 0.01) {
+    const before = scroll; setScroll(scroll + vel * dt);
+    vel *= Math.exp(-dt / 325);
+    if (scroll === before) vel = 0;
+  } else if (!dragging) vel = 0;
+  updateOmnom(t, dt);
+  const gs = Math.floor(t / 420);
+  if (gs !== glowStep) { glowStep = gs; bulbEls.forEach((e, i) => e.classList.toggle("on", (i + gs) % 3 === 0)); }
+  if (taskState && !taskState.found) drawTask();
+  requestAnimationFrame(frame);
+}
+
+// ================= test API =================
+window.__game = {
+  get ready() { return ready; },
+  getState() {
+    const vis = visibleIds();
+    return {
+      scene: modal ? "sheet:" + modal.kind : "hub",
+      scroll: Math.round(scroll), maxScroll: Math.round(maxScroll), collapse: +collapse.toFixed(3),
+      roomH: Math.round(ROOM_FULL - COLLAPSE * collapse),
+      omnom: { frame: om.frame, feet: { x: Math.round(omFeet.x), y: Math.round(omFeet.y) }, look: { x: +om.look.x.toFixed(1), y: +om.look.y.toFixed(1) } },
+      games: GAMES.length, themes: THEMES.map(t => ({ id: t.id, name: t.name, color: t.color, count: GAMES.filter(g => g.theme === t.id).length })),
+      real: GAMES.filter(g => g.kind !== "stub").map(g => ({ id: g.id, name: g.name, kind: g.kind, href: g.href })),
+      newIds: GAMES.filter(isNewDot).map(g => g.id), seen: [...st.seen], recent: st.recent.slice(), fav: st.fav.slice(), topTab: topTab(),
+      daily: { tasks: st.daily.tasks.map(t => ({ gid: t.gid, name: GAMES[t.gid].name, text: t.text, untried: t.sub.includes("ещё не") })), done: st.daily.done.slice() },
+      cards: (m => ({ recent: m.recent.id, fresh: m.fresh.id }))(cardsModel()),
+      visible: vis, lastLaunch,
+      task: taskState ? { target: taskState.target, name: GAMES[taskState.target].name, found: taskState.found, sec: taskState.sec === null ? null : +taskState.sec.toFixed(2), taps: taskState.taps, results: taskState.results } : null,
+      view: { k: fitK, x: fitX, y: fitY },
+    };
+  },
+  act(a, p) {
+    if (a === "scrollTo") { vel = 0; setScroll(Number(p)); }
+    else if (a === "scrollBy") { vel = 0; setScroll(scroll + Number(p)); }
+    else if (a === "open" || a === "tap") openGame(typeof p === "string" ? byName(p).id : p, "act");
+    else if (a === "fav") toggleFav(typeof p === "string" ? byName(p).id : p);
+    else if (a === "tab") { st.topTab = p; render(); }
+    else if (a === "card") { const el = content.querySelector('.card[data-k="' + p + '"]'); if (el) doAct(el); }
+    else if (a === "panel") showSheet(p === "daily" ? "daily" : p);
+    else if (a === "close") closeSheet();
+    else if (a === "noNav") noNav = !!p;
+    else if (a === "newTarget") newTarget();
+    else if (a === "reset") { ["seen","recent","fav","daily"].forEach(k => { try { localStorage.removeItem(LS + k); } catch (_) {} }); location.reload(); }
+    else if (a === "boxRect") { // page-pixel rect of a game's shelf box (for real-mouse tests); scrolls it into view first
+      const id = typeof p === "string" ? byName(p).id : p;
+      const b = layout.boxes.find(b => b.id === id && !b.card); if (!b) return null;
+      const top = ROOM_FULL - COLLAPSE, want = b.y + ROOM_FULL - (top + 40);
+      if (b.y + ROOM_FULL - scroll < top || b.y + ROOM_FULL - scroll + b.h > H - PANEL_H) setScroll(want);
+      const off = ROOM_FULL - scroll;
+      return { x: fitX + (b.x + b.w / 2) * fitK, y: fitY + (b.y + off + b.h / 2) * fitK };
+    }
+  },
+  metrics() {
+    const s = frames.slice().sort((a, b) => a - b), avg = s.reduce((a, b) => a + b, 0) / (s.length || 1);
+    return { fps: Math.round(1000 / (avg || 16.7)), frameMsP95: +(s[Math.floor(s.length * 0.95)] || 0).toFixed(1), drawCalls: -1 };
+  },
+};
+
+// ================= start =================
+render();
+if (TASK_MODE) newTarget();
+window.addEventListener("load", () => { measure(); requestAnimationFrame(t => { frame(t); requestAnimationFrame(() => { ready = true; }); }); });
+</script>
+</body>
+</html>

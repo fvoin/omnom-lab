@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Конфетная горка</title>
+<link rel="icon" href="data:,">
+<style>html,body{color:#eef3f8;background:#1c2a38;height:100%;margin:0;font:14px/1.3 system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden}body{flex-direction:column;display:flex}header{flex-wrap:wrap;align-items:center;gap:4px 12px;padding:8px 16px 6px;display:flex}header a{color:#9cd2ff;text-decoration:none}h1{margin:0;font-size:16px}.stats{font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:auto}.rule{color:#b8c8d8;flex-basis:100%;font-size:13px}button{font:inherit;color:#fff;cursor:pointer;background:#48a64a;border:0;border-radius:10px;padding:5px 14px}#wrap{flex:1;min-height:0;position:relative}canvas{touch-action:none;width:100%;height:100%;display:block;position:absolute;inset:0}#over{background:#0a121c8c;justify-content:center;align-items:center;display:none;position:absolute;inset:0}#over.show{display:flex}.card{color:#223;text-align:center;background:#fff;border-radius:18px;min-width:200px;padding:22px 30px}.card .big{margin:4px 0;font-size:40px;font-weight:700}.card p{margin:6px 0}.card button{margin-top:10px;padding:10px 26px;font-size:18px}</style>
+</head>
+<body>
+<header>
+  <a href="index.html">← Лаборатория</a>
+  <h1>Конфетная горка</h1>
+  <span class="stats" id="stats">Поймано 0 · ⏱ 90</span>
+  <button id="restart">Заново</button>
+  <div class="rule">Рисуй пальцем горку — конфеты скатятся Ому Ному в рот. Росчерк по верёвке режет её.</div>
+</header>
+<div id="wrap">
+  <canvas id="cv"></canvas>
+  <div id="over"><div class="card">
+    <p>Ом Ном съел</p>
+    <div class="big" id="ovScore">0</div>
+    <p id="ovMiss"></p>
+    <p id="ovBest"></p>
+    <button id="again">Ещё раз</button>
+  </div></div>
+</div>
+<script>
+"use strict";
+// ---- Главные числа: крути здесь ----
+const TUNE = {
+  roundSec: 90,          // длина раунда
+  spawnStart: 2.0,       // интервал конфет в начале, с
+  spawnEnd: 0.8,         // интервал конфет в конце, с
+  spawnWarn: 0.5,        // метка «тут упадёт» заранее, с
+  candyG: 600,           // гравитация конфет, u/с² (верёвка — 784, как в CTR)
+  candyR: 10,            // радиус конфеты
+  friction: 0.004,       // трение качения за подшаг (0 — лёд)
+  bounce: 0.08,          // отскок от верёвки
+  inkMax: 260,           // чернила, u (поле 320 шириной)
+  inkRegen: 75,          // восстановление чернил, u/с
+  minRope: 28,           // короче — не верёвка
+  link: 8,               // длина звена верёвки
+  hold: 0.08,            // как сильно верёвка держит нарисованную форму (провис ≈ g·dt²/hold)
+  ropeGive: 0.3,         // насколько конфета продавливает верёвку
+  ropeIters: 22,         // итерации Верле
+  ropeLife: 10,          // жизнь верёвки, с (последние 1,5 с мигает)
+  scrapFade: 1.2,        // обрывки тают, с
+  cutStart: 16,          // росчерк, начатый ближе к верёвке, — срез
+  dragStart: 4,          // сдвиг пальца до начала росчерка
+  mouthR: 30,            // зона рта
+  omMoveEvery: 20,       // Ом Ном перебегает раз в N с
+  omWarn: 2,             // за сколько секунд тянется в новый угол
+  omRunSec: 0.9,
+  spawnAvoidOm: 70,      // конфеты не падают прямо в рот
+  bubbleFrom: 14,        // пузыри с этой секунды
+  bubbleEvery: 9,        // примерно раз в N с
+  bubbleSpeed: 42,
+  bubbleR: 17,
+};
+// -----------------------------------
+const W = 320, H = 480, DT = 1 / 60, ROPE_G = 784, FLOOR = 466, OM_Y = 444, OM_R = 22;
+const OM_X = [48, 272];
+const SUB = 3;
+
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d"), wrap = document.getElementById("wrap");
+const statsEl = document.getElementById("stats"), overEl = document.getElementById("over");
+let view = { s: 1, ox: 0, oy: 0, dpr: 1, cw: 0, ch: 0 };
+
+function readBest() { try { return +(localStorage.getItem("lab.best.slide") || 0) || 0; } catch (e) { return 0; } }
+function writeBest(v) { try { localStorage.setItem("lab.best.slide", String(v)); } catch (e) {} }
+
+function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+let S;
+function newGame(seed) {
+  seed = seed == null ? (Date.now() & 0xffffff) : seed;
+  S = {
+    t: 0, seed, rng: mulberry(seed), ropes: [], candies: [], bubbles: [], fx: [],
+    ink: TUNE.inkMax, caught: 0, missed: 0, over: false, best: readBest(), newBest: false,
+    om: { x: OM_X[0], side: 0, run: null, warn: -1, nextMove: TUNE.omMoveEvery, chew: 0, open: 0 },
+    pending: null, nextSpawn: 0, script: [0.3, 2.7, 3.9, 5.1], scriptX: 262, nextBubble: TUNE.bubbleFrom,
+    hint: { active: true, done: false, t0: 0.9, dur: 1.1, a: { x: 288, y: 226 }, b: { x: 108, y: 408 } },
+  };
+  S.nextSpawn = S.script[0];
+  ptr = null;
+  overEl.classList.remove("show");
+}
+
+// ---------- ropes ----------
+function resample(pts, step) {
+  const out = [{ x: pts[0].x, y: pts[0].y }];
+  let carry = 0;
+  for (let i = 1; i < pts.length; i++) {
+    let ax = pts[i - 1].x, ay = pts[i - 1].y; const bx = pts[i].x, by = pts[i].y;
+    let seg = Math.hypot(bx - ax, by - ay);
+    while (carry + seg >= step) {
+      const k = (step - carry) / seg; ax += (bx - ax) * k; ay += (by - ay) * k;
+      out.push({ x: ax, y: ay }); seg = Math.hypot(bx - ax, by - ay); carry = 0;
+    }
+    carry += seg;
+  }
+  const last = pts[pts.length - 1], tail = out[out.length - 1];
+  if (Math.hypot(last.x - tail.x, last.y - tail.y) > step * 0.4) out.push({ x: last.x, y: last.y });
+  else { tail.x = last.x; tail.y = last.y; }
+  return out;
+}
+function makeRope(pts) {
+  const r = resample(pts, TUNE.link);
+  if (r.length < 3) return null;
+  const nodes = r.map(p => ({ x: p.x, y: p.y, px: p.x, py: p.y, hx: p.x, hy: p.y }));
+  const rest = [];
+  for (let i = 0; i < nodes.length - 1; i++) rest.push(Math.hypot(nodes[i + 1].x - nodes[i].x, nodes[i + 1].y - nodes[i].y) * 1.02);
+  const rope = { nodes, rest, pinA: true, pinB: true, solid: true, hold: TUNE.hold, age: 0, fade: 0, fadeMax: 0 };
+  S.ropes.push(rope);
+  return rope;
+}
+function stepRope(r) {
+  const n = r.nodes, last = n.length - 1, g = ROPE_G * DT * DT;
+  for (let i = 0; i <= last; i++) {
+    const p = n[i];
+    if ((i === 0 && r.pinA) || (i === last && r.pinB)) { p.px = p.x; p.py = p.y; continue; }
+    const vx = (p.x - p.px) * 0.99, vy = (p.y - p.py) * 0.99;
+    p.px = p.x; p.py = p.y; p.x += vx; p.y += vy + g;
+    if (r.hold) { p.x += (p.hx - p.x) * r.hold; p.y += (p.hy - p.y) * r.hold; }
+  }
+  for (let k = 0; k < TUNE.ropeIters; k++) {
+    for (let i = 0; i < last; i++) {
+      const a = n[i], b = n[i + 1];
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1e-6;
+      if (d <= r.rest[i]) continue; // верёвка тянет, но не толкает
+      const wa = (i === 0 && r.pinA) ? 0 : 1, wb = (i + 1 === last && r.pinB) ? 0 : 1, w = wa + wb;
+      if (!w) continue;
+      const c = (d - r.rest[i]) / d / w;
+      a.x += dx * c * wa; a.y += dy * c * wa; b.x -= dx * c * wb; b.y -= dy * c * wb;
+    }
+  }
+}
+function scrapify(r, sec) { r.solid = false; r.hold = 0; r.fade = r.fadeMax = sec; }
+function segInter(p1, p2, p3, p4) {
+  const d = (p2.x - p1.x) * (p4.y - p3.y) - (p2.y - p1.y) * (p4.x - p3.x);
+  if (Math.abs(d) < 1e-9) return false;
+  const u = ((p3.x - p1.x) * (p4.y - p3.y) - (p3.y - p1.y) * (p4.x - p3.x)) / d;
+  const v = ((p3.x - p1.x) * (p2.y - p1.y) - (p3.y - p1.y) * (p2.x - p1.x)) / d;
+  return u >= 0 && u <= 1 && v >= 0 && v <= 1;
+}
+function cutSegment(p0, p1) {
+  let cuts = 0;
+  for (const r of S.ropes.slice()) {
+    if (!r.solid) continue;
+    const n = r.nodes;
+    for (let i = 0; i < n.length - 1; i++) {
+      if (!segInter(p0, p1, n[i], n[i + 1])) continue;
+      S.ropes.splice(S.ropes.indexOf(r), 1);
+      const A = { nodes: n.slice(0, i + 1), rest: r.rest.slice(0, i), pinA: r.pinA, pinB: false };
+      const B = { nodes: n.slice(i + 1), rest: r.rest.slice(i + 1), pinA: false, pinB: r.pinB };
+      for (const piece of [A, B]) {
+        if (piece.nodes.length < 2) continue;
+        Object.assign(piece, { solid: true, hold: 0, age: r.age, fade: 0, fadeMax: 0 });
+        // маленький толчок от пальца, чтобы обрывок «отпрыгнул»
+        for (const p of piece.nodes) { p.px -= (p1.x - p0.x) * 0.04; p.py -= (p1.y - p0.y) * 0.04; }
+        scrapify(piece, TUNE.scrapFade);
+        S.ropes.push(piece);
+      }
+      cuts++;
+      break;
+    }
+  }
+  return cuts;
+}
+function ropeDist(p) {
+  let best = 1e9;
+  for (const r of S.ropes) {
+    if (!r.solid) continue;
+    const n = r.nodes;
+    for (let i = 0; i < n.length - 1; i++) best = Math.min(best, distSeg(p, n[i], n[i + 1]).d);
+  }
+  return best;
+}
+function distSeg(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy || 1e-9;
+  let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2; t = t < 0 ? 0 : t > 1 ? 1 : t;
+  const qx = a.x + dx * t, qy = a.y + dy * t;
+  return { d: Math.hypot(p.x - qx, p.y - qy), qx, qy, t };
+}
+
+// ---------- candies ----------
+function spawnCandy(x) { S.candies.push({ x, y: -TUNE.candyR, vx: 0, vy: 30, ang: S.rng() * 6.28, state: "fall", bub: null, demo: S.t < 1 }); }
+function chooseX() {
+  for (let k = 0; k < 20; k++) {
+    const x = 22 + S.rng() * (W - 44);
+    if (Math.abs(x - S.om.x) > TUNE.spawnAvoidOm && (!S.om.run || Math.abs(x - S.om.run.to) > TUNE.spawnAvoidOm)) return x;
+  }
+  return W / 2;
+}
+function mouth() { return { x: S.om.x, y: OM_Y - 8 }; }
+function stepCandies(h) {
+  const R = TUNE.candyR, cs = S.candies, m = mouth();
+  for (const c of cs) {
+    if (c.state === "bub") { c.x = c.bub.x; c.y = c.bub.y; c.vx = 0; c.vy = 0; continue; }
+    if (c.state !== "fall") continue;
+    c.vy += TUNE.candyG * h; c.x += c.vx * h; c.y += c.vy * h;
+    // верёвки
+    for (const r of S.ropes) {
+      if (!r.solid || r.fade) continue;
+      const n = r.nodes, rr = R + 2.5;
+      for (let i = 0; i < n.length - 1; i++) {
+        const q = distSeg(c, n[i], n[i + 1]);
+        if (q.d >= rr) continue;
+        let nx, ny;
+        if (q.d > 1e-6) { nx = (c.x - q.qx) / q.d; ny = (c.y - q.qy) / q.d; }
+        else { nx = -(n[i + 1].y - n[i].y); ny = n[i + 1].x - n[i].x; const l = Math.hypot(nx, ny) || 1; nx /= l; ny /= l; if (ny > 0) { nx = -nx; ny = -ny; } }
+        const pen = rr - q.d, give = r.hold ? TUNE.ropeGive : 0;
+        c.x += nx * pen * (1 - give); c.y += ny * pen * (1 - give);
+        const a = n[i], b = n[i + 1], last = n.length - 1;
+        if (!(i === 0 && r.pinA)) { a.x -= nx * pen * give * (1 - q.t); a.y -= ny * pen * give * (1 - q.t); }
+        if (!(i + 1 === last && r.pinB)) { b.x -= nx * pen * give * q.t; b.y -= ny * pen * give * q.t; }
+        const vn = c.vx * nx + c.vy * ny;
+        if (vn < 0) { c.vx -= nx * vn * (1 + TUNE.bounce); c.vy -= ny * vn * (1 + TUNE.bounce); }
+        c.vx *= 1 - TUNE.friction; c.vy *= 1 - TUNE.friction;
+        c.onRope = 4;
+      }
+    }
+    // стены
+    if (c.x < R) { c.x = R; c.vx = Math.abs(c.vx) * 0.3; }
+    if (c.x > W - R) { c.x = W - R; c.vx = -Math.abs(c.vx) * 0.3; }
+    // рот
+    if (Math.hypot(c.x - m.x, c.y - m.y) < TUNE.mouthR) {
+      c.state = "eaten"; S.caught++; S.om.chew = 0.35;
+      S.fx.push({ k: "txt", x: m.x, y: m.y - 30, t: 0, life: 0.8, s: "+1" });
+      continue;
+    }
+    // пол
+    if (c.y > FLOOR - R) {
+      c.state = "splat"; c.y = FLOOR - 3; c.t = 0;
+      if (!c.demo) S.missed++;
+      continue;
+    }
+    // пузыри
+    for (const b of S.bubbles) if (!b.c && Math.hypot(c.x - b.x, c.y - b.y) < b.r + R * 0.6) { b.c = c; c.state = "bub"; c.bub = b; break; }
+  }
+  // конфеты друг о друга
+  for (let i = 0; i < cs.length; i++) for (let j = i + 1; j < cs.length; j++) {
+    const a = cs[i], b = cs[j];
+    if (a.state !== "fall" || b.state !== "fall") continue;
+    const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+    if (d >= 2 * R || d < 1e-6) continue;
+    const nx = dx / d, ny = dy / d, p = (2 * R - d) / 2;
+    a.x -= nx * p; a.y -= ny * p; b.x += nx * p; b.y += ny * p;
+    const rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+    if (rv < 0) { a.vx += nx * rv * 0.6; a.vy += ny * rv * 0.6; b.vx -= nx * rv * 0.6; b.vy -= ny * rv * 0.6; }
+  }
+}
+
+// ---------- tick ----------
+function tick() {
+  if (S.over) return;
+  S.t += DT;
+  const om = S.om;
+  // подсказка: рука рисует первую горку
+  const hn = S.hint;
+  if (hn.active && !hn.done && S.t >= hn.t0 + hn.dur) {
+    hn.done = true; hn.active = false;
+    makeRope([hn.a, { x: (hn.a.x + hn.b.x) / 2 + 4, y: (hn.a.y + hn.b.y) / 2 - 6 }, hn.b]);
+  }
+  // спавн
+  if (!S.pending && S.t >= S.nextSpawn - TUNE.spawnWarn) {
+    const scripted = S.script.length > 0;
+    S.pending = { x: scripted ? S.scriptX : chooseX(), at: S.nextSpawn };
+  }
+  if (S.pending && S.t >= S.pending.at) {
+    spawnCandy(S.pending.x); S.pending = null;
+    if (S.script.length) S.script.shift();
+    if (S.script.length) S.nextSpawn = S.script[0];
+    else {
+      const k = Math.min(1, S.t / TUNE.roundSec);
+      S.nextSpawn = S.t + TUNE.spawnStart + (TUNE.spawnEnd - TUNE.spawnStart) * k;
+    }
+  }
+  // пузыри
+  if (S.t >= S.nextBubble) {
+    S.bubbles.push({ x: 50 + S.rng() * (W - 100), y: FLOOR + 10, r: TUNE.bubbleR, c: null, ph: S.rng() * 6 });
+    S.nextBubble = S.t + TUNE.bubbleEvery * (0.7 + S.rng() * 0.6);
+  }
+  for (const b of S.bubbles) { b.y -= TUNE.bubbleSpeed * DT; b.ph += DT * 3; b.x += Math.sin(b.ph) * 0.3; }
+  for (const b of S.bubbles.slice()) if (b.y < -b.r - 4) {
+    if (b.c) { b.c.state = "gone"; S.missed++; }
+    S.bubbles.splice(S.bubbles.indexOf(b), 1);
+  }
+  // Ом Ном перебегает
+  if (!om.run && S.t >= om.nextMove - TUNE.omWarn && om.warn < 0) om.warn = 1 - om.side;
+  if (!om.run && S.t >= om.nextMove) { om.run = { from: om.x, to: OM_X[1 - om.side], t: 0 }; }
+  if (om.run) {
+    om.run.t += DT / TUNE.omRunSec;
+    const k = Math.min(1, om.run.t), e = k * k * (3 - 2 * k);
+    om.x = om.run.from + (om.run.to - om.run.from) * e;
+    if (k >= 1) { om.side = 1 - om.side; om.run = null; om.warn = -1; om.nextMove += TUNE.omMoveEvery; }
+  }
+  om.chew = Math.max(0, om.chew - DT);
+  // рот открывается, когда конфета близко
+  const m = mouth(); let near = 0;
+  for (const c of S.candies) if (c.state === "fall") { const d = Math.hypot(c.x - m.x, c.y - m.y); if (d < 120) near = Math.max(near, 1 - d / 120); }
+  om.open += (Math.min(1, near * 1.8) - om.open) * 0.2;
+  // верёвки
+  for (const r of S.ropes) {
+    r.age += DT;
+    if (r.solid && r.age >= TUNE.ropeLife) { r.pinA = r.pinB = false; scrapify(r, 0.8); }
+    if (r.fade) r.fade = Math.max(1e-6, r.fade - DT);
+    stepRope(r);
+  }
+  S.ropes = S.ropes.filter(r => !(r.fadeMax && r.fade <= 1e-6) && r.nodes[0].y < H + 200);
+  // конфеты
+  for (let i = 0; i < SUB; i++) stepCandies(DT / SUB);
+  for (const c of S.candies) { if (c.state === "fall") c.ang += c.vx * DT / TUNE.candyR; if (c.state === "splat") c.t += DT; }
+  S.candies = S.candies.filter(c => c.state === "fall" || c.state === "bub" || (c.state === "splat" && c.t < 0.6));
+  // чернила
+  if (!(ptr && ptr.mode === "draw")) S.ink = Math.min(TUNE.inkMax, S.ink + TUNE.inkRegen * DT);
+  for (const f of S.fx) f.t += DT;
+  S.fx = S.fx.filter(f => f.t < f.life);
+  if (S.t >= TUNE.roundSec) endRound();
+}
+function endRound() {
+  S.over = true;
+  if (S.caught > S.best) { S.best = S.caught; S.newBest = true; writeBest(S.best); }
+  document.getElementById("ovScore").textContent = S.caught;
+  document.getElementById("ovMiss").textContent = "Мимо: " + S.missed;
+  document.getElementById("ovBest").textContent = S.newBest ? "Новый рекорд!" : "Рекорд: " + S.best;
+  overEl.classList.add("show");
+  ptr = null;
+}
+
+// ---------- input ----------
+let ptr = null;
+function toField(e) {
+  const rc = cv.getBoundingClientRect();
+  return { x: (e.clientX - rc.left - view.ox) / view.s, y: (e.clientY - rc.top - view.oy) / view.s };
+}
+function popAt(p) {
+  for (const b of S.bubbles) if (Math.hypot(p.x - b.x, p.y - b.y) < b.r + 12) {
+    if (b.c) { b.c.state = "fall"; b.c.bub = null; b.c.vx = 0; b.c.vy = 0; }
+    S.bubbles.splice(S.bubbles.indexOf(b), 1);
+    S.fx.push({ k: "pop", x: b.x, y: b.y, t: 0, life: 0.3 });
+    return true;
+  }
+  return false;
+}
+function cancelHint() { if (S.hint.active) S.hint.active = false; }
+function startStroke(p) {
+  cancelHint();
+  if (popAt(p)) return null;
+  const mode = ropeDist(p) < TUNE.cutStart ? "cut" : "pending";
+  return { mode, pts: [p], start: p, last: p, len: 0 };
+}
+function moveStroke(st, p) {
+  if (!st) return;
+  if (st.mode === "pending" && Math.hypot(p.x - st.start.x, p.y - st.start.y) > TUNE.dragStart) st.mode = "draw";
+  if (st.mode === "draw") {
+    const l = st.pts[st.pts.length - 1];
+    let d = Math.hypot(p.x - l.x, p.y - l.y);
+    if (d < 3) return;
+    if (d > S.ink) { if (S.ink < 1) return; const k = S.ink / d; p = { x: l.x + (p.x - l.x) * k, y: l.y + (p.y - l.y) * k }; d = S.ink; }
+    S.ink -= d; st.len += d; st.pts.push(p);
+  } else if (st.mode === "cut") {
+    cutSegment(st.last, p);
+    S.fx.push({ k: "trail", x: st.last.x, y: st.last.y, x2: p.x, y2: p.y, t: 0, life: 0.25 });
+  }
+  st.last = p;
+}
+function endStroke(st) {
+  if (!st || st.mode !== "draw") return null;
+  if (st.len < TUNE.minRope) { S.ink = Math.min(TUNE.inkMax, S.ink + st.len); return null; }
+  return makeRope(st.pts);
+}
+cv.addEventListener("pointerdown", e => {
+  if (S.over || ptr) return;
+  try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+  const st = startStroke(toField(e));
+  ptr = st ? Object.assign(st, { id: e.pointerId }) : null;
+});
+cv.addEventListener("pointermove", e => {
+  if (!ptr || e.pointerId !== ptr.id) return;
+  const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  for (const ev of (evs.length ? evs : [e])) moveStroke(ptr, toField(ev));
+});
+function up(e) { if (!ptr || e.pointerId !== ptr.id) return; const st = ptr; ptr = null; endStroke(st); }
+cv.addEventListener("pointerup", up);
+cv.addEventListener("pointercancel", up);
+function bindBtn(el, fn) { el.addEventListener("pointerup", fn); el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") fn(); }); }
+bindBtn(document.getElementById("restart"), () => newGame());
+bindBtn(document.getElementById("again"), () => newGame());
+
+// ---------- render ----------
+function fit() {
+  const cw = wrap.clientWidth, ch = wrap.clientHeight;
+  if (!cw || !ch) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (cw === view.cw && ch === view.ch && dpr === view.dpr) return;
+  const pad = 12, s = Math.min((cw - 2 * pad) / W, (ch - 2 * pad) / H);
+  view = { s, ox: (cw - W * s) / 2, oy: (ch - H * s) / 2, dpr, cw, ch };
+  cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
+}
+new ResizeObserver(fit).observe(wrap);
+window.addEventListener("resize", fit);
+window.addEventListener("orientationchange", fit);
+
+function drawRopePath(r) {
+  const n = r.nodes;
+  ctx.beginPath(); ctx.moveTo(n[0].x, n[0].y);
+  for (let i = 1; i < n.length - 1; i++) { const mx = (n[i].x + n[i + 1].x) / 2, my = (n[i].y + n[i + 1].y) / 2; ctx.quadraticCurveTo(n[i].x, n[i].y, mx, my); }
+  ctx.lineTo(n[n.length - 1].x, n[n.length - 1].y);
+}
+function drawOm() {
+  const om = S.om, x = om.x;
+  let lean = 0;
+  if (om.warn >= 0 && !om.run) lean = (om.warn === 1 ? 1 : -1) * (3 + 3 * Math.sin(S.t * 14));
+  const chew = om.chew > 0 ? Math.sin(om.chew * 40) * 0.12 : 0;
+  ctx.save(); ctx.translate(x + lean, OM_Y + OM_R); ctx.scale(1 - chew * 0.5, 1 + chew); ctx.translate(0, -OM_R);
+  // тень и ножки
+  ctx.fillStyle = "rgba(0,0,0,.15)"; ctx.beginPath(); ctx.ellipse(0, OM_R, 20, 4, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = "#4e9a2a"; ctx.fillRect(-12, OM_R - 6, 8, 6); ctx.fillRect(4, OM_R - 6, 8, 6);
+  // антенна
+  ctx.strokeStyle = "#4e9a2a"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0, -OM_R + 2); ctx.quadraticCurveTo(4, -OM_R - 8, 0, -OM_R - 12); ctx.stroke();
+  ctx.fillStyle = "#79cc3c"; ctx.beginPath(); ctx.arc(0, -OM_R - 13, 3.5, 0, 7); ctx.fill();
+  // тело
+  ctx.fillStyle = "#79cc3c"; ctx.beginPath(); ctx.arc(0, 0, OM_R, 0, 7); ctx.fill();
+  // глаза смотрят на ближайшую конфету
+  let tx = 0, ty = -60, bd = 1e9;
+  for (const c of S.candies) if (c.state === "fall") { const d = Math.hypot(c.x - x, c.y - OM_Y); if (d < bd) { bd = d; tx = c.x - x; ty = c.y - OM_Y; } }
+  const tl = Math.hypot(tx, ty) || 1;
+  for (const ex of [-8, 8]) {
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(ex, -9, 6.5, 0, 7); ctx.fill();
+    ctx.fillStyle = "#222"; ctx.beginPath(); ctx.arc(ex + tx / tl * 2.6, -9 + ty / tl * 2.6, 3, 0, 7); ctx.fill();
+  }
+  // рот
+  const o = om.chew > 0 ? 0.15 : om.open;
+  ctx.fillStyle = "#6b1e2a"; ctx.beginPath(); ctx.ellipse(0, 5 + o * 2, 9 + o * 4, 2.5 + o * 8, 0, 0, 7); ctx.fill();
+  if (o > 0.25) { ctx.fillStyle = "#fff"; ctx.fillRect(-6, 4 - o * 6 + 1, 4, 3); ctx.fillRect(2, 4 - o * 6 + 1, 4, 3); }
+  ctx.restore();
+  // стрелка «сейчас перебегу»
+  if (om.warn >= 0 && !om.run) {
+    const to = OM_X[om.warn], a = 0.4 + 0.4 * Math.sin(S.t * 10);
+    ctx.strokeStyle = `rgba(80,140,40,${a})`; ctx.lineWidth = 3; ctx.setLineDash([6, 6]);
+    ctx.beginPath(); ctx.moveTo(x + (to > x ? 30 : -30), OM_Y + 8); ctx.lineTo(to + (to > x ? -26 : 26), OM_Y + 8); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(to, OM_Y, OM_R, 0, 7); ctx.stroke();
+  }
+}
+function drawCandy(x, y, ang, sx, sy, alpha) {
+  const R = TUNE.candyR;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(sx, sy); ctx.rotate(ang);
+  ctx.fillStyle = "#ff4f7e"; ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.fill();
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-R + 2, 0); ctx.lineTo(R - 2, 0); ctx.stroke();
+  ctx.strokeStyle = "#b8264f"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.stroke();
+  ctx.restore();
+}
+function render() {
+  fit();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.setTransform(view.s * view.dpr, 0, 0, view.s * view.dpr, view.ox * view.dpr, view.oy * view.dpr);
+  // фон
+  const gr = ctx.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, "#bfe4ff"); gr.addColorStop(1, "#f4fbff");
+  ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#8cc363"; ctx.fillRect(0, FLOOR, W, H - FLOOR);
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
+  // метка следующей конфеты
+  if (S.pending) {
+    const a = 0.35 + 0.35 * Math.sin(S.t * 20);
+    ctx.fillStyle = `rgba(255,79,126,${a})`; ctx.beginPath();
+    ctx.moveTo(S.pending.x - 8, 2); ctx.lineTo(S.pending.x + 8, 2); ctx.lineTo(S.pending.x, 14); ctx.fill();
+  }
+  // верёвки
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  for (const r of S.ropes) {
+    let a = 1;
+    if (r.fadeMax) a = r.fade / r.fadeMax;
+    else if (r.age > TUNE.ropeLife - 1.5) a = 0.55 + 0.45 * Math.cos((r.age - TUNE.ropeLife + 1.5) * 14);
+    ctx.globalAlpha = Math.max(0, a);
+    drawRopePath(r); ctx.strokeStyle = "#7a4a1e"; ctx.lineWidth = 5; ctx.stroke();
+    ctx.strokeStyle = "#c98a4b"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = "#555";
+    if (r.pinA) { ctx.beginPath(); ctx.arc(r.nodes[0].x, r.nodes[0].y, 3.5, 0, 7); ctx.fill(); }
+    if (r.pinB) { const l = r.nodes[r.nodes.length - 1]; ctx.beginPath(); ctx.arc(l.x, l.y, 3.5, 0, 7); ctx.fill(); }
+  }
+  ctx.globalAlpha = 1;
+  // рисуемый росчерк
+  if (ptr && ptr.mode === "draw" && ptr.pts.length > 1) {
+    ctx.strokeStyle = "rgba(122,74,30,.55)"; ctx.lineWidth = 5; ctx.setLineDash([8, 6]);
+    ctx.beginPath(); ctx.moveTo(ptr.pts[0].x, ptr.pts[0].y); for (const p of ptr.pts) ctx.lineTo(p.x, p.y); ctx.stroke(); ctx.setLineDash([]);
+  }
+  // подсказка-рука
+  const hn = S.hint;
+  if (hn.active && S.t >= hn.t0 - 0.3) {
+    const k = Math.max(0, Math.min(1, (S.t - hn.t0) / hn.dur));
+    const fx = hn.a.x + (hn.b.x - hn.a.x) * k, fy = hn.a.y + (hn.b.y - hn.a.y) * k;
+    if (k > 0) { ctx.strokeStyle = "rgba(122,74,30,.55)"; ctx.lineWidth = 5; ctx.setLineDash([8, 6]); ctx.beginPath(); ctx.moveTo(hn.a.x, hn.a.y); ctx.lineTo(fx, fy); ctx.stroke(); ctx.setLineDash([]); }
+    ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.strokeStyle = "rgba(40,60,80,.6)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(fx + 6, fy + 10, 11, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(fx + 1, fy - 8, 9, 20, 4) : ctx.rect(fx + 1, fy - 8, 9, 20); ctx.fill(); ctx.stroke();
+  }
+  // пузыри
+  for (const b of S.bubbles) {
+    ctx.fillStyle = "rgba(170,220,255,.35)"; ctx.strokeStyle = "rgba(90,160,220,.9)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.8)"; ctx.beginPath(); ctx.arc(b.x - 6, b.y - 7, 3, 0, 7); ctx.fill();
+  }
+  drawOm();
+  // конфеты
+  for (const c of S.candies) {
+    if (c.state === "splat") drawCandy(c.x, c.y, 0, 1 + c.t * 1.2, 0.35, 1 - c.t / 0.6);
+    else drawCandy(c.x, c.y, c.ang, 1, 1, 1);
+  }
+  // эффекты
+  for (const f of S.fx) {
+    const a = 1 - f.t / f.life;
+    if (f.k === "txt") { ctx.globalAlpha = a; ctx.fillStyle = "#2d7a12"; ctx.font = "bold 18px system-ui"; ctx.textAlign = "center"; ctx.fillText(f.s, f.x, f.y - f.t * 30); }
+    else if (f.k === "trail") { ctx.globalAlpha = a; ctx.strokeStyle = "#fff"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(f.x2, f.y2); ctx.stroke(); }
+    else if (f.k === "pop") { ctx.globalAlpha = a; ctx.strokeStyle = "rgba(90,160,220,1)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(f.x, f.y, TUNE.bubbleR + f.t * 40, 0, 7); ctx.stroke(); }
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+  // чернила
+  ctx.fillStyle = "rgba(0,0,0,.18)"; ctx.fillRect(8, H - 10, 90, 5);
+  ctx.fillStyle = S.ink < TUNE.minRope ? "#d55" : "#7a4a1e"; ctx.fillRect(8, H - 10, 90 * S.ink / TUNE.inkMax, 5);
+  ctx.strokeStyle = "rgba(0,0,0,.25)"; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+  statsEl.textContent = `Поймано ${S.caught} · мимо ${S.missed} · ⏱ ${Math.max(0, Math.ceil(TUNE.roundSec - S.t))}`;
+}
+
+// ---------- loop ----------
+let manual = false, acc = 0, lastT = 0;
+const frames = [];
+function loop(now) {
+  if (lastT) {
+    const d = now - lastT; frames.push(d); if (frames.length > 120) frames.shift();
+    if (!manual) { acc += Math.min(d / 1000, 0.1); while (acc >= DT) { tick(); acc -= DT; } }
+  }
+  lastT = now;
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ---------- тестовый API ----------
+const P = a => Array.isArray(a) ? { x: a[0], y: a[1] } : { x: a.x, y: a.y };
+window.__game = {
+  ready: false,
+  getState() {
+    return {
+      scene: S.over ? "over" : "play", best: S.best, view,
+      om: { x: S.om.x, moving: !!S.om.run, warn: S.om.warn },
+      hint: S.hint.active,
+      slide: {
+        t: +S.t.toFixed(3), ink: Math.round(S.ink), caught: S.caught, missed: S.missed,
+        ropes: S.ropes.filter(r => r.solid).map(r => ({ nodes: r.nodes.length, age: +r.age.toFixed(2), a: [r.nodes[0].x, r.nodes[0].y], b: [r.nodes[r.nodes.length - 1].x, r.nodes[r.nodes.length - 1].y] })),
+        scraps: S.ropes.filter(r => !r.solid).length,
+        candies: S.candies.map(c => ({ x: +c.x.toFixed(1), y: +c.y.toFixed(1), vx: +c.vx.toFixed(1), vy: +c.vy.toFixed(1), state: c.state })),
+        bubbles: S.bubbles.map(b => ({ x: b.x, y: b.y, has: !!b.c })),
+      },
+    };
+  },
+  act(a, p) {
+    if (a === "restart") newGame(p && p.seed);
+    else if (a === "clock") manual = !!(p && p.manual);
+    else if (a === "step") { for (let i = 0; i < (p || 1); i++) tick(); }
+    else if (a === "end") { S.t = TUNE.roundSec - DT; tick(); }
+    else if (a === "draw" || a === "cut") {
+      const pts = p.map(P); const st = startStroke(pts[0]);
+      if (!st) return;
+      if (a === "draw") st.mode = "pending"; else st.mode = "cut";
+      for (const q of pts.slice(1)) moveStroke(st, q);
+      return !!endStroke(st);
+    } else if (a === "tap") popAt(P(p));
+  },
+  metrics() {
+    const s = frames.slice().sort((x, y) => x - y), avg = s.reduce((x, y) => x + y, 0) / (s.length || 1);
+    return { fps: s.length ? Math.round(1000 / avg) : 0, frameMsP95: s.length ? +s[Math.floor(s.length * 0.95)].toFixed(1) : 0, drawCalls: -1 };
+  },
+};
+newGame();
+fit();
+render();
+window.__game.ready = true;
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

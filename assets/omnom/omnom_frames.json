@@ -1,0 +1,641 @@
+{
+ "character": "omnom",
+ "variant": "C (D-20): generated from the user's reference, 3/4 view, raster frames",
+ "units": "logical field units (320x480); offsets are from the FEET point, x right, y down; Om Nom faces the viewer's LEFT in the files",
+ "sets": {
+  "x6": {
+   "pxPerLogical": 6.0,
+   "note": "pick per device: need = 72 * fieldScale * DPR px; <= 240 -> x3, else x6"
+  },
+  "x3": {
+   "pxPerLogical": 3.0,
+   "note": "pick per device: need = 72 * fieldScale * DPR px; <= 240 -> x3, else x6"
+  }
+ },
+ "canvasLogical": [
+  82,
+  79
+ ],
+ "feetPixelAtX6": [
+  264,
+  462
+ ],
+ "pivot": [
+  0.5366,
+  0.9747
+ ],
+ "pivotMeaning": "feet contact point (like rig.origin). Same canvas and pivot for EVERY frame and pupils layer: swap textures only",
+ "heightLogical": 72.0,
+ "anchorsLogical": {
+  "mouth": [
+   -2.08,
+   -19.98
+  ],
+  "mouthNote": "centre of the open mouth (wide frame) = level point `om`: feet = om - mouth (x mirrored, y flipped as below)",
+  "mouthAjar": [
+   -7.03,
+   -21.43
+  ],
+  "antennaTip": [
+   5.82,
+   -72.0
+  ],
+  "body": {
+   "left": -33.69,
+   "right": 31.75,
+   "top": -57.32,
+   "bottom": -0.0
+  },
+  "tapZone": {
+   "center": [
+    -1.0,
+    -28.7
+   ],
+   "radii": [
+    36,
+    32
+   ]
+  }
+ },
+ "pupils": {
+  "neutral": {
+   "layer": "neutral_pupils",
+   "center": [
+    -6.13,
+    -43.11
+   ],
+   "maxOffset": {
+    "left": 7.03,
+    "right": 10.15,
+    "up": 5.0,
+    "down": 1.41
+   }
+  },
+  "wide": {
+   "layer": "wide_pupils",
+   "center": [
+    -6.83,
+    -49.51
+   ],
+   "maxOffset": {
+    "left": 3.9,
+    "right": 1.72,
+    "up": 2.66,
+    "down": 2.66
+   }
+  },
+  "ajar": {
+   "layer": "ajar_pupils",
+   "center": [
+    -7.45,
+    -46.39
+   ],
+   "maxOffset": {
+    "left": 4.22,
+    "right": 2.19,
+    "up": 3.59,
+    "down": 4.69
+   }
+  },
+  "wide2": {
+   "layer": "wide2_pupils",
+   "center": [
+    -7.53,
+    -50.53
+   ],
+   "maxOffset": {
+    "left": 3.44,
+    "right": 1.56,
+    "up": 2.34,
+    "down": 2.5
+   }
+  }
+ },
+ "pupilsNote": "Frames with pupils as a layer: draw <frame> then <frame>_pupils at the same point, offset (dx, dy) toward the candy; clamp dx to [-left, right], dy to [-up, down] (logical, in the frame's own unmirrored axes). Other frames have the pupils baked in.",
+ "frames": {
+  "neutral": {
+   "x6": "omnom_c/x6/neutral.webp",
+   "x3": "omnom_c/x3/neutral.webp"
+  },
+  "blink": {
+   "x6": "omnom_c/x6/blink.webp",
+   "x3": "omnom_c/x3/blink.webp"
+  },
+  "wide": {
+   "x6": "omnom_c/x6/wide.webp",
+   "x3": "omnom_c/x3/wide.webp"
+  },
+  "chew": {
+   "x6": "omnom_c/x6/chew.webp",
+   "x3": "omnom_c/x3/chew.webp"
+  },
+  "joy": {
+   "x6": "omnom_c/x6/joy.webp",
+   "x3": "omnom_c/x3/joy.webp"
+  },
+  "sad": {
+   "x6": "omnom_c/x6/sad.webp",
+   "x3": "omnom_c/x3/sad.webp"
+  },
+  "ajar": {
+   "x6": "omnom_c/x6/ajar.webp",
+   "x3": "omnom_c/x3/ajar.webp"
+  },
+  "half": {
+   "x6": "omnom_c/x6/half.webp",
+   "x3": "omnom_c/x3/half.webp"
+  },
+  "wide2": {
+   "x6": "omnom_c/x6/wide2.webp",
+   "x3": "omnom_c/x3/wide2.webp"
+  },
+  "chew2": {
+   "x6": "omnom_c/x6/chew2.webp",
+   "x3": "omnom_c/x3/chew2.webp"
+  },
+  "wave1": {
+   "x6": "omnom_c/x6/wave1.webp",
+   "x3": "omnom_c/x3/wave1.webp"
+  },
+  "wave2": {
+   "x6": "omnom_c/x6/wave2.webp",
+   "x3": "omnom_c/x3/wave2.webp"
+  },
+  "neutral_pupils": {
+   "x6": "omnom_c/x6/neutral_pupils.webp",
+   "x3": "omnom_c/x3/neutral_pupils.webp"
+  },
+  "wide_pupils": {
+   "x6": "omnom_c/x6/wide_pupils.webp",
+   "x3": "omnom_c/x3/wide_pupils.webp"
+  },
+  "ajar_pupils": {
+   "x6": "omnom_c/x6/ajar_pupils.webp",
+   "x3": "omnom_c/x3/ajar_pupils.webp"
+  },
+  "wide2_pupils": {
+   "x6": "omnom_c/x6/wide2_pupils.webp",
+   "x3": "omnom_c/x3/wide2_pupils.webp"
+  },
+  "shadow": {
+   "x6": "omnom_c/x6/shadow.webp",
+   "x3": "omnom_c/x3/shadow.webp"
+  }
+ },
+ "atlases": {
+  "x6": {
+   "image": "omnom_c/omnom_c_x6.webp",
+   "json": "omnom_c/omnom_c_x6.json",
+   "size": [
+    2048,
+    2048
+   ]
+  },
+  "x3": {
+   "image": "omnom_c/omnom_c_x3.webp",
+   "json": "omnom_c/omnom_c_x3.json",
+   "size": [
+    1024,
+    1024
+   ]
+  }
+ },
+ "atlasNote": "same frames packed and trimmed (Phaser load.atlas, JSON hash); frame names = keys of `frames`; trimmed frames keep the canvas via sourceSize, so setOrigin(pivot) works as for the single files",
+ "framesInfo": {
+  "neutral": {
+   "scaleCorrection": 1.0,
+   "silhouetteDiffPct": 0.0
+  },
+  "blink": {
+   "scaleCorrection": 1.0052,
+   "silhouetteDiffPct": 1.8
+  },
+  "wide": {
+   "scaleCorrection": 1.0132,
+   "silhouetteDiffPct": 5.3
+  },
+  "chew": {
+   "scaleCorrection": 1.0052,
+   "silhouetteDiffPct": 1.1
+  },
+  "joy": {
+   "scaleCorrection": 1.0026,
+   "silhouetteDiffPct": 7.6
+  },
+  "sad": {
+   "scaleCorrection": 1.0079,
+   "silhouetteDiffPct": 1.9
+  },
+  "ajar": {
+   "scaleCorrection": 1.0026,
+   "silhouetteDiffPct": 1.4
+  },
+  "half": {
+   "scaleCorrection": 1.0052,
+   "silhouetteDiffPct": 2.5
+  },
+  "wide2": {
+   "scaleCorrection": 1.0213,
+   "silhouetteDiffPct": 8.5
+  },
+  "chew2": {
+   "scaleCorrection": 0.9948,
+   "silhouetteDiffPct": 2.4
+  },
+  "wave1": {
+   "scaleCorrection": 0.9897,
+   "silhouetteDiffPct": 7.6
+  },
+  "wave2": {
+   "scaleCorrection": 0.9948,
+   "silhouetteDiffPct": 7.8
+  }
+ },
+ "mirror": "files face the viewer's left. Face right = scaleX -1 around the feet; the mouth x offset flips, so feet.x = om.x - mouth.x * mirror (mirror = +1 default, -1 facing right) and the platform stays centred on om.x",
+ "ceiling": "om.flip: scaleY -1 around the feet (feet.y = om.y - mouth.y * flip), everything else identical; pupil dy is multiplied by flip",
+ "states": {
+  "idle": {
+   "frames": [
+    "neutral"
+   ],
+   "pupils": "track",
+   "breath": "scaleY 1->1.02, scaleX 1->0.99, 800 ms yoyo, pivot feet"
+  },
+  "blink": {
+   "frames": [
+    "half",
+    "blink",
+    "half"
+   ],
+   "ms": [
+    40,
+    70,
+    40
+   ]
+  },
+  "lookAround": {
+   "frames": [
+    "neutral"
+   ],
+   "pupils": "left limit 250 ms, hold 600, right limit 300, hold 500, back 250"
+  },
+  "excited": {
+   "frames": [
+    "ajar"
+   ],
+   "pupils": "track",
+   "when": "70 < d(candy, om) <= 110 (hysteresis 8)"
+  },
+  "mouthOpen": {
+   "frames": [
+    "wide",
+    "wide2"
+   ],
+   "pupils": "track",
+   "when": "sim mouthOpen",
+   "tongue": "after 300 ms: wide <-> wide2 every 180 ms"
+  },
+  "nyam": {
+   "frames": [
+    "chew"
+   ],
+   "ms": [
+    80
+   ],
+   "squash": "0.9 / 1.08 then back 120 ms Back.easeOut"
+  },
+  "chew": {
+   "frames": [
+    "chew",
+    "chew2"
+   ],
+   "ms": 110,
+   "repeat": 3
+  },
+  "happy": {
+   "frames": [
+    "joy"
+   ],
+   "hop": "y -6 logical 180 ms up, 220 ms Bounce down, landing squash 0.92"
+  },
+  "sad": {
+   "frames": [
+    "sad"
+   ],
+   "squash": "scaleY 0.96 scaleX 1.03 250 ms",
+   "ms": 1000
+  },
+  "greet": {
+   "frames": [
+    "wave1",
+    "wave2"
+   ],
+   "ms": 120,
+   "repeat": 3,
+   "alt": "30 %: lookAround quick"
+  },
+  "turn": {
+   "when": "|candy.x - om.x| > 16 on the other side (hysteresis 8); not during nyam/chew/happy/sad",
+   "anim": "blink-hop turn, 180 ms, |scaleX| never below 0.7 (QA iter-3: the old scaleX -> 0 read as a paper strip)",
+   "frames": [
+    "half",
+    "blink",
+    "<swap mirror at 60 ms>",
+    "blink",
+    "half",
+    "<current>"
+   ],
+   "framesMs": [
+    20,
+    40,
+    0,
+    40,
+    30
+   ],
+   "framesInAjarWide": "keep the current frame, no blink",
+   "scaleX": "|sx| 1 -> 0.7 in 0-60 ms Quad.easeIn; 0.7 -> 1 in 60-180 ms Back.easeOut",
+   "scaleY": "1 -> 1.04 in 0-60; 1.04 -> 1 by 120; landing 0.96 -> 1 by 180",
+   "hopY": "0 -> -3*f logical in 0-60 Quad.easeOut; back to 0 by 120 Quad.easeIn",
+   "pupils": "layer hidden while blink/half; after the turn set straight toward the candy (no lerp from the old side)",
+   "preview": "../preview/omnom_c_turn.png"
+  }
+ },
+ "menu": {
+  "feet": [
+   160,
+   376
+  ],
+  "scale": 1.35,
+  "frames": "idle (neutral) + greet (wave1/wave2)",
+  "mirror": 1,
+  "order": "menu_box_back < Om Nom (x1.35, feet at ui_layout menu.omnomFeet) < menu_box_front; no shadow (the box has one)"
+ },
+ "platform": "stand (platform_cardboard / mech/platform_fabric / mech/platform_paper) pivot at (om.x, feet.y): it stays under the mouth when he turns",
+ "shadow": {
+  "file": {
+   "x6": "omnom_c/x6/shadow.webp",
+   "x3": "omnom_c/x3/shadow.webp"
+  },
+  "logical": [
+   64,
+   12
+  ],
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "place": "at the feet point, under the frame; not flipped by mirror; on the ceiling flip Y with him"
+ },
+ "unity": {
+  "note": "PNG set for Unity (webp paths in `frames` are the web set of cut-the-rope and are not in this product). Same canvas and feet point for every frame, pupils layer and hat anchor math as the logical fields above.",
+  "dir": "unity/",
+  "canvasPx": [
+   525,
+   506
+  ],
+  "pxPerLogical": 6.4024,
+  "pivot": [
+   0.5366,
+   0.0253
+  ],
+  "pivotNote": "Unity sprite pivot (y up from the bottom) = feet point. Logical anchors are y-down from the feet: unityLocal = (x, -y) * worldPerLogical",
+  "frames": {
+   "neutral": "unity/neutral.png",
+   "blink": "unity/blink.png",
+   "wide": "unity/wide.png",
+   "chew": "unity/chew.png",
+   "joy": "unity/joy.png",
+   "sad": "unity/sad.png",
+   "ajar": "unity/ajar.png",
+   "half": "unity/half.png",
+   "wide2": "unity/wide2.png",
+   "chew2": "unity/chew2.png",
+   "wave1": "unity/wave1.png",
+   "wave2": "unity/wave2.png",
+   "neutral_pupils": "unity/neutral_pupils.png",
+   "wide_pupils": "unity/wide_pupils.png",
+   "ajar_pupils": "unity/ajar_pupils.png",
+   "wide2_pupils": "unity/wide2_pupils.png"
+  },
+  "shadow": {
+   "file": "unity/shadow.png",
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "logical": [
+    64,
+    12
+   ]
+  },
+  "order": "shadow < frame < frame_pupils (open-eyed frames) < hat"
+ },
+ "head": {
+  "note": "Hat anchor per frame, logical units from the feet (x right, y down), in the frame's own unmirrored axes: the centre of the hat cuff bottom goes here. Mirror (scaleX -1) and ceiling flip (scaleY -1) apply to the hat together with the frame (make the hat a child of the frame sprite). Frames with pupils as a layer never have the pupils hidden at rest; wide/wide2 lift the hat ~3 u (reads as a surprised hop). Blink/turn swap frames only: move the hat to the new frame's point in the same tick. Cuff anchors lifted 2.6 u (2026-10-01, M1 iter 3): the cuff now overlaps the top of the eye whites by ~1-2.5 u instead of ~4-5 u, so the eyes read round, not half-shut; same delta on every frame keeps blink/turn swaps steady. headTop unchanged.",
+  "frames": {
+   "neutral": [
+    -0.89,
+    -54.51
+   ],
+   "blink": [
+    -1.21,
+    -54.98
+   ],
+   "wide": [
+    -1.99,
+    -57.58
+   ],
+   "chew": [
+    -1.05,
+    -54.67
+   ],
+   "joy": [
+    -0.35,
+    -55.14
+   ],
+   "sad": [
+    -1.44,
+    -54.36
+   ],
+   "ajar": [
+    -1.05,
+    -54.61
+   ],
+   "half": [
+    -1.36,
+    -54.98
+   ],
+   "wide2": [
+    -2.45,
+    -58.67
+   ],
+   "chew2": [
+    -0.74,
+    -54.05
+   ],
+   "wave1": [
+    -0.35,
+    -53.73
+   ],
+   "wave2": [
+    -0.42,
+    -54.05
+   ]
+  },
+  "headTop": {
+   "neutral": [
+    -0.89,
+    -61.41
+   ],
+   "blink": [
+    -1.21,
+    -61.88
+   ],
+   "wide": [
+    -1.99,
+    -62.51
+   ],
+   "chew": [
+    -1.05,
+    -61.57
+   ],
+   "joy": [
+    -0.35,
+    -62.04
+   ],
+   "sad": [
+    -1.44,
+    -61.26
+   ],
+   "ajar": [
+    -1.05,
+    -61.41
+   ],
+   "half": [
+    -1.36,
+    -61.88
+   ],
+   "wide2": [
+    -2.45,
+    -63.29
+   ],
+   "chew2": [
+    -0.74,
+    -60.95
+   ],
+   "wave1": [
+    -0.35,
+    -60.63
+   ],
+   "wave2": [
+    -0.42,
+    -60.95
+   ]
+  }
+ },
+ "hats": {
+  "note": "Hat sprites at the same density as the frames (pxPerLogical of `unity`), so a hat is a child of the frame with scale 1 at the same PPU. Pivot = centre of the cuff bottom (Unity, y up).",
+  "hat_beanie": {
+   "file": "hats/hat_beanie.png",
+   "sizePx": [
+    332,
+    260
+   ],
+   "sizeLogical": [
+    51.86,
+    40.61
+   ],
+   "pivot": [
+    0.5002,
+    0.1311
+   ],
+   "card": "hats/hat_beanie_card.png",
+   "cardNote": "wardrobe cell 300x340 ref px: card image @1.5x, shown ~230 px wide"
+  },
+  "hat_party": {
+   "file": "hats/hat_party.png",
+   "sizePx": [
+    356,
+    307
+   ],
+   "sizeLogical": [
+    55.6,
+    47.95
+   ],
+   "pivot": [
+    0.5074,
+    0.0966
+   ],
+   "card": "hats/hat_party_card.png",
+   "cardNote": "wardrobe cell 300x340 ref px: card image @1.5x, shown ~230 px wide"
+  },
+  "hat_chef": {
+   "file": "hats/hat_chef.png",
+   "sizePx": [
+    370,
+    264
+   ],
+   "sizeLogical": [
+    57.79,
+    41.23
+   ],
+   "pivot": [
+    0.5367,
+    0.1612
+   ],
+   "card": "hats/hat_chef_card.png",
+   "cardNote": "wardrobe cell 300x340 ref px: card image @1.5x, shown ~230 px wide"
+  },
+  "hat_paper": {
+   "file": "hats/hat_paper.png",
+   "sizePx": [
+    381,
+    255
+   ],
+   "sizeLogical": [
+    59.51,
+    39.83
+   ],
+   "pivot": [
+    0.5227,
+    0.1685
+   ],
+   "card": "hats/hat_paper_card.png",
+   "cardNote": "wardrobe cell 300x340 ref px: card image @1.5x, shown ~230 px wide"
+  },
+  "hat_flower": {
+   "file": "hats/hat_flower.png",
+   "sizePx": [
+    355,
+    151
+   ],
+   "sizeLogical": [
+    55.45,
+    23.58
+   ],
+   "pivot": [
+    0.4911,
+    0.455
+   ],
+   "card": "hats/hat_flower_card.png",
+   "cardNote": "wardrobe cell 300x340 ref px: card image @1.5x, shown ~230 px wide"
+  },
+  "hat_propeller": {
+   "file": "hats/hat_propeller.png",
+   "sizePx": [
+    408,
+    265
+   ],
+   "sizeLogical": [
+    63.73,
+    41.39
+   ],
+   "pivot": [
+    0.5823,
+    0.1548
+   ],
+   "card": "hats/hat_propeller_card.png",
+   "cardNote": "wardrobe cell 300x340 ref px: card image @1.5x, shown ~230 px wide"
+  }
+ }
+}

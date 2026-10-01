@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Главный экран C — Одна коробка</title>
+<link rel="icon" href="data:,">
+<style>:root{--ink:#4a2a12;--paper:#f8ead0;--paper2:#efd9b0;--edge:#6b3f1d;--red:#e0412f}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{background:#2a1a0e;height:100%;margin:0;overflow:hidden}body{color:var(--ink);-webkit-user-select:none;user-select:none;touch-action:none;font:16px/1.25 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}#wrap{position:fixed;inset:0;overflow:hidden}#stage{transform-origin:0 0;background:#b9773a url(./assets/hub/cardboard_tile.png) 0 0/192px 192px;width:390px;height:844px;position:absolute;top:0;left:0;overflow:hidden}img{-webkit-user-drag:none;user-drag:none;pointer-events:none}#room{width:390px;height:582px;position:absolute;top:0;left:0;overflow:hidden}#room .sky{width:270px;height:200px;position:absolute;top:165px;left:60px}#room .wall{width:875px;height:834px;position:absolute;top:-221px;left:-382px}#ledge{width:410px;height:28px;position:absolute;top:566px;left:-10px}#floorShade{background:#46230a2e;width:390px;height:254px;position:absolute;top:590px;left:0}#top{color:#fff3dc;z-index:30;background:#4a2a12e0;align-items:center;gap:8px;width:390px;height:44px;padding:0 10px;display:flex;position:absolute;top:0;left:0}#top a{color:#ffd98a;white-space:nowrap;font-size:14px;font-weight:600;text-decoration:none}#title{text-align:right;white-space:nowrap;text-overflow:ellipsis;flex:1;font-size:16px;font-weight:800;overflow:hidden}#title.task{color:#fff;text-overflow:clip;font-size:15px}#title.task.done{color:#bff59a}#title .tm{color:#ffd98a;font-variant-numeric:tabular-nums;min-width:52px;display:inline-block}#title .again{color:var(--ink);background:#ffd98a;border-radius:10px;margin-left:6px;padding:2px 8px;font-size:13px}#dailyHead{color:#fff3dc;text-shadow:0 1px #00000059;align-items:center;gap:6px;height:22px;font-size:14px;font-weight:800;display:flex;position:absolute;top:50px;left:12px}#dailyHead img{width:22px;height:20px}#daily{gap:6px;width:374px;height:62px;display:flex;position:absolute;top:74px;left:8px}.chip{background:var(--paper);border:3px solid var(--edge);border-radius:14px;flex:1;align-items:center;gap:6px;min-width:0;padding:6px;display:flex;position:relative;box-shadow:0 3px #3c1e0a73}.chip.pressed{transform:translateY(2px);box-shadow:0 1px #3c1e0a73}.chip .ic{border:2px solid var(--edge);border-radius:9px;flex:none;width:38px;height:38px;overflow:hidden}.chip .tx{min-width:0;font-size:11px;line-height:1.15}.chip .tx b{white-space:nowrap;text-overflow:ellipsis;font-size:13px;display:block;overflow:hidden}.chip.done{background:#e9dcc0}.chip.done:after{content:"✓";color:#fff;text-align:center;background:#3a8f3a;border:2px solid #fff3dc;border-radius:11px;width:22px;height:22px;font:800 14px/22px system-ui;position:absolute;top:-8px;right:-6px}#segs{z-index:5;gap:5px;width:374px;height:26px;display:flex;position:absolute;top:142px;left:8px}.seg{color:#fff3dc;white-space:nowrap;background:#4a2a128c;border-radius:13px;flex:auto;justify-content:center;align-items:center;height:26px;padding:0 6px;font-size:12px;font-weight:700;display:flex}.seg.on{color:var(--ink);background:#fff3dc}.seg.empty{opacity:.45}#omnom{z-index:6;width:300px;height:289px;position:absolute;top:150px;left:34px}#omnom img{width:300px;height:289px;position:absolute;top:0;left:0}#omnomShadow{opacity:.55;z-index:5;width:234px;height:28px;position:absolute;top:424px;left:78px}#zone{z-index:8;width:390px;height:404px;position:absolute;top:176px;left:0}.box{will-change:transform;width:270px;height:232px;position:absolute;top:154px}.box .flapL,.box .flapR{border:3px solid var(--edge);background:#c98a4b;border-bottom:none;border-radius:6px 6px 0 0;width:126px;height:22px;position:absolute;top:-14px}.box .flapL{left:6px;transform:skew(-18deg)}.box .flapR{right:6px;transform:skew(18deg)}.box .body{border:4px solid var(--edge);background:#c98a4b url(./assets/hub/cardboard_tile.png) 0 0/160px 160px;border-radius:16px;position:absolute;inset:0;box-shadow:0 7px #32190873}.box .win{border:4px solid var(--edge);border-radius:12px;width:230px;height:150px;position:absolute;top:16px;left:16px;overflow:hidden}.box .win svg,.box .win img{width:100%;height:100%;display:block}.box .name{background:var(--paper);border:3px solid var(--edge);white-space:nowrap;border-radius:12px;justify-content:center;align-items:center;width:230px;height:40px;font-size:21px;font-weight:800;display:flex;position:absolute;top:174px;left:16px;overflow:hidden}.box .dot{width:34px;height:34px;position:absolute;top:-12px;right:-10px}.box.pressed .inner{transform:translateY(4px)}.box .inner{position:absolute;inset:0}#paws{pointer-events:none;z-index:9;width:390px;height:844px;position:absolute;top:0;left:0}.paw{background:#a9de28;border:3px solid #0b2608;border-radius:50% 50% 45% 45%;width:46px;height:30px;transition:opacity .12s;position:absolute;top:318px}.paw:before,.paw:after{content:"";background:#0b2608;border-radius:2px;width:3px;height:9px;position:absolute;bottom:2px}.paw:before{left:14px}.paw:after{left:25px}#pawL{left:72px;transform:rotate(-12deg)}#pawR{left:272px;transform:rotate(12deg)}.arrow{z-index:10;width:44px;height:44px;position:absolute;top:356px}.arrow img{width:44px;height:44px;position:absolute;top:0;left:0}.arrow span{color:var(--ink);justify-content:center;align-items:center;padding-bottom:3px;font:900 24px/1 system-ui;display:flex;position:absolute;inset:0}.arrow.pressed{transform:translateY(2px)}#arL{left:4px}#arR{right:4px}#info{text-align:center;z-index:4;width:390px;position:absolute;top:598px;left:0}#tag{color:#fff;background:#4a2a12;border:2px solid #fff9;border-radius:12px;padding:3px 12px;font-size:13px;font-weight:800;display:inline-block}#sub{color:#fff3dc;text-shadow:0 1px #0006;margin-top:6px;font-size:14px;font-weight:700}#bar{z-index:4;border-radius:5px;gap:2px;width:342px;height:10px;display:flex;position:absolute;top:666px;left:24px;overflow:visible}#bar i{background:#4a2a1273;border-radius:5px;height:10px;display:block}#bar i.on{background:#fff3dc}#marker{background:var(--red);border:1px solid #fff;border-radius:3px;width:6px;height:20px;position:absolute;top:-5px}#allBtn{z-index:4;width:200px;height:74px;position:absolute;top:706px;left:95px}#allBtn img{width:200px;height:74px;position:absolute;top:0;left:0}#allBtn span{justify-content:center;align-items:center;gap:10px;font-size:20px;font-weight:900;display:flex;position:absolute;inset:0 0 8px}#allBtn.pressed{transform:translateY(3px)}.g9{grid-template-columns:repeat(3,6px);gap:3px;display:grid}.g9 i{background:var(--ink);border-radius:2px;width:6px;height:6px}#hint{text-align:center;color:#fff3dccc;width:390px;font-size:12px;position:absolute;top:800px;left:0}#grid{z-index:20;background:#b9773a url(./assets/hub/cardboard_tile.png) 0 0/192px 192px;width:390px;height:800px;display:none;position:absolute;top:44px;left:0}#grid.open{display:block}#gHead{z-index:2;background:#4a2a12eb;width:390px;height:96px;padding:8px 10px;position:absolute;top:0;left:0}#gHead .row{align-items:center;height:34px;display:flex}#gHead h2{color:#fff3dc;flex:1;margin:0;font-size:20px}#gClose{width:40px;height:40px;position:relative}#gClose img{width:40px;height:40px;position:absolute;top:0;left:0}#gClose img.x{width:26px;height:26px;top:6px;left:7px}#gClose.pressed{transform:translateY(2px)}#themes{flex-wrap:wrap;gap:4px;margin-top:4px;display:flex}.th{color:#fff;border:2px solid #ffffff8c;border-radius:11px;align-items:center;height:22px;padding:0 8px;font-size:12px;font-weight:800;display:flex}.th.pressed{transform:translateY(1px)}#gView{width:390px;height:704px;position:absolute;top:96px;left:0;overflow:hidden}#gContent{will-change:transform;width:390px;padding:6px 14px 40px;position:absolute;top:0;left:0}.sec{align-items:center;gap:8px;margin:10px 0 6px;display:flex}.sec b{color:#fff;border:2px solid var(--edge);border-radius:12px;padding:4px 12px;font-size:16px}.sec span{color:#fff3dc;font-size:13px;font-weight:700}.cells{grid-template-columns:repeat(3,112px);gap:10px 9px;display:grid}.cell{width:112px;position:relative}.cell .w{border:3px solid var(--edge);background:#999;border-radius:14px;width:112px;height:92px;overflow:hidden}.cell .w svg,.cell .w img{width:100%;height:100%;display:block}.cell .n{text-align:center;height:22px;color:var(--ink);background:var(--paper);border:2px solid var(--edge);white-space:nowrap;border-radius:8px;margin-top:3px;font-size:13px;font-weight:800;line-height:18px;overflow:hidden}.cell .dot{width:24px;height:24px;position:absolute;top:-6px;right:-6px}.cell.pressed{transform:translateY(2px)}.cell.flash .w{outline:4px solid #ffd98a}#pop{z-index:40;background:#1e0f0599;display:none;position:absolute;inset:0}#pop.open{display:block}#popCard{text-align:center;background:var(--paper);border:4px solid var(--edge);border-radius:20px;width:330px;padding:16px 18px 18px;position:absolute;top:230px;left:30px;box-shadow:0 6px #28140580}#popCard img{width:150px;height:145px;margin:-70px auto 0;display:block}#popCard h3{margin:4px 0 6px;font-size:22px}#popCard p{margin:0 0 14px;font-size:15px}#popOk{width:170px;height:62px;margin:0 auto;position:relative}#popOk img{width:170px;height:62px;position:absolute;top:0;left:0}#popOk span{color:#fff;text-shadow:0 2px #0000004d;justify-content:center;align-items:center;font-size:20px;font-weight:900;display:flex;position:absolute;inset:0 0 8px}#popOk.pressed{transform:translateY(3px)}#toast{z-index:45;color:#fff3dc;text-align:center;background:#4a2a12;border-radius:14px;width:310px;padding:8px 12px;font-size:14px;font-weight:700;display:none;position:absolute;top:52px;left:40px}</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <div id="room">
+    <img class="sky" src="./assets/hub/window_sky.png" alt="">
+    <img class="wall" src="./assets/hub/room_wall.png" alt="">
+  </div>
+  <img id="ledge" src="./assets/hub/floor_ledge.png" alt="">
+  <div id="floorShade"></div>
+
+  <div id="top"><a href="index.html" id="back">← Лаборатория</a><div id="title">Ом Ном: игры</div></div>
+
+  <div id="dailyHead"><img src="./assets/hub/daily.png" alt="">Набор дня</div>
+  <div id="daily"></div>
+  <div id="segs"></div>
+
+  <img id="omnomShadow" src="./assets/hub/omnom_shadow.png" alt="">
+  <div id="omnom">
+    <img id="omBody" src="./assets/hub/omnom_neutral.png" alt="">
+    <img id="omPupils" src="./assets/hub/omnom_neutral_pupils.png" alt="">
+  </div>
+  <div id="zone"></div>
+  <div id="paws"><div class="paw" id="pawL"></div><div class="paw" id="pawR"></div></div>
+  <div class="arrow" id="arL" data-tap="prev"><img src="./assets/hub/btn_round.png" alt=""><span>‹</span></div>
+  <div class="arrow" id="arR" data-tap="next"><img src="./assets/hub/btn_round.png" alt=""><span>›</span></div>
+
+  <div id="info"><div id="tag">—</div><div id="sub"></div></div>
+  <div id="bar"><div id="marker"></div></div>
+  <div id="allBtn" data-tap="all"><img src="./assets/hub/btn_secondary.png" alt=""><span><div class="g9"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>Все игры</span></div>
+  <div id="hint">Свайп — листать · тап по коробке — играть</div>
+
+  <div id="grid">
+    <div id="gHead"><div class="row"><h2>Все игры · 100</h2><div id="gClose" data-tap="close"><img src="./assets/hub/btn_round.png" alt=""><img class="x" src="./assets/hub/close.png" alt=""></div></div>
+      <div id="themes"></div></div>
+    <div id="gView"><div id="gContent"></div></div>
+  </div>
+
+  <div id="pop"><div id="popCard"><img src="./assets/omnom/joy.png" alt=""><h3 id="popT"></h3><p id="popP"></p>
+    <div id="popOk" data-tap="ok"><img src="./assets/hub/btn_primary.png" alt=""><span>Понятно</span></div></div></div>
+  <div id="toast"></div>
+  <div style="display:none"><img src="./assets/hub/omnom_blink.png" alt=""><img src="./assets/omnom/joy.png" alt=""></div>
+</div></div>
+
+<script>
+"use strict";
+// ---------- константы ----------
+const W = 390, H = 844;
+const TAP_SLOP = 12;          // сдвиг ≥ 12 px (в единицах экрана 390×844) отменяет тап
+const BOX_STEP = 290;         // шаг карусели, px
+const BOX_W = 270;
+const SEED = 20261001;
+const KEY = "hub.c.";
+const OM_PX = 300 / 525 * 6.4024; // px экрана на лог. ед. Ома Нома
+const PUPIL = { l: 7.03, r: 10.15, u: 5.0, d: 1.41 };
+
+// ---------- хранилище ----------
+function load(k, def) { try { const v = localStorage.getItem(KEY + k); return v === null ? def : JSON.parse(v); } catch (e) { return def; } }
+function save(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch (e) {} }
+
+// ---------- генератор ----------
+function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function shuffle(arr, r) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+const THEMES = [
+  { id: "candy",   name: "Сладости",    color: "#ef8a3a", dark: "#c4651c" },
+  { id: "jump",    name: "Прыжки",      color: "#3fa7e0", dark: "#2580b3" },
+  { id: "puzzle",  name: "Головоломки", color: "#26a99c", dark: "#1a7d73" },
+  { id: "sport",   name: "Спорт",       color: "#e2533e", dark: "#b33a28" },
+  { id: "kitchen", name: "Кухня",       color: "#efb22e", dark: "#c48b14" },
+  { id: "sea",     name: "Море",        color: "#2f6fd6", dark: "#1f50a3" },
+  { id: "space",   name: "Космос",      color: "#3d4b6e", dark: "#283351" },
+];
+const THEME = Object.fromEntries(THEMES.map(t => [t.id, t]));
+const POOLS = {
+  candy: ["Леденцы","Карамелька","Мармелад","Ириска","Пастила","Зефирки","Драже","Вафелька","Пряник","Конфетопад","Чупа-бум","Сахарок","Грильяж","Нуга","Цукаты","Желешки","Батончик","Тянучка"],
+  jump: ["Попрыгун","Батут","Пружинка","Скок-скок","Облака","Лестница","Лианы","Кенгуру","Прыг-Ом","Лягушата","Высота","Мячик","Ступеньки","Вверх!","Шарики","Зонтик"],
+  puzzle: ["Пазл","Лабиринт","Три в ряд","Сундук","Ключики","Шестерёнки","Трубы","Мостик","Тетрамино","Замок","Плитки","Отражение","Тени","Узелки","Кубики","Пятнашки"],
+  sport: ["Футбол","Боулинг","Баскет","Гольф","Теннис","Дартс","Кёрлинг","Бильярд","Регби","Пенальти","Слалом","Городки","Кегли","Бадминтон","Волейбол","Ворота"],
+  kitchen: ["Блинчики","Пицца","Повар Ом","Суп-сюрприз","Кексы","Пончики","Мороженое","Омлет","Сэндвич","Пирожки","Варенье","Салатик","Какао","Печенье","Кашка","Компот"],
+  sea: ["Рыбалка","Кораблик","Ныряльщик","Медузы","Жемчуг","Осьминог","Пузыри","Краб-бег","Маяк","Серфинг","Ракушки","Пират Ом","Акула","Глубина","Дельфин","Течение"],
+  space: ["Ракета","Луноход","Метеоры","Орбита","Звёзды","Комета","Планеты","НЛО","Спутник","Чёрная дыра","Марсоход","Галактика","Невесомость","Астероиды","Созвездия","Космодром"],
+};
+const REAL = [
+  { id: "hook",   name: "Крючки",     theme: "jump",    kind: "lab", href: "hook.html",  pic: "hook" },
+  { id: "sling",  name: "Рогатка",    theme: "sport",   kind: "lab", href: "sling.html", pic: "sling" },
+  { id: "slide",  name: "Горка",      theme: "puzzle",  kind: "lab", href: "slide.html", pic: "slide" },
+  { id: "tower",  name: "Торт-башня", theme: "kitchen", kind: "app", img: "assets/hub/door_pic_cake_tower.png" },
+  { id: "box",    name: "Коробка",    theme: "puzzle",  kind: "app", img: "assets/hub/door_pic_candy_box.png" },
+  { id: "hockey", name: "Хоккей",     theme: "sport",   kind: "app", img: "assets/hub/door_pic_candy_hockey.png" },
+];
+function buildCatalog() {
+  const r = rng(SEED);
+  const games = REAL.map(g => ({ ...g, real: true }));
+  const slots = [];
+  for (let i = 0; i < 94; i++) slots.push(THEMES[i % THEMES.length].id);
+  const pools = {}; for (const t of THEMES) pools[t.id] = shuffle(POOLS[t.id], r);
+  shuffle(slots, r).forEach((th, i) => {
+    const name = pools[th].shift();
+    games.push({ id: "g" + String(i + 1).padStart(2, "0"), name, theme: th, kind: "stub", shape: Math.floor(r() * 2) });
+  });
+  // новинки: 8 случайных (включая одну настоящую)
+  const newIds = new Set(shuffle(games.filter(g => g.kind === "stub"), r).slice(0, 7).map(g => g.id));
+  newIds.add("slide");
+  for (const g of games) g.isNew = newIds.has(g.id);
+  return games;
+}
+const GAMES = buildCatalog();
+const BY_ID = Object.fromEntries(GAMES.map(g => [g.id, g]));
+
+// ---------- картинки окошек ----------
+const SIL = {
+  candy: ['<circle cx="50" cy="50" r="17"/><path d="M34 50 L14 36 L14 64Z M66 50 L86 36 L86 64Z"/>',
+          '<circle cx="50" cy="38" r="20"/><rect x="47" y="56" width="6" height="32" rx="3"/>'],
+  jump:  ['<circle cx="50" cy="34" r="15"/><path d="M30 64 h40 l-6 10 h-28z M38 78 l6 10 h12 l6-10z"/>',
+          '<path d="M24 62 a16 16 0 0 1 20-20 a20 20 0 0 1 36 6 a12 12 0 0 1 0 24 h-52 a10 10 0 0 1 -4-10z"/>'],
+  puzzle:['<path d="M26 34 h14 a8 8 0 1 1 16 0 h14 v14 a8 8 0 1 1 0 16 v14 h-44z"/>',
+          '<circle cx="36" cy="50" r="14"/><rect x="44" y="46" width="36" height="8" rx="3"/><rect x="66" y="52" width="6" height="12"/><rect x="74" y="52" width="6" height="9"/>'],
+  sport: ['<circle cx="50" cy="50" r="28"/>',
+          '<path d="M30 26 h40 v12 a20 20 0 0 1 -14 19 v13 h10 v8 h-32 v-8 h10 v-13 a20 20 0 0 1 -14 -19z"/>'],
+  kitchen:['<path d="M28 50 h44 l-6 30 h-32z"/><path d="M26 50 a24 18 0 0 1 48 0z"/><circle cx="50" cy="28" r="6"/>',
+          '<circle cx="42" cy="54" r="22"/><rect x="62" y="50" width="28" height="8" rx="4"/>'],
+  sea:   ['<path d="M18 50 q24 -26 50 0 q-26 26 -50 0z M66 50 l18 -14 v28z"/>',
+          '<path d="M50 20 a26 26 0 0 1 26 30 h-52 a26 26 0 0 1 26 -30z M30 56 h40 l-8 18 h-24z"/>'],
+  space: ['<path d="M50 14 q16 18 14 46 h-28 q-2 -28 14 -46z M36 60 l-10 18 l14 -6z M64 60 l10 18 l-14 -6z"/><circle cx="50" cy="40" r="5" fill="#fff6" />',
+          '<circle cx="50" cy="50" r="18"/><ellipse cx="50" cy="52" rx="34" ry="8" fill="none" stroke="#fffd" stroke-width="5"/>'],
+};
+const PICS = {
+  hook: '<rect width="230" height="150" fill="#8fd0f5"/><path d="M0 120 q60 -30 120 0 t120 0 v40 h-240z" fill="#b8e5a0"/>' +
+        '<g fill="#7a4a22"><circle cx="50" cy="30" r="9"/><circle cx="120" cy="22" r="9"/><circle cx="190" cy="34" r="9"/></g>' +
+        '<path d="M120 22 L150 80" stroke="#6b3f1d" stroke-width="4"/><circle cx="154" cy="92" r="16" fill="#a9de28" stroke="#0b2608" stroke-width="3"/>' +
+        '<circle cx="150" cy="88" r="4" fill="#fff"/><circle cx="160" cy="88" r="4" fill="#fff"/>' +
+        '<g fill="#e0412f"><circle cx="70" cy="70" r="7"/><circle cx="190" cy="76" r="7"/></g>',
+  sling: '<rect width="230" height="150" fill="#ffd27a"/><rect y="118" width="230" height="32" fill="#d89a4c"/>' +
+         '<path d="M60 120 v-34 l-14 -30 M60 86 l14 -30" stroke="#7a4a22" stroke-width="9" fill="none" stroke-linecap="round"/>' +
+         '<path d="M46 56 L58 74 L74 56" stroke="#4a2a12" stroke-width="3" fill="none"/><circle cx="58" cy="74" r="9" fill="#e0412f" stroke="#7a1a10" stroke-width="2"/>' +
+         '<path d="M78 70 q50 -50 100 10" stroke="#fff" stroke-width="3" stroke-dasharray="6 6" fill="none"/>' +
+         '<circle cx="184" cy="96" r="20" fill="#a9de28" stroke="#0b2608" stroke-width="3"/><ellipse cx="180" cy="102" rx="9" ry="6" fill="#7a1a10"/>',
+  slide: '<rect width="230" height="150" fill="#bfe6ff"/><path d="M20 30 q60 0 90 50 t110 30" stroke="#7a4a22" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+         '<g fill="#e0412f" stroke="#7a1a10" stroke-width="2"><circle cx="34" cy="22" r="8"/><circle cx="70" cy="34" r="8"/><circle cx="106" cy="68" r="8"/></g>' +
+         '<circle cx="200" cy="112" r="20" fill="#a9de28" stroke="#0b2608" stroke-width="3"/><ellipse cx="194" cy="116" rx="9" ry="6" fill="#7a1a10"/>',
+};
+function picHTML(g) {
+  if (g.img) return `<img src="${g.img}" alt="" style="object-fit:cover;background:${THEME[g.theme].color}">`;
+  if (g.pic) return `<svg viewBox="0 0 230 150" preserveAspectRatio="xMidYMid slice">${PICS[g.pic]}</svg>`;
+  const t = THEME[g.theme];
+  return `<svg viewBox="0 0 100 82" preserveAspectRatio="xMidYMid slice"><rect width="100" height="82" fill="${t.color}"/>` +
+    `<path d="M0 66 q25 -10 50 0 t50 0 v16 h-100z" fill="${t.dark}"/>` +
+    `<g transform="translate(14 0) scale(0.72)" fill="rgba(255,255,255,.9)">${SIL[g.theme][g.shape]}</g></svg>`;
+}
+
+// ---------- состояние ----------
+const today = new Date().toISOString().slice(0, 10);
+let recent = load("recent", []).filter(id => BY_ID[id]);
+let seen = new Set(load("seen", []).filter(id => BY_ID[id]));
+let openedToday = load("opened", {});
+for (const k in openedToday) if (openedToday[k] !== today) delete openedToday[k];
+
+function makeDaily() {
+  const d = load("daily", null);
+  if (d && d.date === today && d.ids.every(id => BY_ID[id])) return d.ids;
+  const r = rng(SEED + Number(today.replace(/-/g, "")));
+  const labs = shuffle(["hook", "sling", "slide"], r);
+  const untried = shuffle(GAMES.filter(g => !seen.has(g.id) && !recent.includes(g.id) && g.kind === "stub"), r)[0];
+  const third = shuffle(GAMES.filter(g => g.id !== labs[0] && g.id !== (untried && untried.id)), r)[0];
+  const ids = [labs[0], untried ? untried.id : labs[1], third.id];
+  save("daily", { date: today, ids });
+  return ids;
+}
+const DAILY = makeDaily();
+const DAILY_LABEL = ["Сыграй", "Ещё не пробовал", "Загляни"];
+
+// порядок карусели: недавние, новые, набор дня, остальные (по темам и алфавиту)
+const order = [];
+const segs = [];
+(function buildOrder() {
+  const used = new Set();
+  const push = (seg, ids) => { const start = order.length; for (const id of ids) if (!used.has(id)) { used.add(id); order.push(id); }
+    segs.push({ id: seg.id, name: seg.name, start, end: order.length }); };
+  push({ id: "recent", name: "Недавние" }, recent);
+  push({ id: "new", name: "Новое" }, GAMES.filter(g => g.isNew && !seen.has(g.id)).map(g => g.id));
+  push({ id: "daily", name: "Набор дня" }, DAILY);
+  const rest = GAMES.slice().sort((a, b) => THEMES.findIndex(t => t.id === a.theme) - THEMES.findIndex(t => t.id === b.theme) || a.name.localeCompare(b.name, "ru"));
+  push({ id: "rest", name: "Все" }, rest.map(g => g.id));
+})();
+function segAt(i) { return segs.find(s => i >= s.start && i < s.end) || segs[segs.length - 1]; }
+
+const st = {
+  pos: 0, target: 0, vel: 0, dragging: false,
+  gridOpen: false, gridY: 0, gridVel: 0, gridMax: 0,
+  popup: null, toast: 0, pressed: null,
+  task: null, taps: 0,
+  look: { x: 0, y: 0, tx: 0, ty: 0, until: 0 }, blinkUntil: 0, nextBlink: 1500, joyUntil: 0,
+  pending: null,
+};
+
+// ---------- раскладка (вписать 390×844 в окно) ----------
+const stage = document.getElementById("stage");
+let scale = 1, offX = 0, offY = 0, lastW = 0, lastH = 0;
+function fit() {
+  const w = window.innerWidth, h = window.innerHeight;
+  if (!w || !h || (w === lastW && h === lastH)) return;
+  lastW = w; lastH = h;
+  scale = Math.min(w / W, h / H);
+  offX = Math.round((w - W * scale) / 2); offY = Math.round((h - H * scale) / 2);
+  stage.style.transform = `translate(${offX}px,${offY}px) scale(${scale})`;
+}
+window.addEventListener("resize", fit);
+window.addEventListener("orientationchange", fit);
+fit();
+function toStage(e) { return { x: (e.clientX - offX) / scale, y: (e.clientY - offY) / scale }; }
+
+// ---------- DOM: набор дня, разделы, сетка ----------
+const $ = id => document.getElementById(id);
+const dailyEl = $("daily");
+DAILY.forEach((id, i) => {
+  const g = BY_ID[id];
+  const c = document.createElement("div");
+  c.className = "chip"; c.dataset.tap = "chip"; c.dataset.i = i; c.dataset.id = id;
+  c.innerHTML = `<div class="ic">${picHTML(g)}</div><div class="tx">${DAILY_LABEL[i]}<b></b></div>`;
+  c.querySelector("b").textContent = g.name;
+  dailyEl.appendChild(c);
+});
+function refreshDaily() { for (const c of dailyEl.children) c.classList.toggle("done", !!openedToday[c.dataset.id]); }
+refreshDaily();
+
+const segsEl = $("segs");
+for (const s of segs) {
+  const b = document.createElement("div");
+  b.className = "seg" + (s.end === s.start ? " empty" : ""); b.dataset.tap = "seg"; b.dataset.seg = s.id;
+  b.textContent = `${s.name} ${s.end - s.start}`;
+  segsEl.appendChild(b);
+}
+const barEl = $("bar");
+for (const s of segs) { const i = document.createElement("i"); i.style.flex = String(Math.max(s.end - s.start, 0.0001));
+  if (s.end === s.start) i.style.display = "none"; barEl.insertBefore(i, $("marker")); }
+
+const themesEl = $("themes"), gContent = $("gContent");
+const secTop = {};
+for (const t of THEMES) {
+  const list = GAMES.filter(g => g.theme === t.id).sort((a, b) => a.name.localeCompare(b.name, "ru"));
+  const chip = document.createElement("div");
+  chip.className = "th"; chip.style.background = t.color; chip.dataset.tap = "theme"; chip.dataset.theme = t.id; chip.textContent = t.name;
+  themesEl.appendChild(chip);
+  const sec = document.createElement("div"); sec.className = "sec"; sec.dataset.theme = t.id;
+  sec.innerHTML = `<b style="background:${t.color}"></b><span>${list.length}</span>`; sec.querySelector("b").textContent = t.name;
+  gContent.appendChild(sec);
+  const cells = document.createElement("div"); cells.className = "cells";
+  for (const g of list) {
+    const c = document.createElement("div"); c.className = "cell"; c.dataset.tap = "cell"; c.dataset.id = g.id;
+    c.innerHTML = `<div class="w">${picHTML(g)}</div><div class="n"></div>` + `<img class="dot" src="assets/hub/badge_dot.png" alt="">`;
+    c.querySelector(".n").textContent = g.name;
+    cells.appendChild(c);
+  }
+  gContent.appendChild(cells);
+}
+function refreshDots() {
+  for (const c of gContent.querySelectorAll(".cell")) { const g = BY_ID[c.dataset.id]; c.querySelector(".dot").style.display = g.isNew && !seen.has(g.id) ? "" : "none"; }
+}
+refreshDots();
+
+// ---------- карусель ----------
+const zone = $("zone");
+const boxEls = new Map();
+function boxEl(i) {
+  let el = boxEls.get(i);
+  if (el) return el;
+  const g = BY_ID[order[i]];
+  el = document.createElement("div"); el.className = "box"; el.dataset.i = i; el.dataset.tap = "box";
+  el.innerHTML = `<div class="inner"><div class="flapL"></div><div class="flapR"></div><div class="body"></div>` +
+    `<div class="win">${picHTML(g)}</div><div class="name"></div><img class="dot" src="assets/hub/badge_dot.png" alt=""></div>`;
+  el.querySelector(".name").textContent = g.name;
+  if (g.name.length > 10) el.querySelector(".name").style.fontSize = "18px";
+  zone.appendChild(el); boxEls.set(i, el);
+  return el;
+}
+function renderCarousel() {
+  const lo = Math.floor(st.pos - 1.6), hi = Math.ceil(st.pos + 1.6);
+  for (const [i, el] of boxEls) if (i < lo || i > hi) { el.remove(); boxEls.delete(i); }
+  for (let i = Math.max(0, lo); i <= Math.min(order.length - 1, hi); i++) {
+    const el = boxEl(i), x = W / 2 + (i - st.pos) * BOX_STEP - BOX_W / 2;
+    el.style.transform = `translate3d(${x.toFixed(1)}px,0,0)`;
+    const g = BY_ID[order[i]];
+    el.querySelector(".dot").style.display = g.isNew && !seen.has(g.id) ? "" : "none";
+    el.classList.toggle("pressed", st.pressed === el);
+  }
+  // лапы держат коробку, только когда она на месте
+  const off = Math.abs(st.pos - Math.round(st.pos));
+  const pawOp = off < 0.08 && !st.gridOpen ? "1" : "0";
+  $("pawL").style.opacity = pawOp; $("pawR").style.opacity = pawOp;
+  const idx = curIndex(), g = BY_ID[order[idx]], s = segAt(idx), t = THEME[g.theme];
+  const tag = $("tag");
+  const tagText = s.id === "recent" ? "Недавно" : s.id === "new" ? "Новое" : s.id === "daily" ? "Набор дня" : t.name;
+  if (tag.textContent !== tagText) tag.textContent = tagText;
+  tag.style.background = s.id === "rest" ? t.color : s.id === "new" ? "#e0412f" : s.id === "recent" ? "#4a2a12" : "#c4651c";
+  const sub = `${t.name} · ${g.kind === "lab" ? "играть в лаборатории" : g.kind === "app" ? "игра из приложения" : "заглушка"} · ${idx + 1} / ${order.length}`;
+  if ($("sub").textContent !== sub) $("sub").textContent = sub;
+  for (const b of segsEl.children) b.classList.toggle("on", b.dataset.seg === s.id);
+  $("marker").style.left = `${(Math.max(0, Math.min(order.length - 1, st.pos)) / (order.length - 1)) * 336}px`;
+  $("arL").style.opacity = idx === 0 ? ".4" : "1"; $("arR").style.opacity = idx === order.length - 1 ? ".4" : "1";
+}
+function curIndex() { return Math.max(0, Math.min(order.length - 1, Math.round(st.pos))); }
+function goTo(i, instant) {
+  i = Math.max(0, Math.min(order.length - 1, i));
+  st.target = i; if (instant) st.pos = i;
+  lookAt(Math.sign(i - st.pos) * 1, 0.2, 700);
+}
+
+// ---------- Ом Ном живой ----------
+const omBody = $("omBody"), omPupils = $("omPupils");
+function lookAt(nx, ny, ms) { st.look.tx = nx; st.look.ty = ny; st.look.until = performance.now() + ms; }
+function updateOmNom(now, dt) {
+  if (now > st.look.until) { st.look.tx = 0.15; st.look.ty = 0.1; } // смотрит на тебя
+  const k = 1 - Math.pow(0.001, dt / 1000);
+  st.look.x += (st.look.tx - st.look.x) * k; st.look.y += (st.look.ty - st.look.y) * k;
+  const dx = (st.look.x < 0 ? st.look.x * PUPIL.l : st.look.x * PUPIL.r) * OM_PX;
+  const dy = (st.look.y < 0 ? st.look.y * PUPIL.u : st.look.y * PUPIL.d) * OM_PX;
+  omPupils.style.transform = `translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;
+  if (now > st.nextBlink && now > st.blinkUntil) { st.blinkUntil = now + 140; st.nextBlink = now + 1800 + Math.random() * 3200; }
+  let frame = "neutral";
+  if (now < st.joyUntil) frame = "joy"; else if (now < st.blinkUntil) frame = "blink";
+  if (omBody.dataset.f !== frame) { omBody.dataset.f = frame; omBody.src = `assets/hub/omnom_${frame}.png`; omPupils.style.display = frame === "neutral" ? "" : "none"; }
+  const bob = Math.sin(now / 520) * 1.5;
+  $("omnom").style.transform = `translate(0,${bob.toFixed(2)}px)`;
+}
+
+// ---------- открыть игру ----------
+function openGame(id) {
+  const g = BY_ID[id];
+  if (st.task && !st.task.done) {
+    if (id === st.task.target) { for (const c of document.querySelectorAll(`.cell[data-id="${id}"]`)) c.classList.add("flash"); st.task.done = true; st.task.sec = (performance.now() - st.task.t0) / 1000; st.joyUntil = performance.now() + 900; renderTask(); }
+    else showToast(`Это «${g.name}», а ищем «${BY_ID[st.task.target].name}»`);
+    return;
+  }
+  recent = [id].concat(recent.filter(x => x !== id)).slice(0, 8); save("recent", recent);
+  seen.add(id); save("seen", [...seen]);
+  openedToday[id] = today; save("opened", openedToday);
+  refreshDots(); refreshDaily();
+  st.joyUntil = performance.now() + 700;
+  if (g.kind === "lab") { st.pending = g.href; setTimeout(() => { location.href = g.href; }, 380); return; }
+  st.popup = g.kind;
+  $("popT").textContent = `«${g.name}»`;
+  $("popP").textContent = g.kind === "app" ? "Эта игра есть в приложении. В прототипе главного экрана её нет." : "Заглушка: игры пока нет. Представь, что она открылась.";
+  $("pop").classList.add("open");
+}
+function closePopup() { st.popup = null; $("pop").classList.remove("open"); }
+function showToast(text) { const t = $("toast"); t.textContent = text; t.style.display = "block"; st.toast = performance.now() + 1800; }
+
+function openGrid() { st.gridOpen = true; $("grid").classList.add("open"); st.gridMax = Math.max(0, gContent.offsetHeight - 704); }
+function closeGrid() { st.gridOpen = false; $("grid").classList.remove("open"); }
+function gridTo(y) { st.gridY = Math.max(0, Math.min(st.gridMax, y)); st.gridVel = 0; }
+function gridToTheme(th) {
+  const sec = gContent.querySelector(`.sec[data-theme="${th}"]`);
+  if (sec) gridTo(sec.offsetTop - 4);
+}
+
+// ---------- режим самопроверки ?task=1 ----------
+const TASK = new URLSearchParams(location.search).get("task") === "1";
+function newTask() {
+  const firstScreen = new Set(order.slice(0, 3));
+  const pool = GAMES.filter(g => g.kind === "stub" && !firstScreen.has(g.id));
+  const t = pool[Math.floor(Math.random() * pool.length)];
+  for (const c of document.querySelectorAll(".cell.flash")) c.classList.remove("flash");
+  st.task = { target: t.id, t0: performance.now(), done: false, sec: 0 }; st.taps = 0;
+  renderTask();
+}
+function renderTask() {
+  const el = $("title");
+  if (!st.task) return;
+  el.className = "task" + (st.task.done ? " done" : "");
+  $("back").textContent = "←";
+  const name = BY_ID[st.task.target].name;
+  if (st.task.done) el.innerHTML = `✓ «<b></b>» за ${st.task.sec.toFixed(1)} с · тапов ${st.taps}<span class="again" data-tap="again">Ещё</span>`;
+  else el.innerHTML = `Найди: «<b></b>» <span class="tm">0.0 с</span>`;
+  el.querySelector("b").textContent = name;
+}
+
+// ---------- ввод: тап, свайп, колесо ----------
+let ptr = null; // {id, x0, y0, x, y, t0, kind, target, moved, samples}
+function tapTargetOf(el) { return el && el.closest ? el.closest("[data-tap]") : null; }
+stage.addEventListener("pointerdown", e => {
+  if (ptr) return;
+  const p = toStage(e);
+  const target = tapTargetOf(e.target);
+  let kind = "none";
+  if (st.popup) kind = "tap";
+  else if (st.gridOpen) kind = p.y > 140 ? "gridScroll" : "tap";
+  else if (p.y >= 176 && p.y < 580 && !(target && (target.id === "arL" || target.id === "arR"))) kind = "carousel";
+  else kind = "tap";
+  ptr = { id: e.pointerId, x0: p.x, y0: p.y, x: p.x, y: p.y, t0: performance.now(), kind, target, moved: false,
+    pos0: st.pos, grid0: st.gridY, samples: [{ t: performance.now(), x: p.x, y: p.y }] };
+  try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+  if (target) { st.pressed = target; target.classList.add("pressed"); }
+  if (kind === "gridScroll") st.gridVel = 0;
+});
+stage.addEventListener("pointermove", e => {
+  const p = toStage(e);
+  if (!ptr || e.pointerId !== ptr.id) {
+    if (e.pointerType === "mouse" && !st.gridOpen && !st.popup) lookAt((p.x - 195) / 160, (p.y - 275) / 200, 1200);
+    return;
+  }
+  ptr.x = p.x; ptr.y = p.y;
+  ptr.samples.push({ t: performance.now(), x: p.x, y: p.y }); if (ptr.samples.length > 8) ptr.samples.shift();
+  if (!ptr.moved && Math.hypot(p.x - ptr.x0, p.y - ptr.y0) >= TAP_SLOP) {
+    ptr.moved = true;
+    if (st.pressed) { st.pressed.classList.remove("pressed"); st.pressed = null; }
+  }
+  if (!ptr.moved) return;
+  if (ptr.kind === "carousel") {
+    st.dragging = true;
+    let pos = ptr.pos0 - (p.x - ptr.x0) / BOX_STEP;
+    if (pos < 0) pos = pos * 0.35; if (pos > order.length - 1) pos = order.length - 1 + (pos - order.length + 1) * 0.35;
+    st.pos = pos; st.target = pos;
+    lookAt(-Math.sign(p.x - ptr.x0) * 0.9, 0.3, 600);
+  } else if (ptr.kind === "gridScroll") {
+    let y = ptr.grid0 - (p.y - ptr.y0);
+    if (y < 0) y *= 0.35; if (y > st.gridMax) y = st.gridMax + (y - st.gridMax) * 0.35;
+    st.gridY = y;
+  }
+});
+function velocity(p) {
+  const s = p.samples, now = performance.now();
+  const a = s.find(q => now - q.t < 90) || s[s.length - 1], b = s[s.length - 1];
+  const dt = Math.max(16, b.t - a.t);
+  return { vx: (b.x - a.x) / dt, vy: (b.y - a.y) / dt };
+}
+function endPointer(e, cancelled) {
+  if (!ptr || e.pointerId !== ptr.id) return;
+  const p = ptr; ptr = null;
+  if (st.pressed) { st.pressed.classList.remove("pressed"); st.pressed = null; }
+  if (cancelled) { if (p.kind === "carousel") settle(0); return; }
+  if (!p.moved) {
+    // тап: срабатывает на отпускании, если палец не сдвинулся на 12 px и остался на том же элементе
+    const pt = toStage(e);
+    const under = tapTargetOf(document.elementFromPoint(e.clientX, e.clientY));
+    if (p.target && (under === p.target || Math.hypot(pt.x - p.x0, pt.y - p.y0) < TAP_SLOP)) doTap(p.target);
+    if (p.kind === "carousel") settle(0);
+    return;
+  }
+  const v = velocity(p);
+  if (p.kind === "carousel") { st.dragging = false; settle(-v.vx * 1000 / BOX_STEP); }
+  else if (p.kind === "gridScroll") st.gridVel = -v.vy * 1000;
+}
+stage.addEventListener("pointerup", e => endPointer(e, false));
+stage.addEventListener("pointercancel", e => endPointer(e, true));
+function settle(velIdxPerSec) {
+  let t = Math.round(st.pos + Math.max(-4, Math.min(4, velIdxPerSec * 0.18)));
+  if (Math.abs(velIdxPerSec) > 0.8 && t === Math.round(st.pos)) t += Math.sign(velIdxPerSec);
+  goTo(t);
+}
+let wheelAcc = 0, wheelLock = 0;
+stage.addEventListener("wheel", e => {
+  e.preventDefault();
+  const k = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
+  const dx = e.deltaX * k, dy = e.deltaY * k;
+  if (st.popup) return;
+  if (st.gridOpen) { st.gridY = Math.max(0, Math.min(st.gridMax, st.gridY + dy)); st.gridVel = 0; return; }
+  const now = performance.now();
+  wheelAcc += Math.abs(dx) > Math.abs(dy) ? dx : dy;
+  if (now < wheelLock) { wheelAcc = 0; return; }
+  if (Math.abs(wheelAcc) >= 40) { goTo(Math.round(st.target) + Math.sign(wheelAcc)); wheelAcc = 0; wheelLock = now + 220; }
+}, { passive: false });
+window.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight") act("next"); else if (e.key === "ArrowLeft") act("prev");
+  else if (e.key === "Enter") act("tapBox"); else if (e.key === "Escape") { closePopup(); closeGrid(); }
+});
+
+function doTap(el) {
+  st.taps++;
+  const k = el.dataset.tap;
+  if (k === "box") { const i = Number(el.dataset.i); if (i === curIndex() && Math.abs(st.pos - i) < 0.25) openGame(order[i]); else goTo(i); }
+  else if (k === "prev") goTo(curIndex() - 1);
+  else if (k === "next") goTo(curIndex() + 1);
+  else if (k === "chip") { const i = order.indexOf(el.dataset.id); goTo(i); lookAt(-0.6, -1, 800); }
+  else if (k === "seg") { const s = segs.find(q => q.id === el.dataset.seg); if (s && s.end > s.start) goTo(s.start); }
+  else if (k === "all") openGrid();
+  else if (k === "close") closeGrid();
+  else if (k === "theme") gridToTheme(el.dataset.theme);
+  else if (k === "cell") openGame(el.dataset.id);
+  else if (k === "ok") closePopup();
+  else if (k === "again") newTask();
+}
+
+// ---------- цикл ----------
+const frames = []; let lastT = performance.now();
+function loop(now) {
+  const dt = Math.min(64, now - lastT); lastT = now;
+  frames.push(dt); if (frames.length > 120) frames.shift();
+  if (!st.dragging) {
+    const k = 1 - Math.pow(0.0005, dt / 1000);
+    st.pos += (st.target - st.pos) * Math.min(1, k * 1.6);
+    if (Math.abs(st.target - st.pos) < 0.001) st.pos = st.target;
+  }
+  if (st.gridOpen && !(ptr && ptr.kind === "gridScroll" && ptr.moved)) {
+    if (Math.abs(st.gridVel) > 5) { st.gridY += st.gridVel * dt / 1000; st.gridVel *= Math.pow(0.04, dt / 1000); } else st.gridVel = 0;
+    if (st.gridY < 0) { st.gridY += (0 - st.gridY) * 0.25; st.gridVel = 0; if (st.gridY > -0.5) st.gridY = 0; }
+    if (st.gridY > st.gridMax) { st.gridY += (st.gridMax - st.gridY) * 0.25; st.gridVel = 0; if (st.gridY < st.gridMax + 0.5) st.gridY = st.gridMax; }
+  }
+  gContent.style.transform = `translate3d(0,${(-st.gridY).toFixed(1)}px,0)`;
+  renderCarousel();
+  updateOmNom(now, dt);
+  if (st.toast && now > st.toast) { st.toast = 0; $("toast").style.display = "none"; }
+  if (st.task && !st.task.done) { const tm = $("title").querySelector(".tm"); if (tm) tm.textContent = ((now - st.task.t0) / 1000).toFixed(1) + " с"; }
+  requestAnimationFrame(loop);
+}
+
+// ---------- тестовый API ----------
+function act(action, payload) {
+  switch (action) {
+    case "next": goTo(curIndex() + 1); break;
+    case "prev": goTo(curIndex() - 1); break;
+    case "goto": goTo(typeof payload === "string" ? order.indexOf(payload) : Number(payload), true); break;
+    case "swipe": { const n = Number(payload) || 1; goTo(curIndex() + n); break; }
+    case "tapBox": openGame(order[curIndex()]); break;
+    case "chip": goTo(order.indexOf(DAILY[Number(payload) || 0])); break;
+    case "segment": { const s = segs.find(q => q.id === payload); if (s && s.end > s.start) goTo(s.start); break; }
+    case "openGrid": openGrid(); break;
+    case "closeGrid": closeGrid(); break;
+    case "gridScroll": gridTo(Number(payload) || 0); break;
+    case "gridTheme": gridToTheme(payload); break;
+    case "openGame": openGame(payload); break;
+    case "closePopup": closePopup(); break;
+    case "newTask": newTask(); break;
+    case "settle": st.pos = st.target; break;
+    case "reset": try { for (const k of ["recent", "seen", "opened", "daily"]) localStorage.removeItem(KEY + k); } catch (e) {} break;
+  }
+}
+window.__game = {
+  ready: false,
+  getState() {
+    const i = curIndex();
+    return { screen: st.popup ? "popup" : st.gridOpen ? "grid" : "carousel", index: i, pos: +st.pos.toFixed(3), current: order[i],
+      currentName: BY_ID[order[i]].name, segment: segAt(i).id, segments: segs.map(s => ({ id: s.id, start: s.start, count: s.end - s.start })),
+      order: order.slice(0, 12), total: order.length, recent: recent.slice(), daily: DAILY.slice(),
+      newUnseen: GAMES.filter(g => g.isNew && !seen.has(g.id)).map(g => g.id),
+      grid: { open: st.gridOpen, y: Math.round(st.gridY), max: st.gridMax }, popup: st.popup, pending: st.pending,
+      task: st.task ? { target: st.task.target, name: BY_ID[st.task.target].name, done: st.task.done, sec: +st.task.sec.toFixed(2), taps: st.taps } : null,
+      themes: THEMES.map(t => ({ id: t.id, count: GAMES.filter(g => g.theme === t.id).length })),
+      view: { scale, offX, offY } };
+  },
+  act,
+  metrics() { const s = frames.slice().sort((a, b) => a - b); const avg = s.reduce((a, b) => a + b, 0) / (s.length || 1);
+    return { fps: Math.round(1000 / (avg || 16.7)), frameMsP95: +(s[Math.floor(s.length * 0.95)] || 0).toFixed(1), drawCalls: -1 }; },
+  catalog: () => GAMES.map(g => ({ id: g.id, name: g.name, theme: g.theme, kind: g.kind, isNew: !!g.isNew })),
+};
+if (TASK) newTask();
+requestAnimationFrame(loop);
+Promise.all([...document.images].map(im => im.decode ? im.decode().catch(() => {}) : Promise.resolve()))
+  .then(() => requestAnimationFrame(() => requestAnimationFrame(() => { window.__game.ready = true; })));
+</script>
+</body>
+</html>

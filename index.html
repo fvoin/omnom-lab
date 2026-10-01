@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Лаборатория</title>
+<link rel="icon" href="data:,">
+<style>:root{--bg:#1d2333;--fg:#f3f5fa;--muted:#a9b1c6;--card:#2a3148;--card2:#323b57;--best:#ffd166}*{box-sizing:border-box}html,body{background:var(--bg);color:var(--fg);margin:0;font:16px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}main{max-width:520px;margin:0 auto;padding:20px 16px 32px}h1{margin:4px 0;font-size:26px}.lead{color:var(--muted);margin:0 0 18px;font-size:14px}a.game{color:inherit;background:var(--card);border-radius:16px;align-items:center;gap:12px;min-height:76px;margin:0 0 12px;padding:16px 18px;text-decoration:none;display:flex}a.game:active{background:var(--card2)}.txt{flex:1;min-width:0}.name{font-size:19px;font-weight:700}.rule{color:var(--muted);margin-top:3px;font-size:14px}.best{text-align:right;color:var(--best);font-variant-numeric:tabular-nums;flex:none;font-size:18px;font-weight:700}h2{text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:22px 0 2px;font-size:15px}.note{color:var(--muted);opacity:.8;margin:0 0 10px;font-size:13px}.best small{color:var(--muted);font-size:11px;font-weight:400;display:block}</style>
+</head>
+<body>
+<main>
+  <h1>Лаборатория</h1>
+  <p class="lead">Грубые прототипы игр. Поиграй в каждый минуту-две.</p>
+  <div id="list"></div>
+</main>
+<script>
+"use strict";
+const SECTIONS = [
+  ["В приложении", "Эти игры переносим в сборник; здесь подбираем ощущение.", [
+    ["hook",  "Ом Ном на крючках", "Держи — Ом Ном цепляется и качается, отпусти — летит выше"],
+    ["sling", "Конфетная рогатка", "Оттяни конфету и отпусти — попади Ому Ному в рот"],
+    ["slide", "Конфетная горка", "Рисуй пальцем верёвку-горку — конфеты катятся в рот"],
+  ]],
+  ["Эксперименты", "Остаются в лаборатории.", [
+    ["ninja", "Конфетный ниндзя", "Режь верёвки шариков росчерком — Ом Ном ловит конфеты"],
+    ["claw",  "Кран с конфетами", "Держи — кран едет, отпусти — клешня хватает конфету"],
+  ]],
+  ["Главный экран", "Варианты экрана на 100 игр. Полистай и выбери. ?task=1 — найти игру на время.", [
+    ["hub-a", "A. Комната + полки", "Комната Ома Нома сверху, ниже — «что сыграть сейчас» и полки по темам по 3 коробки"],
+    ["hub-b", "B. Дом этажами", "Дом-коробка по этажам-темам, Ом Ном едет на лифте-корзинке; кнопки этажей слева"],
+    ["hub-c", "C. Одна коробка", "Ом Ном держит одну большую игру, свайп листает, «Все игры» — сетка"],
+  ]],
+];
+function best(slug) { try { const v = localStorage.getItem("lab.best." + slug); return v === null ? null : Number(v); } catch (e) { return null; } }
+const list = document.getElementById("list");
+for (const [title, note, games] of SECTIONS) {
+  const h = document.createElement("h2"); h.textContent = title; list.appendChild(h);
+  const n = document.createElement("p"); n.className = "note"; n.textContent = note; list.appendChild(n);
+  for (const [slug, name, rule] of games) {
+    const a = document.createElement("a");
+    a.className = "game"; a.href = slug + ".html";
+    const b = best(slug);
+    a.innerHTML = `<div class="txt"><div class="name"></div><div class="rule"></div></div>` +
+      (b !== null && !isNaN(b) ? `<div class="best"><small>рекорд</small>${b}</div>` : "");
+    a.querySelector(".name").textContent = name;
+    a.querySelector(".rule").textContent = rule;
+    list.appendChild(a);
+  }
+}
+</script>
+</body>
+</html>
