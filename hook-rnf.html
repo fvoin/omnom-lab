@@ -4,19 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="data:,">
-<title>Крючки как Rope'n'Fly</title>
-<style>:root{--card:#c98a4b;--card2:#b8773d;--shade:#8f5427;--cut:#5a2e10;--cream:#fbebd0;--cream2:#e9cfa3;--ink:#4a2512;--act:#e8458a;--act2:#a82060;--actInk:#4f0c2c;--star:#ffd23f}*{box-sizing:border-box}html,body{background:var(--card2);height:100%;color:var(--ink);margin:0;font:700 14px/1.3 Nunito,ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{flex-direction:column;display:flex}header{flex-direction:column;gap:4px;padding:8px 12px 6px;display:flex}.row{justify-content:space-between;align-items:center;gap:8px;display:flex}a.back{color:var(--cream);font-size:13px;text-decoration:none}h1{color:var(--cream);text-shadow:0 1px 0 var(--cut);margin:0;font-size:17px;font-weight:900}.rules{color:var(--cream);opacity:.9;min-height:34px;font-size:13px}.hud{font-variant-numeric:tabular-nums;background:var(--cream);border:2px solid var(--ink);white-space:nowrap;border-radius:999px;align-items:baseline;gap:8px;padding:2px 12px;font-weight:900;display:flex}.hud b{font-size:22px;line-height:1.1}.hud small{opacity:.75;font-size:12px;font-weight:800}.hud .st{color:var(--star);-webkit-text-stroke:1px var(--ink);letter-spacing:1px;font-size:15px}.hud .st i{color:var(--cut);-webkit-text-stroke:0;opacity:.45;font-style:normal}button{font:inherit;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--cream2);border-radius:999px;padding:5px 12px;font-weight:800}button.big{background:var(--act);color:#fff;border-color:var(--actInk);box-shadow:0 5px 0 var(--act2);text-shadow:0 1px 0 var(--actInk), 0 -1px 0 var(--actInk), 1px 0 0 var(--actInk), -1px 0 0 var(--actInk);padding:10px 26px;font-size:19px}.btns{gap:6px;display:flex}#stage{flex:1;min-height:0;margin:0 10px 10px;position:relative}canvas{touch-action:none;-webkit-user-select:none;user-select:none;box-shadow:0 0 0 5px var(--shade), 0 6px 0 5px var(--cut);border-radius:14px;display:block;position:absolute}#aimSw{border:2px solid var(--ink);z-index:3;background:#fbebd0eb;border-radius:999px;gap:2px;padding:2px;display:flex;position:absolute;top:10px;right:14px;box-shadow:0 2px #4a251259}#aimSw button{box-shadow:none;background:0 0;border:0;border-radius:999px;padding:3px 11px;font-size:13px}#aimSw button.on{background:var(--act);color:#fff;text-shadow:0 1px 0 var(--actInk)}#end{z-index:2;justify-content:center;align-items:center;display:none;position:absolute;inset:0}#end .card{background:var(--cream);border:3px solid var(--ink);text-align:center;min-width:240px;box-shadow:0 6px 0 var(--cream2), 0 10px 24px #4a251259;border-radius:24px;padding:16px 26px 20px}#end .omEnd{pointer-events:none;height:100px;margin:-4px auto -2px;display:block}#end .stars{letter-spacing:4px;margin:2px 0 4px;font-size:44px;line-height:1}#end .stars span{color:var(--cut);opacity:.35}#end .stars span.on{color:var(--star);opacity:1;-webkit-text-stroke:2px var(--ink)}#end .score{margin:0;font-size:44px;font-weight:900}#end p{opacity:.85;margin:4px 0;font-weight:700}#end small{opacity:.65;margin-top:2px;font-weight:700;display:block}</style>
+<title>Крючки как Rope'n'Fly v2</title>
+<style>:root{--card:#c98a4b;--card2:#b8773d;--shade:#8f5427;--cut:#5a2e10;--cream:#fbebd0;--cream2:#e9cfa3;--ink:#4a2512;--act:#e8458a;--act2:#a82060;--actInk:#4f0c2c;--star:#ffd23f}*{box-sizing:border-box}html,body{background:var(--card2);height:100%;color:var(--ink);margin:0;font:700 14px/1.3 Nunito,ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{flex-direction:column;display:flex}header{flex-direction:column;gap:4px;padding:8px 12px 6px;display:flex}.row{justify-content:space-between;align-items:center;gap:8px;display:flex}a.back{color:var(--cream);font-size:13px;text-decoration:none}a.ver{color:var(--cream);opacity:.75;margin-left:8px;font-size:11px;text-decoration:underline}h1{color:var(--cream);text-shadow:0 1px 0 var(--cut);margin:0;font-size:17px;font-weight:900}.rules{color:var(--cream);opacity:.9;min-height:34px;font-size:13px}.hud{font-variant-numeric:tabular-nums;background:var(--cream);border:2px solid var(--ink);white-space:nowrap;border-radius:999px;align-items:baseline;gap:8px;padding:2px 12px;font-weight:900;display:flex}.hud b{font-size:22px;line-height:1.1}.hud small{opacity:.75;font-size:12px;font-weight:800}.hud .st{color:var(--star);-webkit-text-stroke:1px var(--ink);letter-spacing:1px;font-size:15px}.hud .st i{color:var(--cut);-webkit-text-stroke:0;opacity:.45;font-style:normal}button{font:inherit;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--cream2);border-radius:999px;padding:5px 12px;font-weight:800}button.big{background:var(--act);color:#fff;border-color:var(--actInk);box-shadow:0 5px 0 var(--act2);text-shadow:0 1px 0 var(--actInk), 0 -1px 0 var(--actInk), 1px 0 0 var(--actInk), -1px 0 0 var(--actInk);padding:10px 26px;font-size:19px}.btns{gap:6px;display:flex}#stage{flex:1;min-height:0;margin:0 10px 10px;position:relative}canvas{touch-action:none;-webkit-user-select:none;user-select:none;box-shadow:0 0 0 5px var(--shade), 0 6px 0 5px var(--cut);border-radius:14px;display:block;position:absolute}#end{z-index:2;justify-content:center;align-items:center;display:none;position:absolute;inset:0}#end .card{background:var(--cream);border:3px solid var(--ink);text-align:center;min-width:240px;box-shadow:0 6px 0 var(--cream2), 0 10px 24px #4a251259;border-radius:24px;padding:16px 26px 20px}#end .omEnd{pointer-events:none;height:100px;margin:-4px auto -2px;display:block}#end .stars{letter-spacing:4px;margin:2px 0 4px;font-size:44px;line-height:1}#end .stars span{color:var(--cut);opacity:.35}#end .stars span.on{color:var(--star);opacity:1;-webkit-text-stroke:2px var(--ink)}#end .score{margin:0;font-size:44px;font-weight:900}#end p{opacity:.85;margin:4px 0;font-weight:700}#end small{opacity:.65;margin-top:2px;font-weight:700;display:block}</style>
 </head>
 <body>
 <header>
-  <div class="row"><a class="back" href="index.html">← Лаборатория</a>
+  <div class="row"><span><a class="back" href="index.html">← Лаборатория</a><a class="ver" href="hook-rnf-v1.html" title="прошлая версия для сравнения">v1</a></span>
     <span class="btns"><button id="botBtn">Бот: выкл</button><button id="restart">Заново</button></span></div>
   <div class="row"><h1>Крючки как Rope'n'Fly</h1><span class="hud" id="hud"></span></div>
-  <div class="rules" id="rules"></div>
+  <div class="rules" id="rules">Нажми — верёвка цепляется за подсвеченную крышу. Отпусти на подъёме — «вжух» высоко вверх!</div>
 </header>
 <div id="stage">
   <canvas id="cv"></canvas>
-  <div id="aimSw"><button id="aimAngle" type="button">Угол 55°</button><button id="aimFinger" type="button">Пальцем</button></div>
   <div id="end"><div class="card">
     <img class="omEnd" src="./assets/omnom/joy.png" alt="">
     <div class="stars" id="endStars"><span>★</span><span>★</span><span>★</span></div>
@@ -30,6 +29,8 @@
 </div>
 <script>
 "use strict";
+// Версия 2 (D-53, «как Человек-паук»): прицел только «угол», зацеп за верх крыши с подсветкой цели до нажатия,
+// большие махи и высокий полёт, камера дальше, дома выше и реже, генератор с проверкой досягаемости. v1 — hook-rnf-v1.html.
 // ---- Ом Ном кадрами приложения (D-40, не рисунок кодом) ---------------------------
 // Кадры лежат в assets/omnom/ — одна папка на все прототипы; новую версию Ома Нома копируем поверх теми же именами.
 // Числа — из assets/omnom/omnom_frames.json: 6,4024 px на u, лапы = pivot, рот (кадр wide); зрачки — два слоя (левый и правый глаз), каждый ходит в эллипсе своего глаза (pupils.<кадр>.eyes).
@@ -103,59 +104,70 @@ const OMS = (() => {
   }
   return { draw, img, PUP, eyePos, last, loaded: Promise.all(waits), ready: () => NAMES.every((n) => ok(img[n])) };
 })();
-// ---- Главные числа: крутить здесь -------------------------------------------
-// Поле 320×480 u. Ягодная улица: домики — задний план (места для зацепа), пол — пружинящее варенье.
+// ---- Главные числа: крутить здесь (TUNE v2, спецификация v2.5) ------------------------
+// Окно 320×480 u, варенье y 462. Домики — задний план (места для зацепа), высота h над вареньем, крыша top = 462 − h (может быть < 0).
 const SIZE = {
   omH: 72,        // Ом Ном от лап до усика, u
   omR: 30,        // полуширина тела
   omFeet: 30,     // от центра тела до лап
   omTop: 36,      // от центра тела до макушки (верх кадра)
   mouthDy: 10,    // рот ниже центра тела
-  candyR: 17,     // конфета Ø 34 u
-  rope: 4,        // толщина верёвки
+  candyR: 20,     // конфета Ø 40 u
+  rope: 7,        // толщина верёвки (u; при зуме 0,5 — 3,5 u экрана)
 };
 const TUNE = {
-  gravity: 784, iterations: 25, linkLen: 12, nodeWeight: 0.02, // верёвка — Верле как в hook (только вид)
+  gravity: 1300, airDrag: 0.999, iterations: 25, linkLen: 14, nodeWeight: 0.02, // верёвка — Верле (только вид)
+  // прицел: только угол; цель — точка на верхнем ребре крыши (v2.1)
   rayAngle: 55,        // ° вверх-вправо (?angle=)
-  rayMax: 360,         // u, длина верёвки/луча
-  ropeMin: 40,         // u, ближе не цепляем — берём следующее пересечение
-  sweetBoost: 1.12,    // «вжух»: множитель скорости
-  sweetMin: 15, sweetMax: 60, // ° к горизонту вправо-вверх
-  candyKick: 25,       // u/с вдоль движения за конфету
-  bounceUp: 560, bounceVx: 140, fallPenalty: 2, // варенье
-  maxSpeed: 700, airDrag: 0.999,
-  jumpVx: 220, jumpVy: -120, // первое нажатие с коробки
-  eatDist: 34, magnet: 140, magnetZone: 17, // как hook
+  aimCone: 30,         // ° допуск от rayAngle: 25…85°
+  liftDy: 60,          // u: крыша выше центра Ома Нома хотя бы на столько
+  roofInset: 8,        // u: отступ точки от углов крыши
+  aimHyst: 6,          // °: прежняя цель держится, пока её dev ≤ лучший + aimHyst
+  ropeMin: 80, ropeMax: 600, // u
+  missRay: 120,        // u: выстрел промаха и серый луч «цели нет»
+  // динамика «как Человек-паук» (v2.2)
+  swingMin: 350,       // u/с: касательная скорость при зацепе поднимается до этой («рывок паутины»)
+  backDrag: 0.985,     // ×/тик скорости на верёвке, пока vx < 0 (обратный мах гаснет)
+  sweetBoost: 1.08,    // «вжух»: множитель скорости
+  sweetMin: 25, sweetMax: 60, // окно угла скорости, ° к горизонту вправо-вверх (спецификация 15…70; сужено по калибровке — первая ручка v2.6)
+  sweetLift: 160,      // u: «вжух» гарантирует взлёт центра на столько выше точки зацепа
+  capVx: 950, capVy: 1400,
+  candyKick: 30,       // u/с вдоль движения за конфету
+  bounceUp: 800, bounceVx: 200, fallPenalty: 2, // варенье-батут
+  jumpVx: 300, jumpVy: -200, // первое нажатие с коробки
+  eatDist: 40, magnet: 140, magnetZone: 20,
   roundSec: 60, finaleSec: 1.2, fragFade: 1.2, shootSec: 0.07, retractSec: 0.15,
-  // улица
-  gapMin: 25, gapMax0: 50, gapGrow: 0.003, gapCap: 115,
-  wMin: 90, wMax0: 200, wShrink: 0.002, wFloor: 130,
-  topMin: 90, topCap: 290, safeY: 300,
-  // камера
-  camAnchor: 0.25, camLerp: 0.12, zoomMin: 0.82, zoomV0: 300, zoomV1: 650, zoomLerp: 0.05,
-  // ошибки умения бота s (как в hook): доля «рассеянных» фаз (1−s)^randPow; ошибка момента ±(offBase + offSlope·(1−s)) тиков; запаздывание delaySlope·(1−s) тиков
+  // улица (v2.3)
+  gapMin: 140, gapMax0: 220, gapGrow: 0.004, gapCap: 380,
+  wMin: 110, wMax0: 220, wShrink: 0.002, wFloor: 160,
+  hMax: 720, hMin0: 440, hMinG: 0.6, scanH: [200, 380], genRetry: 6, genScanStep: 5,
+  // камера (v2.3)
+  zoomBase: 0.5, zoomFast: 0.44, zoomMin: 0.40, zoomV0: 500, zoomV1: 900, zoomLerp: 0.06,
+  camTopMargin: 100, camYLerp: 0.12, camAnchor: 0.18, camLerp: 0.12,
+  speedLines: 700,
+  // ошибки умения бота s (как v1): доля «рассеянных» фаз (1−s)^randPow; ошибка момента ±(offBase + offSlope·(1−s)) тиков; запаздывание delaySlope·(1−s) тиков
   botRandPow: 4, botOffBase: 3, botOffSlope: 9, botDelaySlope: 8,
-  // отличие от hook: поздний «хлоп» по варенью здесь стоит дорого (зацеп не достаёт ниже крыш), поэтому ошибка момента на нажатие ×0,2, на отпускание ×1
-  botErrPress: 0.2, botErrRelease: 1,
-  botAimNoise: 1,      // множитель ошибки прицела пальцем (σ 20/10/5 u)
+  botErrPress: 0.2, botErrRelease: 1, // множители ошибки момента на нажатие и на отпускание
+  botBounceCost: 400,  // цена варенья в оценке прокрутки (как v1; 1500 по замеру ничего не меняет)
 };
-// пороги звёзд по режимам (метры) — выставлены по замеру ботов, см. отчёт и calib()
-const STARS = { angle: [0, 0], finger: [0, 0] };
+// пороги звёзд (метры) — по калибровке v2, см. calib()
+let STARS = [0, 0];
 // ----------------------------------------------------------------------------
 const W = 320, H = 480, DT = 1 / 60, FLOOR = 462;
 const START = { x: 80, bodyY: 300, boxX0: 40, boxX1: 120, boxTop: 330 };
+const FIRST = { x0: 200, w: 180, h: 560 }; // первый домик: top −98; с коробки цель (358,7; −98), L 485,9
 const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
 const stage = document.getElementById("stage");
 const hudEl = document.getElementById("hud");
 const endEl = document.getElementById("end");
-const rulesEl = document.getElementById("rules");
 const QS = new URLSearchParams(location.search);
 if (QS.has("sec")) TUNE.roundSec = Math.max(5, +QS.get("sec") || 60);
 if (QS.has("angle")) TUNE.rayAngle = Math.max(20, Math.min(80, +QS.get("angle") || 55));
-let AIM = (QS.get("aim") === "finger" || QS.get("aim") === "tap") ? "finger" : "angle";
 const rad = (d) => d * Math.PI / 180;
 const lerp = (a, b, t) => a + (b - a) * t;
-const star2 = () => STARS[AIM][0], star3 = () => STARS[AIM][1];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const star2 = () => STARS[0], star3 = () => STARS[1];
+const BEST_KEY = "lab.best.hook-rnf-v2";
 
 // Детерминированный генератор (mulberry32)
 class Prng {
@@ -170,87 +182,113 @@ let SIM = false;  // идёт прокрутка планировщика бот
 let NOFX = false; // тихий прогон (калибровка): без эффектов и DOM, но со статистикой
 const fx = () => !SIM && !NOFX;
 
+// ---- Цель зацепа: точка на верхнем ребре крыши (v2.1) -----------------------------------
+// Домик-кандидат: x1 − inset > x, x0 ≤ x + ropeMax, крыша выше центра на ≥ liftDy. Точка P — где луч rayAngle пересёк
+// линию крыши, зажатая в ребро с отступом inset; годится, если |угол к P − rayAngle| ≤ aimCone и ropeMin ≤ |P − O| ≤ ropeMax.
+function houseAim(b, x, y, tn) {
+  const ins = TUNE.roofInset;
+  if (!(b.x1 - ins > x) || b.x0 > x + TUNE.ropeMax) return null;
+  const dy = y - b.top; if (dy < TUNE.liftDy) return null;
+  const lo = Math.max(b.x0 + ins, x + 1), hi = b.x1 - ins;
+  const px = Math.min(hi, Math.max(lo, x + dy / tn)), dx = px - x;
+  const dev = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI - TUNE.rayAngle), L = Math.hypot(dx, dy);
+  if (dev > TUNE.aimCone || L < TUNE.ropeMin || L > TUNE.ropeMax) return null;
+  return { x: px, y: b.top, dev, L, house: b.id };
+}
+// лучшая цель среди домиков list[i0…]: наименьший dev (округлённый до 1°), при равенстве — ближний; гистерезис по prevId
+function aimIn(list, i0, x, y, prevId) {
+  const tn = Math.tan(rad(TUNE.rayAngle));
+  let best = null, bestR = 1e9, prev = null;
+  for (let i = i0; i < list.length; i++) {
+    const b = list[i]; if (b.x0 > x + TUNE.ropeMax) break;
+    const c = houseAim(b, x, y, tn); if (!c) continue;
+    if (c.house === prevId) prev = c;
+    const r = Math.round(c.dev);
+    if (r < bestR || (r === bestR && c.L < best.L)) { best = c; bestR = r; }
+  }
+  if (prev && prev !== best && prev.dev <= best.dev + TUNE.aimHyst) return prev;
+  return best;
+}
+function firstIdx(bl, x) { // первый домик с x1 − inset > x
+  let lo = 0, hi = bl.length; const xx = x + TUNE.roofInset;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (bl[m].x1 <= xx) lo = m + 1; else hi = m; }
+  return lo;
+}
+function aimAt(x, y, prevId) { const bl = S.WD.bld; return aimIn(bl, firstIdx(bl, x), x, y, prevId); }
+// цель Ома Нома сейчас (с гистерезисом); на верёвке цели нет
+function updateTarget() {
+  if (S.rope) { S.tgt = null; return; }
+  const o = S.om, prev = S.tgt;
+  const t = aimAt(o.x, o.y, prev ? prev.house : -1);
+  if (t && (!prev || prev.house !== t.house) && fx()) S.tgtBlink = 0.1;
+  if (t && (!prev || prev.house !== t.house)) S.tgtSwitch++;
+  S.tgt = t;
+}
+
 // ---- Мир: домики улицы ---------------------------------------------------------
-// Домик: x0, x1, top (крыша), col (цвет-ягода), v (вариант окон). Низ — варенье (FLOOR).
+// Домик: x0, x1, top (крыша), h, col (цвет-ягода), v (вариант окон), g (промежуток перед ним).
 // Мир общий для настоящего раунда и прокруток бота: растёт только вперёд и целиком зависит от seed.
 const gapMaxAt = (d) => Math.min(TUNE.gapCap, TUNE.gapMax0 + TUNE.gapGrow * d);
 const wMaxAt = (d) => Math.max(TUNE.wFloor, TUNE.wMax0 - TUNE.wShrink * d);
-const topMaxAt = (g) => Math.max(TUNE.topMin, Math.min(TUNE.topCap, TUNE.safeY - 46 - 1.43 * g));
+const hMinAt = (g) => Math.min(TUNE.hMax, TUNE.hMin0 + TUNE.hMinG * (g - TUNE.gapMin));
+function mkHouse(id, x0, w, h, col, v, g) { return { id, x0, x1: x0 + w, top: FLOOR - h, h, col, v, g }; }
 function newWorld(seed) {
-  const WD = { seed, rng: new Prng((Math.imul(seed >>> 0, 2654435761) ^ 0x9E3779B9) >>> 0), bld: [], cand: [], genX: 320, auto: true, n: 0 };
-  WD.bld.push({ id: 0, x0: 160, x1: 320, top: 100, col: 0, v: 0, g: 0 });
+  const WD = { seed, rng: new Prng((Math.imul(seed >>> 0, 2654435761) ^ 0x9E3779B9) >>> 0), bld: [], cand: [], auto: true,
+    tries: 0, rerolls: 0, halves: 0, fails: 0 };
+  const b = mkHouse(0, FIRST.x0, FIRST.w, FIRST.h, 0, 0, 0);
+  WD.bld.push(b); houseCandies(WD, null, b);
   return WD;
+}
+// досягаемость нового домика B после A: скан x от A.x0 до B.x0 + 5 на высотах scanH над вареньем — цель везде.
+// Шаг genScanStep 5 по сетке кратных 5 u (в спецификации 10: при 10 между узлами оставались «окна» шириной < 10 u без цели — 50 точек из 800 тыс. в проверке шагом 5)
+function reachOK(A, B) {
+  const list = [A, B], st = TUNE.genScanStep;
+  for (let x = Math.floor(A.x0 / st) * st; x <= B.x0 + 5 + 1e-9; x += st)
+    for (const hs of TUNE.scanH) if (!aimIn(list, 0, x, FLOOR - hs, -1)) return false;
+  return true;
 }
 function genMore(WD, xTo) {
   if (!WD.auto) return;
-  while (WD.genX < xTo) {
-    const last = WD.bld[WD.bld.length - 1], r = WD.rng;
-    const g = lerp(TUNE.gapMin, gapMaxAt(last.x1 + TUNE.gapMin), r.next()); // d = левый край домика ≥ last.x1 + gapMin: gapMax(d) только растёт
-    const x0 = last.x1 + g;
-    const w = lerp(TUNE.wMin, wMaxAt(x0), r.next());
-    const top = Math.round(lerp(TUNE.topMin, topMaxAt(g), r.next()));
-    const b = { id: last.id + 1, x0, x1: x0 + w, top, col: (last.col + 1 + Math.floor(r.next() * 2)) % 3, v: Math.floor(r.next() * 3), g }; // соседние домики разного цвета
-    WD.bld.push(b);
-    // конфеты: 2 на дуге «хорошего маха» перед домиком, 1 над широким промежутком
-    for (const th of [20, 45]) {
-      const t = rad(th);
-      addCand(WD, b.x0 - 180 * Math.sin(t), b.top + 40 + 180 * Math.cos(t));
+  while (WD.bld[WD.bld.length - 1].x1 < xTo) {
+    const A = WD.bld[WD.bld.length - 1], r = WD.rng, d0 = A.x1 + TUNE.gapMin;
+    let g = 0, w = 0, h = 0, ok = false, B = null;
+    for (let k = 0; k <= TUNE.genRetry && !ok; k++) { // первая попытка и до genRetry перебросов
+      g = lerp(TUNE.gapMin, gapMaxAt(d0), r.next());
+      w = lerp(TUNE.wMin, wMaxAt(A.x1 + g), r.next());
+      h = lerp(hMinAt(g), TUNE.hMax, r.next());
+      B = mkHouse(A.id + 1, A.x1 + g, w, h, 0, 0, g);
+      ok = reachOK(A, B); WD.tries++; if (k > 0) WD.rerolls++;
     }
-    if (g >= 60) addCand(WD, last.x1 + g / 2, b.top + 60);
-    WD.genX = b.x1;
+    for (let k = 0; k < 12 && !ok; k++) { // дальше промежуток к gapMin по половинам (h ≥ hMin(g) остаётся верным)
+      g = (g + TUNE.gapMin) / 2; if (k === 11) g = TUNE.gapMin;
+      w = Math.min(w, wMaxAt(A.x1 + g));
+      B = mkHouse(A.id + 1, A.x1 + g, w, h, 0, 0, g);
+      ok = reachOK(A, B); WD.halves++;
+    }
+    if (!ok) WD.fails++;
+    B.col = (A.col + 1 + Math.floor(r.next() * 2)) % 3; B.v = Math.floor(r.next() * 3); // соседние домики разного цвета
+    WD.bld.push(B);
+    houseCandies(WD, A, B);
   }
+}
+// конфеты: над промежутком ≥ 160 — «верхняя» посередине, на 120 выше крыши выше-стоящего соседа;
+// у домика 2 на дуге маха: центр (x0 + w/2; top), R = min(380, h − 140), 0° и 35° вправо от вертикали вниз
+function houseCandies(WD, A, B) {
+  if (A && B.g >= 160) addCand(WD, A.x1 + B.g / 2, Math.min(A.top, B.top) - 120);
+  const cx = (B.x0 + B.x1) / 2, R = Math.min(380, B.h - 140);
+  for (const th of [0, 35]) { const t = rad(th); addCand(WD, cx + R * Math.sin(t), B.top + R * Math.cos(t)); }
 }
 function addCand(WD, x, y) {
-  y = Math.min(y, FLOOR - 60 - 20); // лапы над вареньем ≥ 60 u (лапы = рот + 20)
+  y = Math.min(y, FLOOR - 100 - 20); // лапы над вареньем ≥ 100 u (лапы = рот + 20)
   const L = WD.cand;
-  for (let i = L.length - 1; i >= 0 && i >= L.length - 14; i--) if (Math.hypot(L[i].x - x, L[i].y - y) < 44) return;
+  for (let i = L.length - 1; i >= 0 && i >= L.length - 14; i--) if (Math.hypot(L[i].x - x, L[i].y - y) < 50) return;
   L.push({ x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 });
 }
-// улица вместо генератора (dev, для проверок)
+// улица вместо генератора (dev, для проверок): houses [{x0, w, h}] (h над вареньем; можно top)
 function setStreet(houses) {
   const WD = S.WD; WD.auto = false;
-  WD.bld = houses.map((h, i) => ({ id: i, x0: h.x0, x1: h.x0 + h.w, top: h.top, col: i % 3, v: i % 3, g: 0 }));
-  WD.cand = []; S.cand = []; S.ci = 0;
-}
-
-// ---- Луч и зацеп -----------------------------------------------------------------
-// Первое пересечение луча с контуром домика на расстоянии ropeMin…maxT: вход в левую стену/крышу;
-// если Ом Ном перед домиком — выход через крышу или правую стену; ближе ropeMin — следующее пересечение.
-const RAY = { hit: false, t: 0, x: 0, y: 0, b: null };
-function castRay(ox, oy, dx, dy, maxT) {
-  RAY.hit = false; RAY.b = null;
-  if (dy > 1e-9) return RAY; // вниз не цепляем
-  const bl = S.WD.bld, xe = ox + dx * maxT, xa = Math.min(ox, xe), xb = Math.max(ox, xe);
-  let lo = 0, hi = bl.length;
-  while (lo < hi) { const m = (lo + hi) >> 1; if (bl[m].x1 < xa) lo = m + 1; else hi = m; }
-  let best = 1e9, bb = null;
-  const ymax = FLOOR + 40;
-  for (let i = lo; i < bl.length; i++) {
-    const b = bl[i]; if (b.x0 > xb) break;
-    let tin = -1e9, tout = 1e9;
-    if (dx > 1e-9 || dx < -1e-9) {
-      let a = (b.x0 - ox) / dx, c = (b.x1 - ox) / dx; if (a > c) { const q = a; a = c; c = q; }
-      if (a > tin) tin = a; if (c < tout) tout = c;
-    } else if (ox < b.x0 || ox > b.x1) continue;
-    if (dy < -1e-9) {
-      let a = (b.top - oy) / dy, c = (ymax - oy) / dy; if (a > c) { const q = a; a = c; c = q; }
-      if (a > tin) tin = a; if (c < tout) tout = c;
-    } else if (oy < b.top || oy > ymax) continue;
-    if (tout < tin || tout < TUNE.ropeMin) continue;
-    const t = tin >= TUNE.ropeMin ? tin : tout;
-    if (t > maxT || t >= best) continue;
-    if (oy + dy * t > FLOOR - 4) continue; // под вареньем не цепляем
-    best = t; bb = b;
-  }
-  if (bb) { RAY.hit = true; RAY.t = best; RAY.x = ox + dx * best; RAY.y = oy + dy * best; RAY.b = bb; }
-  return RAY;
-}
-function aimDir() { const a = rad(TUNE.rayAngle); return { dx: Math.cos(a), dy: -Math.sin(a) }; }
-// направление к точке касания; ниже Ома Нома — «промах» (dy > 0)
-function dirTo(px, py) {
-  const o = S.om; let dx = px - o.x, dy = py - o.y; const L = Math.hypot(dx, dy);
-  if (L < 3) return { dx: 0, dy: -1, below: false };
-  return { dx: dx / L, dy: dy / L, below: dy > 0.001 };
+  WD.bld = houses.map((h, i) => mkHouse(i, h.x0, h.w, h.h != null ? h.h : FLOOR - h.top, i % 3, i % 3, 0));
+  WD.cand = []; S.cand = []; S.ci = 0; S.tgt = null;
 }
 
 // ---- Новый раунд -------------------------------------------------------------------
@@ -262,21 +300,23 @@ function newRound(seed) {
     seed, WD: newWorld(seed), scene: "ready", t: TUNE.roundSec, fin: 0, held: false,
     om: { x: START.x, y: y0, px: START.x, py: y0, face: 1, chew: 0, grounded: true },
     rope: null, shot: null, frags: [], pops: [], rings: [], cand: [], ci: 0,
-    camX: 0, zoom: 1, maxX: START.x, candies: 0, combo: 0, bestCombo: 0, bounces: 0, misses: 0, sweet: 0,
+    camX: 0, camBot: H, zoom: TUNE.zoomBase, maxX: START.x, candies: 0, combo: 0, bestCombo: 0, bounces: 0, misses: 0, sweet: 0,
     gapBounce: new Set(), sadT: 0, wideT: 0, steps: 0, phase: 0, phaseAt: 0, noPressUntil: 0,
-    stars: 1, best: 0, hintT: 0, lastAim: { hit: false, x: 0, y: 0 }, tutor: true, roundNo: (S ? S.roundNo + 1 : 0),
+    stars: 1, best: 0, hintT: 0, tutor: true, roundNo: (S ? S.roundNo + 1 : 0),
+    tgt: null, tgtBlink: 0, tgtSwitch: 0, peak: null, peaks: [], playTicks: 0, ropeTicks: 0, vSum: 0, vxSum: 0, capTicks: 0,
   };
   S.camX = camTarget();
   ensureWorld();
+  updateTarget();
   botReset();
   if (!NOFX) { endEl.style.display = "none"; updateHud(); }
 }
 function ensureWorld() {
   const o = S.om;
-  genMore(S.WD, o.x + 1700);
+  genMore(S.WD, o.x + 2000);
   const L = S.WD.cand;
-  while (S.ci < L.length && L[S.ci].x < o.x + 900) { const c = L[S.ci++]; if (c.x > o.x - 400) S.cand.push({ x: c.x, y: c.y }); }
-  if (S.steps % 30 === 0 && S.cand.length) { let j = 0; for (const c of S.cand) if (c.x > o.x - 500) S.cand[j++] = c; S.cand.length = j; }
+  while (S.ci < L.length && L[S.ci].x < o.x + 1300) { const c = L[S.ci++]; if (c.x > o.x - 500) S.cand.push({ x: c.x, y: c.y }); }
+  if (S.steps % 30 === 0 && S.cand.length) { let j = 0; for (const c of S.cand) if (c.x > o.x - 600) S.cand[j++] = c; S.cand.length = j; }
 }
 
 // ---- Верёвка (вид): Верле, последний узел прибит к Ому Ному ---------------------
@@ -299,48 +339,49 @@ function relax(nodes, rest) {
   for (let it = 0; it < TUNE.iterations; it++)
     for (let i = 1; i < nodes.length; i++) solve(nodes[i - 1], nodes[i], rest);
 }
+const vel = (o) => [(o.x - o.px) / DT, (o.y - o.py) / DT];
+function setVel(o, vx, vy) { o.px = o.x - vx * DT; o.py = o.y - vy * DT; }
 
 // ---- Действия игрока --------------------------------------------------------------
 const userLocked = () => S.scene === "finale" || S.scene === "end";
-// pt — точка касания (мировые u) в режиме «пальцем»; без неё — луч под rayAngle
-function fire(pt) {
+function fire() {
   const o = S.om;
-  const d = (AIM === "finger" && pt) ? dirTo(pt.x, pt.y) : { ...aimDir(), below: false };
   const scoring = S.scene !== "end";
-  if (o.grounded) { // первое нажатие с коробки — ещё и прыжок
-    o.px = o.x - TUNE.jumpVx * DT; o.py = o.y - TUNE.jumpVy * DT; o.grounded = false;
-  }
-  if (fx() && AIM === "finger" && pt) S.rings.push({ x: pt.x, y: pt.y, life: 0.3, max: 0.3, tap: true });
-  const hit = !d.below && castRay(o.x, o.y, d.dx, d.dy, TUNE.rayMax).hit;
+  if (o.grounded) { setVel(o, TUNE.jumpVx, TUNE.jumpVy); o.grounded = false; } // первое нажатие с коробки — ещё и прыжок
+  updateTarget();
+  const t = S.tgt;
   S.phase++; S.phaseAt = S.steps;
-  if (hit) {
-    const L = RAY.t, ax = RAY.x, ay = RAY.y;
+  if (t) { // верёвка ровно в подсвеченную точку, L = расстояние
+    const ax = t.x, ay = t.y, L = Math.hypot(ax - o.x, ay - o.y);
+    let [vx, vy] = vel(o);
+    // «рывок паутины»: касательная скорость вперёд (вправо) не меньше swingMin
+    const tx = -(ay - o.y) / L, ty = (ax - o.x) / L, vt = vx * tx + vy * ty;
+    if (vt < TUNE.swingMin) { vx += (TUNE.swingMin - vt) * tx; vy += (TUNE.swingMin - vt) * ty; setVel(o, vx, vy); }
     let nodes = null, n = 1;
     if (fx()) {
-      const vx = (o.x - o.px) / DT, vy = (o.y - o.py) / DT;
       n = Math.max(4, Math.ceil(L / TUNE.linkLen)); nodes = [];
-      for (let i = 0; i <= n; i++) { const t = i / n; nodes.push(P(ax + (o.x - ax) * t, ay + (o.y - ay) * t, (i === 0 || i === n) ? 0 : TUNE.nodeWeight, vx * t, vy * t)); }
+      for (let i = 0; i <= n; i++) { const k = i / n; nodes.push(P(ax + (o.x - ax) * k, ay + (o.y - ay) * k, (i === 0 || i === n) ? 0 : TUNE.nodeWeight, vx * k, vy * k)); }
     }
-    S.rope = { ax, ay, L, nodes, rest: L / n, shoot: 0 };
-    S.lastAim = { hit: true, x: ax, y: ay };
-    S.shot = null;
+    peakDone();
+    S.rope = { ax, ay, L, nodes, rest: L / n, shoot: 0, house: t.house };
+    S.tgt = null; S.shot = null;
   } else {
     if (scoring) S.misses++;
     S.noPressUntil = S.steps + 7;
-    S.lastAim = { hit: false, x: o.x + d.dx * TUNE.rayMax, y: o.y + d.dy * TUNE.rayMax };
-    if (fx()) S.shot = { t: 0, dx: d.dx, dy: d.dy };
+    const a = rad(TUNE.rayAngle);
+    if (fx()) S.shot = { t: 0, dx: Math.cos(a), dy: -Math.sin(a) };
   }
 }
-function doHold(pt) {
+function doHold() {
   S.held = true;
   if (S.scene === "ready") S.scene = "play";
-  if (!S.rope) fire(pt);
+  if (!S.rope) fire();
 }
 function doRelease() {
   const was = S.held; S.held = false;
   if (!S.rope) { if (was) { S.phase++; S.phaseAt = S.steps; } return; }
   const r = S.rope, o = S.om;
-  let vx = (o.x - o.px) / DT, vy = (o.y - o.py) / DT;
+  let [vx, vy] = vel(o);
   const ang = Math.atan2(-vy, vx) * 180 / Math.PI;
   const sweet = vx > 0 && ang >= TUNE.sweetMin && ang <= TUNE.sweetMax;
   if (fx() && r.nodes) {
@@ -357,23 +398,42 @@ function doRelease() {
   S.phase++; S.phaseAt = S.steps;
   if (sweet) {
     vx *= TUNE.sweetBoost; vy *= TUNE.sweetBoost;
+    // гарантированный взлёт: центр поднимется на sweetLift выше точки зацепа
+    const depth = Math.max(0, o.y - r.ay), up = Math.sqrt(2 * TUNE.gravity * (depth + TUNE.sweetLift));
+    if (vy > -up) vy = -up;
     S.sweet++; S.wideT = 0.25;
+    if (!SIM && S.scene !== "end") S.peak = { ay: r.ay, minY: o.y };
     pop(o.x + 12, o.y - 80, "вжух", "#FFC93C");
     if (fx()) S.rings.push({ x: o.x, y: o.y, life: 0.45, max: 0.45 });
   }
-  const sp = Math.hypot(vx, vy); if (sp > TUNE.maxSpeed) { vx *= TUNE.maxSpeed / sp; vy *= TUNE.maxSpeed / sp; }
-  o.px = o.x - vx * DT; o.py = o.y - vy * DT;
-  pop(o.x - 6, o.y - 42, "хрум", "#FBEBD0");
+  vx = clamp(vx, -TUNE.capVx, TUNE.capVx); vy = clamp(vy, -TUNE.capVy, TUNE.capVy);
+  setVel(o, vx, vy);
+  pop(o.x - 6, o.y - 46, "хрум", "#FBEBD0");
+  updateTarget();
 }
-function hold(pt) { if (userLocked()) return; doHold(pt); }
+function hold() { if (userLocked()) return; doHold(); }
 function release() { if (userLocked()) return; doRelease(); }
 function pop(x, y, txt, color) { if (fx()) S.pops.push({ x, y, txt, color, life: 0.8 }); }
+// пик полёта после «вжух» над крышей своего зацепа; reached — полёт дошёл до верхней точки (не зацепился раньше и не шлёпнулся)
+function peakDone(reached) { if (S.peak) { S.peaks.push({ h: S.peak.ay - S.peak.minY, reached: !!reached }); S.peak = null; } }
 
 // ---- Шаг симуляции ------------------------------------------------------------------
-const CAM_FF = (1 - TUNE.camLerp) / TUNE.camLerp; // опережение камеры, чтобы при постоянной скорости Ом Ном стоял на 0,25 ширины
+const CAM_FF = (1 - TUNE.camLerp) / TUNE.camLerp; // опережение камеры, чтобы при постоянной скорости Ом Ном стоял на camAnchor ширины
 function camTarget() {
   const o = S.om, vx = (o.x - o.px) / DT;
   return o.x + vx * DT * CAM_FF - TUNE.camAnchor * W / S.zoom;
+}
+// зум = clamp(min(zSpeed, zHeight), zoomMin, zoomBase); не хватает zoomMin — камера поднимается (низ кадра выше варенья)
+function camStep(snap) {
+  const o = S.om, sp = Math.hypot(o.x - o.px, o.y - o.py) / DT;
+  const zS = lerp(TUNE.zoomBase, TUNE.zoomFast, clamp((sp - TUNE.zoomV0) / (TUNE.zoomV1 - TUNE.zoomV0), 0, 1));
+  const needTop = o.y - SIZE.omTop - TUNE.camTopMargin;
+  const zH = H / Math.max(1, H - needTop); // низ окна (y 480, варенье 462 у самого низа) … над головой ≥ camTopMargin
+  const zt = clamp(Math.min(zS, zH), TUNE.zoomMin, TUNE.zoomBase);
+  S.zoom = snap ? zt : S.zoom + (zt - S.zoom) * TUNE.zoomLerp;
+  const visTop = H - H / S.zoom, bt = needTop < visTop ? needTop + H / S.zoom : H;
+  S.camBot = snap ? bt : S.camBot + (bt - S.camBot) * TUNE.camYLerp;
+  S.camX = snap ? camTarget() : S.camX + (camTarget() - S.camX) * TUNE.camLerp;
 }
 function step() {
   if (SIM) simControl(); else if (BOT.on) botTick();
@@ -381,15 +441,16 @@ function step() {
   const o = S.om;
   if (S.scene === "play") {
     S.t -= DT;
-    if (S.t <= 0) { S.t = 0; S.scene = "finale"; S.fin = TUNE.finaleSec; S.held = false; if (SIM) { S.scene = "end"; return; } }
+    if (S.t <= 0) { S.t = 0; S.scene = "finale"; S.fin = TUNE.finaleSec; S.held = false; peakDone(); if (SIM) { S.scene = "end"; return; } }
   } else if (S.scene === "finale") {
     S.fin -= DT;
     autopilot();
     if (S.fin <= 0) { endRound(); if (SIM) return; }
   } else if (S.scene === "end") autopilot();
   const scoring = S.scene !== "end";
+  const pmx = o.x, pmy = o.y + SIZE.mouthDy;
 
-  if (!o.grounded) integrate(o, S.rope ? 1 : TUNE.airDrag);
+  if (!o.grounded) integrate(o, S.rope ? (o.x - o.px < 0 ? TUNE.backDrag : 1) : TUNE.airDrag);
   if (S.rope) {
     const r = S.rope;
     if (r.nodes) { // вид верёвки: узлы живут сами, последний — на Оме Номе
@@ -400,59 +461,65 @@ function step() {
     if (d > r.L) { o.x = r.ax + dx / d * r.L; o.y = r.ay + dy / d * r.L; }
     if (r.nodes) { const l = r.nodes[r.nodes.length - 1]; l.x = o.x; l.y = o.y; l.px = o.x; l.py = o.y; relax(r.nodes, r.rest); }
   }
-  // потолок скорости
-  { const vx = o.x - o.px, vy = o.y - o.py, sp = Math.hypot(vx, vy) / DT;
-    if (sp > TUNE.maxSpeed) { const k = TUNE.maxSpeed / sp; o.px = o.x - vx * k; o.py = o.y - vy * k; } }
-  // верх кадра: удар vy × −0,3
-  { const lim = H - H / S.zoom + SIZE.omTop;
-    if (o.y < lim) { const vy = (o.y - o.py) / DT; o.y = lim; if (vy < 0) o.py = lim + vy * 0.3 * DT; } }
-  // варенье
+  // пределы скорости по осям
+  { const cx = TUNE.capVx * DT, cy = TUNE.capVy * DT, vx = o.x - o.px, vy = o.y - o.py;
+    if (vx > cx) o.px = o.x - cx; else if (vx < -cx) o.px = o.x + cx;
+    if (vy > cy) o.py = o.y - cy; else if (vy < -cy) o.py = o.y + cy; }
+  // варенье (верха кадра нет — небо открыто)
   if (!o.grounded && o.y + SIZE.omFeet >= FLOOR) bounce(scoring);
 
   if (scoring && o.x > S.maxX) S.maxX = o.x;
   const vxs = o.x - o.px; if (Math.abs(vxs) > 0.3) o.face = Math.sign(vxs);
 
-  // конфеты: съесть или слабо притянуть (не дальше 1 радиуса конфеты)
+  // конфеты: съесть (по отрезку пути рта за тик) или слабо притянуть
   if (scoring) {
-    const mx = o.x, my = o.y + SIZE.mouthDy, eat2 = TUNE.eatDist ** 2, zone2 = (TUNE.eatDist + TUNE.magnetZone) ** 2;
+    const mx = o.x, my = o.y + SIZE.mouthDy, sx = mx - pmx, sy = my - pmy, s2 = sx * sx + sy * sy;
+    const eat2 = TUNE.eatDist ** 2, zone2 = (TUNE.eatDist + TUNE.magnetZone) ** 2;
     const L = S.cand;
     for (let i = L.length - 1; i >= 0; i--) {
-      const c = L[i], dx = mx - c.x; if (dx > 70 || dx < -70) continue;
-      const dy = my - c.y, d2 = dx * dx + dy * dy;
-      if (d2 < eat2) {
+      const c = L[i]; if (c.x - mx > 90 || mx - c.x > 120) continue;
+      let u = s2 > 1e-9 ? ((c.x - pmx) * sx + (c.y - pmy) * sy) / s2 : 1; u = u < 0 ? 0 : u > 1 ? 1 : u;
+      const qx = pmx + sx * u - c.x, qy = pmy + sy * u - c.y, dseg2 = qx * qx + qy * qy;
+      if (dseg2 < eat2) {
         L[i] = L[L.length - 1]; L.pop();
         S.candies++; S.combo++; S.bestCombo = Math.max(S.bestCombo, S.combo); o.chew = 0.3;
         // сахарный рывок вдоль движения
-        let vx = (o.x - o.px) / DT, vy = (o.y - o.py) / DT; const sp = Math.hypot(vx, vy);
+        const [vx, vy] = vel(o), sp = Math.hypot(vx, vy);
         const ux = sp > 1 ? vx / sp : 1, uy = sp > 1 ? vy / sp : 0;
-        const sp0 = sp; o.px -= ux * TUNE.candyKick * DT; o.py -= uy * TUNE.candyKick * DT;
-        S.lastKick = { from: sp0, to: Math.hypot(o.x - o.px, o.y - o.py) / DT };
-        pop(c.x, c.y - 24, S.combo > 1 ? "×" + S.combo : "+1", "#FFD23F");
-      } else if (d2 < zone2) {
-        const d = Math.sqrt(d2), m = Math.min(d, TUNE.magnet * DT);
-        c.x += dx / d * m; c.y += dy / d * m;
+        setVel(o, vx + ux * TUNE.candyKick, vy + uy * TUNE.candyKick);
+        S.lastKick = { from: sp, to: Math.hypot(o.x - o.px, o.y - o.py) / DT };
+        pop(c.x, c.y - 30, S.combo > 1 ? "×" + S.combo : "+1", "#FFD23F");
+        continue;
       }
+      const dx = mx - c.x, dy = my - c.y, d2 = dx * dx + dy * dy;
+      if (d2 < zone2) { const d = Math.sqrt(d2), m = Math.min(d, TUNE.magnet * DT); c.x += dx / d * m; c.y += dy / d * m; }
     }
   }
+  // статистика раунда (калибровка и getState): доля времени на верёвке, средняя скорость, пик после «вжух»
+  if (!SIM && S.scene === "play") {
+    const vx = (o.x - o.px) / DT, vy = (o.y - o.py) / DT;
+    S.playTicks++; if (S.rope) S.ropeTicks++; S.vSum += Math.hypot(vx, vy); S.vxSum += vx;
+    if (vx >= TUNE.capVx - 1) S.capTicks++;
+  }
+  if (S.peak) { S.peak.minY = Math.min(S.peak.minY, o.y); if (o.y - o.py > 0) peakDone(true); }
   if (o.chew > 0) o.chew -= DT;
   if (S.sadT > 0) S.sadT -= DT;
   if (S.wideT > 0) S.wideT -= DT;
+  if (S.tgtBlink > 0) S.tgtBlink -= DT;
   S.hintT += DT;
   if (fx()) tickFx();
 
-  // камера: в обе стороны, отдаление по скорости
-  const sp = Math.hypot(o.x - o.px, o.y - o.py) / DT;
-  const zt = 1 - (1 - TUNE.zoomMin) * Math.max(0, Math.min(1, (sp - TUNE.zoomV0) / (TUNE.zoomV1 - TUNE.zoomV0)));
-  S.zoom += (zt - S.zoom) * TUNE.zoomLerp;
-  S.camX += (camTarget() - S.camX) * TUNE.camLerp;
+  camStep(false);
   ensureWorld();
+  updateTarget();
 }
 function bounce(scoring) {
   const o = S.om;
   o.y = FLOOR - SIZE.omFeet;
-  o.px = o.x - TUNE.bounceVx * DT; o.py = o.y + TUNE.bounceUp * DT; // (vx, vy) = (140, −560)
+  setVel(o, TUNE.bounceVx, -TUNE.bounceUp);
   S.rope = null; // рвётся без «хрум»
   S.phase++; S.phaseAt = S.steps;
+  peakDone();
   if (!scoring) return;
   S.t = Math.max(0, S.t - TUNE.fallPenalty);
   S.combo = 0; S.bounces++; S.sadT = 0.6; S.wideT = 0;
@@ -460,7 +527,7 @@ function bounce(scoring) {
     const bl = S.WD.bld; let k = 0; while (k < bl.length && bl[k].x1 < o.x - 0.5) k++;
     S.gapBounce.add(k < bl.length && bl[k].x0 > o.x ? k : -1 - k);
   }
-  pop(o.x, FLOOR - 118, "−" + String(TUNE.fallPenalty).replace(".", ",") + " с", "#F29B6B");
+  pop(o.x, FLOOR - 130, "−" + String(TUNE.fallPenalty).replace(".", ",") + " с", "#F29B6B");
   if (fx()) S.rings.push({ x: o.x, y: FLOOR - 4, life: 0.35, max: 0.35, jam: true });
 }
 function tickFx() { // обрывки и всплывашки живут и после конца раунда — чтобы дотаять
@@ -470,38 +537,34 @@ function tickFx() { // обрывки и всплывашки живут и по
     relax(f.nodes, f.rest);
   }
   S.frags = S.frags.filter(f => f.life > 0);
-  for (const p of S.pops) { p.life -= DT; p.y -= 30 * DT; }
+  for (const p of S.pops) { p.life -= DT; p.y -= 50 * DT; }
   S.pops = S.pops.filter(p => p.life > 0);
   for (const r of S.rings) r.life -= DT;
   S.rings = S.rings.filter(r => r.life > 0);
   if (S.shot) { S.shot.t += DT; if (S.shot.t > TUNE.shootSec + TUNE.retractSec) S.shot = null; }
 }
-// финал и после него: Ом Ном сам цепляется (если зацеп будет) и висит, чтобы не застыть в воздухе
+// финал и после него: Ом Ном сам цепляется (если цель есть) и висит, чтобы не застыть в воздухе
 function autopilot() {
   if (S.rope) return;
   if (S.held) { doRelease(); return; }
   if (S.steps < S.noPressUntil) return;
-  const o = S.om, d = aimDir();
-  if (!o.grounded && castRay(o.x, o.y, d.dx, d.dy, TUNE.rayMax).hit) doHold();
+  if (!S.om.grounded && S.tgt) doHold();
 }
 function starsFor(m) { return m >= star3() ? 3 : m >= star2() ? 2 : 1; }
 const distM = () => Math.max(0, (S.maxX - START.x) / 40);
 function endRound() {
   S.scene = "end"; S.held = false;
   if (SIM) return;
+  peakDone();
   S.stars = starsFor(distM());
   if (NOFX) return;
-  const key = "lab.best.hook-rnf-" + AIM;
   let best = 0;
-  try { best = +localStorage.getItem(key) || 0; } catch (e) {}
+  try { best = +localStorage.getItem(BEST_KEY) || 0; } catch (e) {}
   const m = Math.floor(distM());
-  if (m > best && !BOT.on) {
-    best = m;
-    try { localStorage.setItem(key, String(best)); const all = Math.max(best, +localStorage.getItem("lab.best.hook-rnf") || 0); localStorage.setItem("lab.best.hook-rnf", String(all)); } catch (e) {}
-  }
+  if (m > best && !BOT.on) { best = m; try { localStorage.setItem(BEST_KEY, String(best)); } catch (e) {} }
   S.best = best;
   document.getElementById("endScore").textContent = m + " м";
-  document.getElementById("endBest").textContent = "Рекорд (" + (AIM === "angle" ? "угол" : "пальцем") + "): " + best + " м" + (BOT.on ? " (бот не пишет)" : "");
+  document.getElementById("endBest").textContent = "Рекорд: " + best + " м" + (BOT.on ? " (бот не пишет)" : "");
   document.getElementById("endStat").textContent = "конфет " + S.candies + " · «вжух» " + S.sweet + " · варенье " + S.bounces;
   document.getElementById("endGoals").textContent = "★★ от " + star2() + " м · ★★★ от " + star3() + " м";
   [...document.querySelectorAll("#endStars span")].forEach((s, i) => s.classList.toggle("on", i < S.stars));
@@ -515,72 +578,44 @@ function updateHud() {
   const txt = "<b>" + Math.floor(m) + " м</b><span class=st>" + stars + "</span><small>🍬 " + S.candies + " · " + mm + ":" + ss + "</small>";
   if (txt !== hudTxt) { hudTxt = txt; hudEl.innerHTML = txt; }
 }
-function setRules() {
-  rulesEl.textContent = AIM === "angle"
-    ? "Нажми — верёвка стреляет по пунктиру и цепляется за домик. Отпусти на подъёме — «вжух»!"
-    : "Коснись домика — верёвка цепляется за него. Держишь — висишь, отпустишь на подъёме — «вжух»!";
-}
 
 // ---- Бот -----------------------------------------------------------------------------
 // Умение s: 0 — жмёт и отпускает наугад; 1 — каждые 3 тика прокручивает варианты «когда нажать / отпустить»
-// (k = 0…48 тиков шагом 2 или «не сейчас») на 120 тиков вперёд той же физикой и берёт лучший; дальше в прокрутке — правило наивного.
-// Ошибки: доля «рассеянных» фаз (1−s)², ошибка момента ±(3 + 9·(1−s)) тиков и запаздывание 8·(1−s) тиков (как в hook).
-// Режим «пальцем»: цель — (x0+10; top+15) ближайшего домика впереди, ошибка гаусс σ 20/10/5 u для умения 0/0,5/1.
+// (k = 0…60 тиков шагом 2 или «не сейчас») на 180 тиков вперёд той же физикой и берёт лучший; дальше в прокрутке — правило наивного.
+// Ошибки как в v1: доля «рассеянных» фаз (1−s)^botRandPow, ошибка момента ±(offBase + offSlope·(1−s)) и запаздывание delaySlope·(1−s) тиков,
+// на нажатие ×botErrPress (раннее/позднее нажатие = другая цель), на отпускание ×botErrRelease.
 const BOT = { on: false, mode: "plan", skill: 1, rng: new Prng(1), phase: -1, random: false, off: 0, randAt: 0, target: -1, lastPlan: -99, plans: 0, pend: null };
-const PLAN_K = []; for (let k = 0; k <= 48; k += 2) PLAN_K.push(k); PLAN_K.push(999);
-const PLAN_H = 120, PLAN_EVERY = 3;
+const PLAN_K = []; for (let k = 0; k <= 60; k += 2) PLAN_K.push(k); PLAN_K.push(999);
+const PLAN_H = 180, PLAN_EVERY = 3;
 function botReset() {
   BOT.rng = new Prng((S.seed * 2654435761 + Math.round(BOT.skill * 1000) * 97 + (BOT.mode === "naive" ? 5 : BOT.mode === "lazy" ? 9 : 13)) >>> 0);
   BOT.phase = -1; BOT.target = -1; BOT.pend = null; BOT.lastPlan = -99;
 }
-const sigmaFor = (s) => s <= 0.5 ? 20 - 20 * s : 10 - 10 * (s - 0.5);
-// цель пальца: ближайший домик впереди, до точки ≤ rayMax и выше Ома Нома на ≥ 40 u
-function fingerTarget(noisy) {
-  if (AIM !== "finger") return null;
-  const o = S.om, bl = S.WD.bld; let best = null, bd = 1e9;
-  for (let i = 0; i < bl.length; i++) {
-    const b = bl[i]; if (b.x1 < o.x) continue; if (b.x0 > o.x + TUNE.rayMax) break;
-    const tx = b.x0 + 10, ty = b.top + 15; if (tx <= o.x) continue;
-    const d = Math.hypot(tx - o.x, ty - o.y); if (d > TUNE.rayMax || ty > o.y - 40) continue;
-    if (d < bd) { bd = d; best = { x: tx, y: ty }; }
-  }
-  if (!best) return null;
-  if (noisy) { const sg = sigmaFor(BOT.skill) * TUNE.botAimNoise; best.x += BOT.rng.gauss() * sg; best.y += BOT.rng.gauss() * sg; }
-  return best;
-}
-// зацеп будет, если нажать сейчас (для правила наивного)
-function wouldHit() {
-  const o = S.om;
-  if (AIM === "finger") { const t = fingerTarget(false); if (!t) return false; const d = dirTo(t.x, t.y); return !d.below && castRay(o.x, o.y, d.dx, d.dy, TUNE.rayMax).hit; }
-  const d = aimDir(); return castRay(o.x, o.y, d.dx, d.dy, TUNE.rayMax).hit;
-}
-function pressNow(noisy) { // нажать как бот
-  if (AIM === "finger") { const t = fingerTarget(noisy); if (!t) return false; doHold(t); return true; }
-  doHold(); return true;
-}
-// правило наивного: нажать, когда падает и зацеп будет; отпустить, когда скорость вправо-вверх > 20° (и не раньше чем через 6 тиков)
+// правило наивного: нажать, когда падает и цель с dev ≤ 10° (или низко — центр ниже 260 u над вареньем — и цель есть);
+// отпустить при скорости вправо-вверх > 25° (не раньше чем через 6 тиков); висит > 1,5 с — отпустить
 function naiveWant() {
   const o = S.om;
   if (S.held && !S.rope) return "release";
   if (S.rope) {
     const vx = (o.x - o.px) / DT, vy = (o.y - o.py) / DT;
-    if (S.steps - S.phaseAt >= 6 && vx > 0 && Math.atan2(-vy, vx) * 180 / Math.PI > 20) return "release";
-    if (S.steps - S.phaseAt > 90) return "release"; // завис на качелях дольше 1,5 с — бросает (иначе наивный висит до конца раунда)
+    if (S.steps - S.phaseAt >= 6 && vx > 0 && Math.atan2(-vy, vx) * 180 / Math.PI > 25) return "release";
+    if (S.steps - S.phaseAt > 90) return "release";
     return null;
   }
   if (S.steps < S.noPressUntil || o.grounded) return null;
-  if ((o.y - o.py) > 0 && wouldHit()) return "hold";
+  const t = S.tgt; if (!t) return null;
+  if (((o.y - o.py) > 0 && t.dev <= 10) || o.y > FLOOR - 260) return "hold";
   return null;
 }
 function botTick() {
   if (S.scene === "finale" || S.scene === "end") return;
   const s = BOT.skill;
-  if (BOT.mode === "lazy") { if (S.scene === "ready") pressNow(false); else if (S.held) doRelease(); return; }
-  if (S.scene === "ready") { pressNow(true); return; }
+  if (BOT.mode === "lazy") { if (S.scene === "ready") doHold(); else if (S.held) doRelease(); return; }
+  if (S.scene === "ready") { doHold(); return; }
   if (BOT.mode === "naive") {
-    if (BOT.pend) { if (S.steps >= BOT.pend.at) { const a = BOT.pend.a; BOT.pend = null; if (a === "hold" && !S.rope && !S.held) pressNow(true); else if (a === "release" && S.held) doRelease(); } return; }
+    if (BOT.pend) { if (S.steps >= BOT.pend.at) { const a = BOT.pend.a; BOT.pend = null; if (a === "hold" && !S.rope && !S.held) doHold(); else if (a === "release" && S.held) doRelease(); } return; }
     const w = naiveWant();
-    if (w) { const ticks = Math.max(0, Math.round((180 + 60 * BOT.rng.gauss()) / 16.667)); if (ticks === 0) { if (w === "hold") pressNow(true); else doRelease(); } else BOT.pend = { a: w, at: S.steps + ticks }; }
+    if (w) { const ticks = Math.max(0, Math.round((180 + 60 * BOT.rng.gauss()) / 16.667)); if (ticks === 0) { if (w === "hold") doHold(); else doRelease(); } else BOT.pend = { a: w, at: S.steps + ticks }; }
     return;
   }
   if (S.held && !S.rope) { doRelease(); return; } // промах: отпустить в следующем тике
@@ -595,29 +630,37 @@ function botTick() {
   if (BOT.random) go = S.steps >= BOT.randAt;
   else {
     if (BOT.target < 0 && S.steps - BOT.lastPlan >= PLAN_EVERY) {
-      const k = plan(); BOT.lastPlan = S.steps;
+      let k = plan(); BOT.lastPlan = S.steps;
+      // «не сейчас» = правило наивного; если оно действует в этот тик — бот действует (иначе вечно откладывает и падает в варенье)
+      if (k === 999) { const w = naiveWant(); if (w && (w === "release") === !!S.rope) k = 0; }
+      if (BOT.log) { BOT.log.push([S.steps, k, BOT.off]); if (BOT.log.length > 400) BOT.log.shift(); }
       const off = Math.round(BOT.off * (S.rope ? TUNE.botErrRelease : TUNE.botErrPress));
-      if (k < 999 && k + Math.min(0, off) <= 0) BOT.target = S.steps + Math.max(0, k + off);
+      // действие раньше следующего пересчёта — фиксируем (в v1 было k ≤ 0: план «через 2 тика» терялся при пересчёте раз в 3 тика, и нажатие откладывалось до поздней длинной верёвки)
+      if (k < 999 && k + Math.min(0, off) < PLAN_EVERY) BOT.target = S.steps + Math.max(0, k + off);
     }
     go = BOT.target >= 0 && S.steps >= BOT.target;
   }
-  if (go) { if (S.rope) doRelease(); else if (S.steps >= S.noPressUntil) pressNow(true); }
+  if (go) { if (S.rope) doRelease(); else if (S.steps >= S.noPressUntil) doHold(); }
 }
 function cloneState(src) {
   const r = src.rope;
   return { ...src, om: { ...src.om },
-    rope: r ? { ax: r.ax, ay: r.ay, L: r.L, nodes: null, rest: 0, shoot: 1 } : null,
-    frags: [], pops: [], rings: [], shot: null,
-    cand: src.cand.filter(c => c.x > src.om.x - 200 && c.x < src.om.x + 900).map(c => ({ x: c.x, y: c.y })) };
+    rope: r ? { ax: r.ax, ay: r.ay, L: r.L, nodes: null, rest: 0, shoot: 1, house: r.house } : null,
+    frags: [], pops: [], rings: [], shot: null, peak: null,
+    cand: src.cand.filter(c => c.x > src.om.x - 200 && c.x < src.om.x + 1200).map(c => ({ x: c.x, y: c.y })) };
 }
-function simControl() { // политика внутри прокрутки: вынужденное действие в момент forceAt, дальше правило наивного
+// политика внутри прокрутки: вынужденное действие в момент forceAt, дальше правило наивного; «не сейчас» (k = 999) — правило наивного с начала.
+// Отличие от v1 (там «не сейчас» = ничего за всю прокрутку): после «вжух» Ом Ном больше секунды выше крыш, любое k ≤ 60 — промах,
+// а «ничего 3 с» — варенье, и бот жал впустую (27–45 промахов за раунд).
+function simControl() {
+  if (S.forceAt >= 999 + S.planAt) { const w = naiveWant(); if (w === "release") doRelease(); else if (w === "hold") doHold(); return; }
   if (S.steps < S.forceAt) return;
   if (S.steps === S.forceAt) {
-    if (S.rope || S.held) doRelease(); else if (S.steps >= S.noPressUntil) pressNow(false);
+    if (S.rope || S.held) doRelease(); else if (S.steps >= S.noPressUntil) doHold();
     return;
   }
   const w = naiveWant();
-  if (w === "release") doRelease(); else if (w === "hold") pressNow(false);
+  if (w === "release") doRelease(); else if (w === "hold") doHold();
 }
 function plan() {
   const real = S, c0 = real.candies, b0 = real.bounces, m0 = real.misses, x0 = real.om.x;
@@ -625,10 +668,10 @@ function plan() {
   SIM = true;
   try {
     for (const k of PLAN_K) {
-      S = cloneState(real); S.forceAt = S.steps + k;
+      S = cloneState(real); S.forceAt = S.steps + k; S.planAt = S.steps;
       for (let i = 0; i < PLAN_H && S.scene !== "end"; i++) step();
       const sp = Math.hypot(S.om.x - S.om.px, S.om.y - S.om.py) / DT;
-      const v = (S.om.x - x0) + 0.6 * sp - 400 * (S.bounces - b0) + 40 * (S.candies - c0) - 60 * (S.misses - m0);
+      const v = (S.om.x - x0) + 0.6 * sp - TUNE.botBounceCost * (S.bounces - b0) + 40 * (S.candies - c0) - 60 * (S.misses - m0);
       if (v > bestV + 1e-6) { bestV = v; bestK = k; }
     }
   } finally { SIM = false; S = real; }
@@ -653,41 +696,47 @@ function runBotRound(seed, spec) { // полный раунд без DOM и эф
     newRound(seed);
     let n = 0; while (S.scene !== "end" && n < 20000) { step(); n++; }
     const bl = S.WD.bld; let houses = 0; for (const b of bl) if (b.x0 < S.maxX) houses++;
-    return { m: distM(), bounces: S.bounces, misses: S.misses, sweet: S.sweet, candies: S.candies, houses, gapBounce: S.gapBounce.size, ticks: n };
+    const pt = S.playTicks || 1;
+    return { m: distM(), bounces: S.bounces, misses: S.misses, sweet: S.sweet, candies: S.candies, houses, gapBounce: S.gapBounce.size, ticks: n,
+      ropeShare: S.ropeTicks / pt, vMean: S.vSum / pt, vxMean: S.vxSum / pt, capShare: S.capTicks / pt, peaks: S.peaks.slice() };
   } finally { NOFX = sNO; S = sS; Object.assign(BOT, sB); botBtn.textContent = "Бот: " + botLabel(); }
 }
 function calib(n, opts) {
   opts = opts || {};
-  const aimSave = AIM; if (opts.aim) AIM = opts.aim === "finger" || opts.aim === "tap" ? "finger" : "angle";
   const seed0 = opts.seed0 || 1;
   const models = { lazy: { lazy: true }, naive: { naive: true }, "0": { skill: 0 }, "0.5": { skill: 0.5 }, "0.75": { skill: 0.75 }, "1": { skill: 1 } };
   const only = opts.only || Object.keys(models);
-  const out = { aim: AIM, n, seed0, tune: { sweetBoost: TUNE.sweetBoost, candyKick: TUNE.candyKick, gapGrow: TUNE.gapGrow, rayAngle: TUNE.rayAngle, roundSec: TUNE.roundSec }, models: {}, raw: {} };
-  try {
-    for (const name of only) {
-      const rs = []; const t0 = performance.now();
-      for (let i = 0; i < n; i++) rs.push(runBotRound(seed0 + i, models[name]));
-      const col = (k) => rs.map(r => r[k]);
-      const houses = col("houses").reduce((s, x) => s + x, 0) || 1;
-      out.models[name] = {
-        median: +quantile(col("m"), 0.5).toFixed(1), p10: +quantile(col("m"), 0.1).toFixed(1), p90: +quantile(col("m"), 0.9).toFixed(1),
-        bounces: quantile(col("bounces"), 0.5), bouncesMean: +(col("bounces").reduce((s, x) => s + x, 0) / n).toFixed(2),
-        misses: quantile(col("misses"), 0.5), missesMean: +(col("misses").reduce((s, x) => s + x, 0) / n).toFixed(2),
-        sweet: quantile(col("sweet"), 0.5), candies: quantile(col("candies"), 0.5),
-        bouncesPer10Houses: +(col("bounces").reduce((s, x) => s + x, 0) / houses * 10).toFixed(2),
-        gapBouncesPer10Houses: +(col("gapBounce").reduce((s, x) => s + x, 0) / houses * 10).toFixed(2),
-        ms: Math.round(performance.now() - t0),
-      };
-      out.raw[name] = col("m").map(x => +x.toFixed(1));
-    }
-    const M = out.models;
-    if (M["0.5"] && M["0.75"]) {
-      const r10 = (x) => Math.round(x / 10) * 10;
-      const s2 = r10(0.9 * M["0.5"].median), s3 = r10(0.95 * M["0.75"].median);
-      const share = (k, th) => out.raw[k] ? +(out.raw[k].filter(x => x >= th).length / n).toFixed(2) : null;
-      out.stars = { star2: s2, star3: s3, share3_075: share("0.75", s3), share3_05: share("0.5", s3), lazyBelowHalfStar2: M.lazy ? M.lazy.median < 0.5 * s2 : null };
-    }
-  } finally { AIM = aimSave; }
+  const out = { n, seed0, tune: { ...TUNE }, models: {}, raw: {} };
+  const mean = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
+  for (const name of only) {
+    const rs = []; const t0 = performance.now();
+    for (let i = 0; i < n; i++) rs.push(runBotRound(seed0 + i, models[name]));
+    const col = (k) => rs.map(r => r[k]);
+    const houses = col("houses").reduce((s, x) => s + x, 0) || 1;
+    const peaks = rs.flatMap(r => r.peaks);
+    out.models[name] = {
+      median: +quantile(col("m"), 0.5).toFixed(1), p10: +quantile(col("m"), 0.1).toFixed(1), p90: +quantile(col("m"), 0.9).toFixed(1),
+      bounces: quantile(col("bounces"), 0.5), bouncesMean: +mean(col("bounces")).toFixed(2),
+      misses: quantile(col("misses"), 0.5), missesMean: +mean(col("misses")).toFixed(2),
+      sweet: quantile(col("sweet"), 0.5), candies: quantile(col("candies"), 0.5),
+      bouncesPer10Houses: +(col("bounces").reduce((s, x) => s + x, 0) / houses * 10).toFixed(2),
+      ropeShare: +quantile(col("ropeShare"), 0.5).toFixed(3), vMean: Math.round(quantile(col("vMean"), 0.5)), vxMean: Math.round(quantile(col("vxMean"), 0.5)),
+      capShare: +quantile(col("capShare"), 0.5).toFixed(3),
+      peakOverRoof: Math.round(quantile(peaks.map(p => p.h), 0.5)), peakShare100: peaks.length ? +(peaks.filter(p => p.h >= 100).length / peaks.length).toFixed(3) : null,
+      peakReached: peaks.length ? +(peaks.filter(p => p.reached).length / peaks.length).toFixed(3) : null,
+      peakReachedOver100: (() => { const r = peaks.filter(p => p.reached); return r.length ? +(r.filter(p => p.h >= 100).length / r.length).toFixed(3) : null; })(),
+      peakReachedMedian: Math.round(quantile(peaks.filter(p => p.reached).map(p => p.h), 0.5)),
+      ms: Math.round(performance.now() - t0),
+    };
+    out.raw[name] = col("m").map(x => +x.toFixed(1));
+  }
+  const M = out.models;
+  if (M["0.5"] && M["0.75"]) {
+    const r10 = (x) => Math.round(x / 10) * 10;
+    const s2 = r10(0.9 * M["0.5"].median), s3 = r10(0.95 * M["0.75"].median);
+    const share = (k, th) => out.raw[k] ? +(out.raw[k].filter(x => x >= th).length / n).toFixed(2) : null;
+    out.stars = { star2: s2, star3: s3, share3_075: share("0.75", s3), share3_05: share("0.5", s3), lazyBelowHalfStar2: M.lazy ? M.lazy.median < 0.5 * s2 : null };
+  }
   window.__calib = out;
   return out;
 }
@@ -710,63 +759,66 @@ function fit() {
   scale = s;
 }
 function hash(n) { n = Math.imul(n ^ (n >>> 16), 0x45d9f3b); n = Math.imul(n ^ (n >>> 16), 0x45d9f3b); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; }
-// экран → мир и обратно: масштаб по низу окна, камера по x
-const toWorld = (sx, sy) => ({ x: S.camX + sx / S.zoom, y: H - (H - sy) / S.zoom });
+// мир ↔ окно (u окна 320×480): x — от camX, y — от низа окна camBot, масштаб zoom
+const toScreen = (x, y) => ({ x: (x - S.camX) * S.zoom, y: H - (S.camBot - y) * S.zoom });
 function drawBackdrop() { // небо, облака мелком и далёкие ягодные холмы; параллакс 0,5 и 0,25
   ctx.fillStyle = C.sky; ctx.fillRect(0, 0, W, H);
-  const px = S.camX * 0.5;
+  const z = S.zoom, px = S.camX * z * 0.5, rise = (H - S.camBot) * z * 0.5;
   ctx.fillStyle = C.sky2;
   for (let x = -((px % 56 + 56) % 56) + 22; x < W; x += 56) ctx.fillRect(x, 0, 18, H);
   const t0 = Math.floor(px / 190) - 1;
   for (let t = t0; t < t0 + 4; t++) {
-    const x = t * 190 - px + hash(t * 7 + 3) * 120, y = 50 + hash(t * 13 + 1) * 170, s = 0.7 + hash(t * 5 + 9) * 0.5;
+    const x = t * 190 - px + hash(t * 7 + 3) * 120, y = 40 + hash(t * 13 + 1) * 230 + rise, s = 0.6 + hash(t * 5 + 9) * 0.45;
+    if (y > H + 40) continue;
     ctx.fillStyle = C.sky3; ctx.globalAlpha = 0.9;
     ctx.beginPath(); ctx.ellipse(x, y, 30 * s, 13 * s, 0, 0, 7); ctx.ellipse(x + 22 * s, y - 8 * s, 20 * s, 14 * s, 0, 0, 7);
     ctx.ellipse(x - 20 * s, y - 4 * s, 16 * s, 11 * s, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
   }
-  const hx = S.camX * 0.25, h0 = Math.floor(hx / 150) - 1;
-  for (let t = h0; t < h0 + 5; t++) {
-    const x = t * 150 - hx + 75, r = 62 + hash(t * 3 + 2) * 40, col = ["#E7A3C7", "#B9A6E3", "#F2B0A0"][((t % 3) + 3) % 3];
-    ctx.fillStyle = col; ctx.globalAlpha = 0.55; ctx.beginPath(); ctx.arc(x, FLOOR + 30, r, Math.PI, 0); ctx.fill(); ctx.globalAlpha = 1;
+  const hx = S.camX * z * 0.25, h0 = Math.floor(hx / 120) - 1, hy = toScreen(0, FLOOR).y + 26;
+  if (hy < H + 110) for (let t = h0; t < h0 + 5; t++) {
+    const x = t * 120 - hx + 60, r = 48 + hash(t * 3 + 2) * 34, col = ["#E7A3C7", "#B9A6E3", "#F2B0A0"][((t % 3) + 3) % 3];
+    ctx.fillStyle = col; ctx.globalAlpha = 0.55; ctx.beginPath(); ctx.arc(x, hy, r, Math.PI, 0); ctx.fill(); ctx.globalAlpha = 1;
   }
 }
-function drawHouse(b) {
+function drawHouse(b, lit) {
   const w = b.x1 - b.x0, h = FLOOR + 30 - b.top, [c1, c2, c3] = BERRY[b.col];
-  ctx.fillStyle = "rgba(74,37,18,.18)"; ctx.beginPath(); ctx.roundRect(b.x0 + 5, b.top + 6, w, h, 14); ctx.fill();
-  ctx.fillStyle = c1; ctx.strokeStyle = C.ink; ctx.lineWidth = 2.6;
-  ctx.beginPath(); ctx.roundRect(b.x0, b.top, w, h, 14); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = c2; ctx.fillRect(b.x1 - 12, b.top + 12, 10, h - 14); // тень справа
-  ctx.fillStyle = c3; ctx.fillRect(b.x0 + 6, b.top + 16, 5, 70); // блик слева
+  ctx.fillStyle = "rgba(74,37,18,.18)"; ctx.beginPath(); ctx.roundRect(b.x0 + 8, b.top + 10, w, h, 18); ctx.fill();
+  ctx.fillStyle = c1; ctx.strokeStyle = C.ink; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.roundRect(b.x0, b.top, w, h, 18); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = c2; ctx.fillRect(b.x1 - 18, b.top + 16, 14, h - 18); // тень справа
+  ctx.fillStyle = c3; ctx.fillRect(b.x0 + 9, b.top + 22, 8, 110); // блик слева
   // окна
-  const cols = Math.max(1, Math.floor((w - 20) / 38)), cw = (w - 24) / cols;
-  for (let r = 0, y = b.top + 34; y < FLOOR - 46; r++, y += 46) for (let c = 0; c < cols; c++) {
-    const lit = hash(b.id * 131 + r * 7 + c * 3 + b.v) < 0.35, x = b.x0 + 12 + c * cw + (cw - 22) / 2;
-    ctx.fillStyle = lit ? "#FFE9A8" : C.cream; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.8;
-    ctx.beginPath(); ctx.roundRect(x, y, 22, 28, 6); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(x + 11, y); ctx.lineTo(x + 11, y + 28); ctx.moveTo(x, y + 14); ctx.lineTo(x + 22, y + 14); ctx.stroke();
+  const cols = Math.max(1, Math.floor((w - 24) / 44)), cw = (w - 30) / cols;
+  ctx.lineWidth = 2.6;
+  for (let r = 0, y = b.top + 44; y < FLOOR - 56; r++, y += 58) for (let c = 0; c < cols; c++) {
+    const lit2 = hash(b.id * 131 + r * 7 + c * 3 + b.v) < 0.35, x = b.x0 + 15 + c * cw + (cw - 28) / 2;
+    ctx.fillStyle = lit2 ? "#FFE9A8" : C.cream; ctx.strokeStyle = C.ink;
+    ctx.beginPath(); ctx.roundRect(x, y, 28, 36, 8); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + 14, y); ctx.lineTo(x + 14, y + 36); ctx.moveTo(x, y + 18); ctx.lineTo(x + 28, y + 18); ctx.stroke();
   }
   // семечки-точки
   ctx.fillStyle = "rgba(255,255,255,.35)";
-  for (let i = 0; i < Math.floor(w / 30); i++) { const x = b.x0 + 14 + hash(b.id * 17 + i) * (w - 28), y = FLOOR - 40 - hash(b.id * 29 + i) * 30; ctx.beginPath(); ctx.ellipse(x, y, 2.5, 4, 0.5, 0, 7); ctx.fill(); }
-  // крыша — шляпка из листиков (зацеп — на линии крыши)
-  ctx.fillStyle = "#5FAE2E"; ctx.strokeStyle = C.ink; ctx.lineWidth = 2;
-  const n = Math.max(3, Math.round(w / 34)), lw = w / n;
+  for (let i = 0; i < Math.floor(w / 30); i++) { const x = b.x0 + 16 + hash(b.id * 17 + i) * (w - 32), y = FLOOR - 40 - hash(b.id * 29 + i) * 40; ctx.beginPath(); ctx.ellipse(x, y, 3.5, 5.5, 0.5, 0, 7); ctx.fill(); }
+  // крыша — шляпка из листиков; цель — крыша светлеет
+  if (lit) { ctx.fillStyle = "rgba(255,240,160,.55)"; ctx.beginPath(); ctx.roundRect(b.x0 - 8, b.top - 32, w + 16, 42, 14); ctx.fill(); }
+  ctx.fillStyle = lit ? "#A6E46A" : "#5FAE2E"; ctx.strokeStyle = C.ink; ctx.lineWidth = 3;
+  const n = Math.max(3, Math.round(w / 40)), lw = w / n;
   for (let i = 0; i < n; i++) {
-    const x = b.x0 + i * lw, hgt = 11 + hash(b.id * 5 + i) * 7;
-    ctx.beginPath(); ctx.moveTo(x + 2, b.top + 3); ctx.lineTo(x + lw / 2, b.top - hgt); ctx.lineTo(x + lw - 2, b.top + 3); ctx.closePath(); ctx.fill(); ctx.stroke();
+    const x = b.x0 + i * lw, hgt = 15 + hash(b.id * 5 + i) * 9;
+    ctx.beginPath(); ctx.moveTo(x + 2, b.top + 4); ctx.lineTo(x + lw / 2, b.top - hgt); ctx.lineTo(x + lw - 2, b.top + 4); ctx.closePath(); ctx.fill(); ctx.stroke();
   }
-  ctx.fillStyle = "#79C443"; ctx.fillRect(b.x0 + 2, b.top, w - 4, 4);
+  ctx.fillStyle = lit ? "#C9F59A" : "#79C443"; ctx.fillRect(b.x0 + 3, b.top, w - 6, 6);
 }
 function drawCandy(c) {
   const r = SIZE.candyR;
   ctx.save(); ctx.translate(c.x, c.y);
-  ctx.fillStyle = C.wrap; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
-  for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(s * (r - 3), 0); ctx.lineTo(s * (r + 9), -8); ctx.lineTo(s * (r + 9), 8); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+  ctx.fillStyle = C.wrap; ctx.strokeStyle = C.ink; ctx.lineWidth = 2.2;
+  for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(s * (r - 3), 0); ctx.lineTo(s * (r + 11), -10); ctx.lineTo(s * (r + 11), 10); ctx.closePath(); ctx.fill(); ctx.stroke(); }
   ctx.fillStyle = C.candy; ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill();
-  ctx.strokeStyle = "#fff"; ctx.lineWidth = 3.5;
-  for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(0, 0, r - 5 - i * 4, i * 2.1, i * 2.1 + 2.2); ctx.stroke(); }
-  ctx.strokeStyle = C.ink; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.stroke();
-  ctx.fillStyle = "rgba(255,255,255,.75)"; ctx.beginPath(); ctx.ellipse(-6, -8, 5, 3, -0.6, 0, 7); ctx.fill();
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 4;
+  for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(0, 0, r - 6 - i * 4.5, i * 2.1, i * 2.1 + 2.2); ctx.stroke(); }
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,.75)"; ctx.beginPath(); ctx.ellipse(-7, -9, 6, 3.5, -0.6, 0, 7); ctx.fill();
   ctx.restore();
 }
 function drawRope(nodes, alpha, width) {
@@ -780,29 +832,29 @@ function drawRope(nodes, alpha, width) {
   path(); ctx.strokeStyle = C.card; ctx.lineWidth = width * 0.4; ctx.stroke();
   ctx.globalAlpha = 1;
 }
-function drawCup(x, y, a) { // золотая присоска
+function drawCup(x, y, a, r) { // золотая присоска (r — радиус в текущих единицах)
+  r = r || 11;
   ctx.globalAlpha = a == null ? 1 : a;
-  ctx.fillStyle = C.gold; ctx.strokeStyle = C.ink; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(x, y, 7.5, 0, 7); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "rgba(255,255,255,.8)"; ctx.beginPath(); ctx.arc(x - 2.5, y - 2.5, 2.4, 0, 7); ctx.fill();
+  ctx.fillStyle = C.gold; ctx.strokeStyle = C.ink; ctx.lineWidth = r * 0.27;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,.8)"; ctx.beginPath(); ctx.arc(x - r * 0.33, y - r * 0.33, r * 0.32, 0, 7); ctx.fill();
   ctx.globalAlpha = 1;
 }
 function drawJam() { // пол — полоса варенья перед домиками
-  const t = S.sadT > 0 ? Math.sin(S.sadT * 40) * 2 : 0;
-  const x0 = S.camX - 20, x1 = S.camX + W / S.zoom + 20;
-  ctx.fillStyle = C.jam; ctx.strokeStyle = C.ink; ctx.lineWidth = 2.4;
-  ctx.beginPath(); ctx.moveTo(x0, FLOOR + 40);
-  for (let x = Math.floor(x0 / 24) * 24; x <= x1 + 24; x += 24) ctx.lineTo(x, FLOOR + t + Math.sin(x * 0.07) * 1.6);
-  ctx.lineTo(x1 + 24, FLOOR + 40); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = C.jam2; ctx.fillRect(x0, FLOOR + 12, x1 - x0, 30);
+  const t = S.sadT > 0 ? Math.sin(S.sadT * 40) * 3 : 0;
+  const x0 = S.camX - 30, x1 = S.camX + W / S.zoom + 30;
+  ctx.fillStyle = C.jam; ctx.strokeStyle = C.ink; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(x0, FLOOR + 80);
+  for (let x = Math.floor(x0 / 30) * 30; x <= x1 + 30; x += 30) ctx.lineTo(x, FLOOR + t + Math.sin(x * 0.05) * 2.4);
+  ctx.lineTo(x1 + 30, FLOOR + 80); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = C.jam2; ctx.fillRect(x0, FLOOR + 14, x1 - x0, 66);
   ctx.fillStyle = C.jamHi; // блики
-  for (let x = Math.floor(x0 / 70) * 70; x < x1; x += 70) { const k = hash(Math.floor(x / 70) + 77); ctx.beginPath(); ctx.ellipse(x + 20 + k * 30, FLOOR + 6, 14, 2.6, 0, 0, 7); ctx.fill(); }
-  ctx.fillStyle = "#E8412F"; // ягодки в варенье
-  for (let x = Math.floor(x0 / 90) * 90; x < x1; x += 90) { const k = hash(Math.floor(x / 90) + 5); ctx.beginPath(); ctx.arc(x + 30 + k * 40, FLOOR + 24, 4, 0, 7); ctx.fill(); }
+  for (let x = Math.floor(x0 / 90) * 90; x < x1; x += 90) { const k = hash(Math.floor(x / 90) + 77); ctx.beginPath(); ctx.ellipse(x + 20 + k * 40, FLOOR + 7, 20, 3.5, 0, 0, 7); ctx.fill(); }
 }
 function drawCrate() { // коробка переднего плана на старте
   const x = START.boxX0, w = START.boxX1 - START.boxX0, y = START.boxTop;
-  ctx.fillStyle = C.card; ctx.strokeStyle = C.ink; ctx.lineWidth = 2.4;
+  if (S.camX > START.boxX1 + 20) return;
+  ctx.fillStyle = C.card; ctx.strokeStyle = C.ink; ctx.lineWidth = 3.4;
   ctx.beginPath(); ctx.roundRect(x, y, w, FLOOR - y + 12, 6); ctx.fill(); ctx.stroke();
   ctx.fillStyle = C.card2; ctx.fillRect(x + 4, y + 22, w - 8, 6); ctx.fillStyle = C.cut;
   for (let yy = y + 36; yy < FLOOR - 4; yy += 22) ctx.fillRect(x + 8, yy, w - 16, 3);
@@ -816,13 +868,13 @@ function poseFrame() { // кадр Ома Нома по состоянию — �
   if (S.sadT > 0) return S.sadT > 0.5 ? "wide" : "sad";
   if (o.grounded) return "neutral";
   let near = 1e9;
-  for (const c of S.cand) { const dx = c.x - o.x; if (dx > -60 && dx < 160) near = Math.min(near, Math.hypot(dx, c.y - o.y - SIZE.mouthDy)); }
-  return near < 60 ? "wide" : "ajar";
+  for (const c of S.cand) { const dx = c.x - o.x; if (dx > -60 && dx < 200) near = Math.min(near, Math.hypot(dx, c.y - o.y - SIZE.mouthDy)); }
+  return near < 70 ? "wide" : "ajar";
 }
 let omFrame = "neutral"; const omGaze = {};
 function drawOmNom(o) {
   let tgt = null, tgtD = 1e9;
-  for (const c of S.cand) { const dx = c.x - o.x; if (dx > -20 && dx < 380) { const d = Math.hypot(dx, c.y - o.y); if (d < tgtD) { tgtD = d; tgt = c; } } }
+  for (const c of S.cand) { const dx = c.x - o.x; if (dx > -20 && dx < 500) { const d = Math.hypot(dx, c.y - o.y); if (d < tgtD) { tgtD = d; tgt = c; } } }
   omFrame = poseFrame();
   let tx, ty;
   if (tgt) { tx = tgt.x; ty = tgt.y; }
@@ -832,47 +884,63 @@ function drawOmNom(o) {
   OMS.draw(ctx, { frame: omFrame, mx: o.x, my: o.y + SIZE.mouthDy, fy: o.y + SIZE.omFeet, flip: o.face > 0, rot: tilt, piv: SIZE.omFeet,
     shadow: o.grounded, tx, ty }, omGaze);
 }
-function drawAim() { // пунктир-прицел (режим «угол»), пока нет верёвки
-  const o = S.om, d = aimDir(), r = castRay(o.x, o.y, d.dx, d.dy, TUNE.rayMax);
-  const len = r.hit ? r.t : TUNE.rayMax;
-  ctx.lineCap = "round"; ctx.lineWidth = 3; ctx.setLineDash([6, 8]);
-  ctx.strokeStyle = r.hit ? "rgba(255,201,60,.95)" : "rgba(74,37,18,.38)";
-  ctx.beginPath(); ctx.moveTo(o.x, o.y); ctx.lineTo(o.x + d.dx * len, o.y + d.dy * len); ctx.stroke();
-  ctx.setLineDash([]);
-  if (r.hit) drawCup(r.x, r.y);
-}
-function drawHand() { // рука-подсказка первого раунда
-  if (S.roundNo > 0 || S.sweet >= 2 || S.scene === "end" || S.scene === "finale" || BOT.on || !S.tutor) return;
-  const o = S.om; let label = null, k = 0;
-  if (!S.rope) {
-    if (AIM === "angle" && (o.grounded || wouldHit())) { label = "жми"; k = 0.5 + 0.5 * Math.sin(S.hintT * 8); }
-    else if (AIM === "finger") { const t = fingerTarget(false); if (t && (o.grounded || wouldHit())) { // рука показывает, куда коснуться
-      const yy = t.y + 26 - 6 * (0.5 + 0.5 * Math.sin(S.hintT * 8));
-      ctx.textAlign = "center"; ctx.font = "34px sans-serif"; ctx.fillText("👆", t.x, yy);
-      ctx.font = "900 13px Nunito, ui-rounded, system-ui, sans-serif"; ctx.lineJoin = "round"; ctx.lineWidth = 4; ctx.strokeStyle = C.ink; ctx.strokeText("сюда", t.x, yy + 18); ctx.fillStyle = "#FBEBD0"; ctx.fillText("сюда", t.x, yy + 18);
-      return; } }
+// подсветка цели до нажатия (мир): пунктир к присоске на ребре крыши; цели нет — короткий серый луч 55°
+function drawAim() {
+  const o = S.om, t = S.tgt;
+  ctx.lineCap = "round"; ctx.lineWidth = 4.5;
+  if (t) {
+    ctx.setLineDash([14, 14]); ctx.strokeStyle = "rgba(255,201,60,.5)";
+    ctx.beginPath(); ctx.moveTo(o.x, o.y); ctx.lineTo(t.x, t.y); ctx.stroke(); ctx.setLineDash([]);
+    const bl = S.tgtBlink > 0;
+    if (bl) { ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.beginPath(); ctx.arc(t.x, t.y, 26, 0, 7); ctx.fill(); }
+    drawCup(t.x, t.y, 1, bl ? 15 : 12);
+  } else {
+    const a = rad(TUNE.rayAngle), L = TUNE.missRay;
+    ctx.setLineDash([12, 12]); ctx.strokeStyle = "rgba(74,37,18,.42)";
+    ctx.beginPath(); ctx.moveTo(o.x, o.y); ctx.lineTo(o.x + Math.cos(a) * L, o.y - Math.sin(a) * L); ctx.stroke(); ctx.setLineDash([]);
   }
-  else { const vx = (o.x - o.px) / DT, vy = (o.y - o.py) / DT, a = Math.atan2(-vy, vx) * 180 / Math.PI; if (vx > 0 && a > 18 && a < 58) { label = "подними палец"; k = 1; } }
+}
+// цель за краем кадра: присоска у края со стрелкой (окно)
+function drawAimEdge() {
+  const t = S.tgt; if (!t) return;
+  const p = toScreen(t.x, t.y), m = 14;
+  if (p.x >= m && p.x <= W - m && p.y >= m && p.y <= H - m) return;
+  const o = toScreen(S.om.x, S.om.y);
+  const cx = clamp(p.x, m, W - m), cy = clamp(p.y, m, H - m), a = Math.atan2(p.y - o.y, p.x - o.x);
+  drawCup(cx, cy, 1, 8);
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(a);
+  ctx.fillStyle = C.gold; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(15, 0); ctx.lineTo(8, -6); ctx.lineTo(8, 6); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+function hintText(label, x, y) {
+  ctx.textAlign = "center"; ctx.font = "28px sans-serif"; ctx.fillText("👆", x, y);
+  ctx.font = "900 13px Nunito, ui-rounded, system-ui, sans-serif"; ctx.lineJoin = "round"; ctx.lineWidth = 4; ctx.strokeStyle = C.ink; ctx.strokeText(label, x, y + 17);
+  ctx.fillStyle = "#FBEBD0"; ctx.fillText(label, x, y + 17);
+}
+function drawHand() { // рука-подсказка первого раунда (окно)
+  if (S.roundNo > 0 || S.sweet >= 2 || S.scene === "end" || S.scene === "finale" || BOT.on || !S.tutor) return;
+  const o = S.om, p = toScreen(o.x, o.y); let label = null, k = 0;
+  if (!S.rope) { if (o.grounded || S.tgt) { label = "жми"; k = 0.5 + 0.5 * Math.sin(S.hintT * 8); } }
+  else { const vx = (o.x - o.px) / DT, vy = (o.y - o.py) / DT, a = Math.atan2(-vy, vx) * 180 / Math.PI; if (vx > 0 && a > 18 && a < 68) { label = "подними палец"; k = 1; } }
   if (!label) return;
-  const x = o.x + 44, y = o.y + 52 - (label === "жми" ? k * -6 : 10 * Math.abs(Math.sin(S.hintT * 6)));
-  ctx.textAlign = "center"; ctx.font = "34px sans-serif"; ctx.fillText("👆", x, y);
-  ctx.font = "900 13px Nunito, ui-rounded, system-ui, sans-serif"; ctx.lineJoin = "round"; ctx.lineWidth = 4; ctx.strokeStyle = C.ink; ctx.strokeText(label, x, y + 18);
-  ctx.fillStyle = "#FBEBD0"; ctx.fillText(label, x, y + 18);
+  hintText(label, p.x + 30, p.y + 44 - (label === "жми" ? -k * 5 : 8 * Math.abs(Math.sin(S.hintT * 6))));
 }
 function draw() {
   fit();
-  ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+  const k = scale * dpr, z = S.zoom;
+  ctx.setTransform(k, 0, 0, k, 0, 0);
   drawBackdrop();
-  // мир: масштаб по низу окна, камера по x
-  const z = S.zoom;
-  ctx.setTransform(scale * dpr * z, 0, 0, scale * dpr * z, -S.camX * z * scale * dpr, (H - H * z) * scale * dpr);
-  const xa = S.camX - 20, xb = S.camX + W / z + 20, bl = S.WD.bld;
-  for (const b of bl) { if (b.x1 < xa) continue; if (b.x0 > xb) break; drawHouse(b); }
-  const o = S.om;
-  if (S.scene !== "end" && S.scene !== "finale" && !S.rope && AIM === "angle") drawAim();
+  // мир: масштаб zoom, камера по x (camX) и по низу окна (camBot)
+  ctx.setTransform(k * z, 0, 0, k * z, -S.camX * z * k, (H - S.camBot * z) * k);
+  const xa = S.camX - 40, xb = S.camX + W / z + 40, bl = S.WD.bld, o = S.om;
+  const aimOn = S.scene !== "end" && S.scene !== "finale" && !S.rope;
+  const litId = aimOn && S.tgt ? S.tgt.house : -1;
+  for (let i = firstIdx(bl, xa - 40); i < bl.length; i++) { const b = bl[i]; if (b.x0 > xb) break; if (b.x1 < xa) continue; drawHouse(b, b.id === litId); }
+  if (aimOn) drawAim();
   if (S.rope && S.rope.shoot >= 1) drawCup(S.rope.ax, S.rope.ay);
   drawCrate();
-  for (const c of S.cand) if (c.x > xa - 20 && c.x < xb + 20) drawCandy(c);
+  for (const c of S.cand) if (c.x > xa - 30 && c.x < xb + 30) drawCandy(c);
   for (const f of S.frags) drawRope(f.nodes, Math.max(0, f.life / TUNE.fragFade), SIZE.rope * 0.8);
   if (S.rope) {
     const r = S.rope;
@@ -880,34 +948,35 @@ function draw() {
     else drawRope(r.nodes, 1, SIZE.rope);
     if (r.shoot < 1) drawCup(o.x + (r.ax - o.x) * r.shoot, o.y + (r.ay - o.y) * r.shoot);
   }
-  if (S.shot) { // промах: верёвка летит на rayMax и втягивается
+  if (S.shot) { // промах: верёвка летит на missRay и втягивается
     const sh = S.shot, p = sh.t < TUNE.shootSec ? sh.t / TUNE.shootSec : 1 - (sh.t - TUNE.shootSec) / TUNE.retractSec;
-    const L = TUNE.rayMax * Math.max(0, p);
+    const L = TUNE.missRay * Math.max(0, p);
     drawRope([{ x: o.x, y: o.y }, { x: o.x + sh.dx * L, y: o.y + sh.dy * L }], 1, SIZE.rope);
   }
   drawOmNom(o);
   drawJam();
   for (const r of S.rings) { // кольцо «вжух» / шлёп варенья
-    const k = 1 - r.life / r.max;
+    const q = 1 - r.life / r.max;
     ctx.globalAlpha = Math.max(0, r.life / r.max);
-    if (r.tap) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(r.x, r.y, 8 + k * 16, 0, 7); ctx.stroke(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(r.x, r.y, 11 + k * 16, 0, 7); ctx.stroke(); }
-    else if (r.jam) { ctx.fillStyle = C.jam; for (let i = 0; i < 7; i++) { const a = -0.3 - i * 0.37, d = 8 + k * 38; ctx.beginPath(); ctx.arc(r.x + Math.cos(a - 1.3) * d * 1.3, r.y + Math.sin(a - 1.3) * d * 1.6 - k * 10, 4 - k * 2, 0, 7); ctx.fill(); } }
-    else { ctx.strokeStyle = C.gold; ctx.lineWidth = 5 - k * 3; ctx.beginPath(); ctx.arc(r.x, r.y, 20 + k * 52, 0, 7); ctx.stroke(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(r.x, r.y, 24 + k * 52, 0, 7); ctx.stroke(); }
+    if (r.jam) { ctx.fillStyle = C.jam; for (let i = 0; i < 7; i++) { const a = -0.3 - i * 0.37, d = 14 + q * 60; ctx.beginPath(); ctx.arc(r.x + Math.cos(a - 1.3) * d * 1.3, r.y + Math.sin(a - 1.3) * d * 1.6 - q * 16, 7 - q * 4, 0, 7); ctx.fill(); } }
+    else { ctx.strokeStyle = C.gold; ctx.lineWidth = 9 - q * 5; ctx.beginPath(); ctx.arc(r.x, r.y, 34 + q * 90, 0, 7); ctx.stroke(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.arc(r.x, r.y, 40 + q * 90, 0, 7); ctx.stroke(); }
     ctx.globalAlpha = 1;
   }
+  // окно: надписи, подсказка, цель за краем, линии скорости
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+  if (aimOn) drawAimEdge();
   drawHand();
   ctx.textAlign = "center"; ctx.font = "900 17px Nunito, ui-rounded, system-ui, sans-serif"; ctx.lineJoin = "round";
   for (const p of S.pops) {
+    const q = toScreen(p.x, p.y);
     ctx.globalAlpha = Math.min(1, p.life * 2);
-    ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.strokeText(p.txt, p.x, p.y);
-    ctx.fillStyle = p.color; ctx.fillText(p.txt, p.x, p.y);
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.strokeText(p.txt, q.x, q.y);
+    ctx.fillStyle = p.color; ctx.fillText(p.txt, q.x, q.y);
   }
   ctx.globalAlpha = 1;
-  // линии скорости (экран)
-  ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
   const sp = Math.hypot(o.x - o.px, o.y - o.py) / DT;
-  if (sp > 450) {
-    const a = Math.min(0.55, (sp - 450) / 450), f = Math.floor(S.steps / 2);
+  if (sp > TUNE.speedLines) {
+    const a = Math.min(0.55, (sp - TUNE.speedLines) / 450), f = Math.floor(S.steps / 2);
     ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.globalAlpha = a;
     for (let i = 0; i < 9; i++) { const y = 30 + hash(i * 31 + f) * 380, x = 20 + hash(i * 17 + f * 3) * 300, l = 24 + hash(i * 7 + f) * 40; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + l, y); ctx.stroke(); }
     ctx.globalAlpha = 1;
@@ -935,11 +1004,10 @@ function frame(now) {
 
 // ---- Ввод ---------------------------------------------------------------------------------------------
 const downs = new Set();
-function pointWorld(e) { const r = cv.getBoundingClientRect(); return toWorld((e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H); }
 cv.addEventListener("pointerdown", e => {
   e.preventDefault(); if (BOT.on) return;
   downs.add(e.pointerId); try { cv.setPointerCapture(e.pointerId); } catch (_) {}
-  hold(AIM === "finger" ? pointWorld(e) : undefined);
+  hold();
 });
 function up(e) { if (!downs.delete(e.pointerId)) return; if (!downs.size) release(); }
 cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
@@ -954,59 +1022,52 @@ botBtn.addEventListener("click", () => {
   const cur = !BOT.on ? 0 : BOT.mode === "naive" ? 4 : BOT.mode === "lazy" ? 5 : BOT.skill === 0 ? 1 : BOT.skill === 0.5 ? 2 : 3;
   const nx = BOT_MODES[(cur + 1) % BOT_MODES.length]; setBot(nx.label === "выкл" ? null : nx); newRound();
 });
-const aimBtns = { angle: document.getElementById("aimAngle"), finger: document.getElementById("aimFinger") };
-function setAim(m, restart) {
-  AIM = m === "finger" || m === "tap" ? "finger" : "angle";
-  aimBtns.angle.classList.toggle("on", AIM === "angle"); aimBtns.finger.classList.toggle("on", AIM === "finger");
-  aimBtns.angle.textContent = "Угол " + TUNE.rayAngle + "°";
-  setRules(); try { const u = new URL(location.href); u.searchParams.set("aim", AIM); history.replaceState(null, "", u); } catch (e) {}
-  if (restart) newRound();
-}
-aimBtns.angle.addEventListener("click", () => { if (AIM !== "angle") setAim("angle", true); });
-aimBtns.finger.addEventListener("click", () => { if (AIM !== "finger") setAim("finger", true); });
 new ResizeObserver(() => draw()).observe(stage);
 window.addEventListener("orientationchange", () => draw());
 
 // ---- Тестовый API -----------------------------------------------------------------------------------------
-function toPt(p) { if (!p) return undefined; if (p.x != null) return { x: p.x, y: p.y }; if (p.sx != null) return toWorld(p.sx, p.sy); return undefined; }
 window.__game = {
   ready: false,
   getState() {
-    const o = S.om, vx = (o.x - o.px) / DT, vy = (o.y - o.py) / DT;
-    const near = []; for (const b of S.WD.bld) if (b.x1 > S.camX - 100 && b.x0 < S.camX + 600) near.push({ x0: b.x0, x1: b.x1, top: b.top });
+    const o = S.om, vx = (o.x - o.px) / DT, vy = (o.y - o.py) / DT, t = S.tgt;
+    const near = []; for (const b of S.WD.bld) if (b.x1 > S.camX - 100 && b.x0 < S.camX + W / S.zoom + 100) near.push({ x0: b.x0, x1: b.x1, top: b.top, h: b.h });
     return {
-      scene: S.scene, seed: S.seed, t: S.t, held: S.held, steps: S.steps, aimMode: AIM,
+      scene: S.scene, seed: S.seed, t: S.t, held: S.held, steps: S.steps,
       om: { x: o.x, y: o.y, vx, vy, frame: poseFrame(), grounded: o.grounded },
       dist: distM(), maxX: S.maxX, speed: Math.hypot(vx, vy),
-      rope: S.rope ? { ax: S.rope.ax, ay: S.rope.ay, L: S.rope.L } : null,
-      aim: AIM === "angle" && !S.rope ? (() => { const d = aimDir(), r = castRay(o.x, o.y, d.dx, d.dy, TUNE.rayMax); return { hit: r.hit, x: r.hit ? r.x : o.x + d.dx * TUNE.rayMax, y: r.hit ? r.y : o.y + d.dy * TUNE.rayMax }; })() : { ...S.lastAim },
+      rope: S.rope ? { ax: S.rope.ax, ay: S.rope.ay, L: S.rope.L, house: S.rope.house } : null,
+      target: t ? { x: t.x, y: t.y, dev: t.dev, L: t.L, house: t.house } : null, tgtBlink: S.tgtBlink, tgtSwitch: S.tgtSwitch,
       candies: S.candies, combo: S.combo, bounces: S.bounces, misses: S.misses, sweet: S.sweet,
-      stars: S.scene === "end" ? S.stars : starsFor(distM()), star2: star2(), star3: star3(), camX: S.camX, zoom: S.zoom,
+      stars: S.scene === "end" ? S.stars : starsFor(distM()), star2: star2(), star3: star3(),
+      camX: S.camX, camY: S.camBot - H, zoom: S.zoom,
+      ropeShare: S.playTicks ? S.ropeTicks / S.playTicks : 0, vMean: S.playTicks ? S.vSum / S.playTicks : 0, peaks: S.peaks.slice(-20),
       view: (() => { const r = cv.getBoundingClientRect(); return { left: r.left, top: r.top, width: r.width, height: r.height, scale: r.width / W }; })(),
       bot: { on: BOT.on, mode: BOT.mode, skill: BOT.skill, plans: BOT.plans },
       houses: near, candiesNear: S.cand.length, candyList: S.cand.slice(0, 16).map(c => ({ x: c.x, y: c.y })), gapBounces: S.gapBounce.size, best: S.best,
+      gen: { houses: S.WD.bld.length, tries: S.WD.tries, rerolls: S.WD.rerolls, halves: S.WD.halves, fails: S.WD.fails },
       kick: S.lastKick || null, pops: S.pops.map(p => p.txt), sadT: S.sadT, wideT: S.wideT, shot: !!S.shot, ropeShoot: S.rope ? S.rope.shoot : null,
     };
   },
   act(a, p) {
-    if (a === "hold") { if (!BOT.on) hold(toPt(p)); }
+    if (a === "hold") { if (!BOT.on) hold(); }
     else if (a === "release") { if (!BOT.on) release(); }
     else if (a === "restart") newRound(p && p.seed != null ? p.seed : undefined);
     else if (a === "clock") { manual = !!(p && p.manual); }
     else if (a === "step") { for (let i = 0; i < (p || 1); i++) step(); }
-    else if (a === "tune") Object.assign(TUNE, p || {});
-    else if (a === "stars") { if (p) { if (p.angle) STARS.angle = p.angle; if (p.finger) STARS.finger = p.finger; } }
-    else if (a === "aim") setAim(p && (p.mode || p), true);
+    else if (a === "tune") { Object.assign(TUNE, p || {}); if (!S.rope) updateTarget(); }
+    else if (a === "stars") { if (Array.isArray(p)) STARS = p.slice(0, 2); else if (p) STARS = [p.star2, p.star3]; }
     else if (a === "autoplay") setBot(p == null || p === false ? null : p);
     else if (a === "runToEnd") { let n = 0; while (S.scene !== "end" && n < 20000) { step(); n++; } }
     else if (a === "calib") return calib((p && p.n) || 30, p);
-    else if (a === "place") { // dev: поставить Ома Нома (без верёвки)
-      const o = S.om; o.x = p.x; o.y = p.y; o.px = o.x - (p.vx || 0) * DT; o.py = o.y - (p.vy || 0) * DT; o.grounded = false;
-      S.rope = null; S.held = false; S.frags = []; if (S.scene === "ready" && p.start !== false) S.scene = "play";
-      S.camX = camTarget(); ensureWorld();
+    else if (a === "place") { // dev: поставить Ома Нома (без верёвки); цель — сразу, с гистерезисом от прежней
+      const o = S.om; o.x = p.x; o.y = p.y; setVel(o, p.vx || 0, p.vy || 0); o.grounded = false;
+      S.rope = null; S.held = false; S.frags = []; S.peak = null; if (S.scene === "ready" && p.start !== false) S.scene = "play";
+      ensureWorld(); camStep(true); updateTarget();
     }
-    else if (a === "street") { setStreet((p && p.houses) || []); ensureWorld(); }
-    else if (a === "gencheck") return genCheck((p && p.n) || 50, (p && p.x) || 30000);
+    else if (a === "street") { setStreet((p && p.houses) || []); ensureWorld(); updateTarget(); }
+    else if (a === "botlog") { BOT.log = p ? [] : null; }
+    else if (a === "botlogGet") return BOT.log ? BOT.log.slice() : null;
+    else if (a === "gencheck") return genCheck((p && p.n) || 50, (p && p.x) || 40000);
   },
   metrics() {
     const a = frameTimes.slice().sort((x, y) => x - y);
@@ -1014,32 +1075,33 @@ window.__game = {
     return { fps: a.length ? Math.round(1000 / mean) : 0, frameMsP95: a.length ? a[Math.floor(a.length * 0.95)] : 0, drawCalls: -1 };
   },
 };
-// проверка генератора: g, w, top в пределах §4; скан x шагом 5 u на y = safeY — луч цепляет везде
+// проверка генератора: g, w, h в пределах v2.3; скан x шагом 5 u на высотах scanH над вареньем — цель везде
 function genCheck(n, xMax) {
-  const sS = S, sNO = NOFX, bad = [], res = { seeds: n, houses: 0, gapMin: 1e9, gapMax: 0, wMin: 1e9, wMax: 0, topMin: 1e9, topMax: 0, scanPoints: 0, scanMiss: 0, bad };
-  const d = aimDir(); NOFX = true;
+  const sS = S, sNO = NOFX, bad = [];
+  const res = { seeds: n, xMax, houses: 0, gapMin: 1e9, gapMax: 0, wMin: 1e9, wMax: 0, hMin: 1e9, hMax: 0, scanPoints: 0, scanMiss: 0, tries: 0, rerolls: 0, halves: 0, fails: 0, bad };
+  NOFX = true;
   try {
     for (let sd = 1; sd <= n; sd++) {
-      newRound(sd); const WD = S.WD; genMore(WD, xMax + 600);
+      newRound(sd); const WD = S.WD; genMore(WD, xMax + 700);
       const bl = WD.bld;
+      res.tries += WD.tries; res.rerolls += WD.rerolls; res.halves += WD.halves; res.fails += WD.fails;
       for (let i = 1; i < bl.length; i++) {
-        const b = bl[i], g = b.g, w = b.x1 - b.x0;
+        const A = bl[i - 1], b = bl[i], g = b.g, w = b.x1 - b.x0;
         res.houses++; res.gapMin = Math.min(res.gapMin, g); res.gapMax = Math.max(res.gapMax, g);
-        res.wMin = Math.min(res.wMin, w); res.wMax = Math.max(res.wMax, w); res.topMin = Math.min(res.topMin, b.top); res.topMax = Math.max(res.topMax, b.top);
-        if (g < TUNE.gapMin - 1e-6 || g > gapMaxAt(b.x0) + 1e-6 || w < TUNE.wMin - 1e-6 || w > wMaxAt(b.x0) + 1e-6 || b.top < TUNE.topMin || b.top > topMaxAt(g) + 0.5)
-          if (bad.length < 5) bad.push({ sd, i, g, w, top: b.top });
+        res.wMin = Math.min(res.wMin, w); res.wMax = Math.max(res.wMax, w); res.hMin = Math.min(res.hMin, b.h); res.hMax = Math.max(res.hMax, b.h);
+        if (g < TUNE.gapMin - 1e-6 || g > gapMaxAt(A.x1 + TUNE.gapMin) + 1e-6 || w < TUNE.wMin - 1e-6 || w > wMaxAt(b.x0) + 1e-6 || b.h < hMinAt(g) - 1e-6 || b.h > TUNE.hMax + 1e-6)
+          if (bad.length < 5) bad.push({ sd, i, g, w, h: b.h });
       }
-      for (let x = START.x; x < xMax; x += 5) { // с высоты 300; запас на край 25 u — у самой границы страны улицы не проверяем
+      for (let x = START.x; x < xMax; x += 5) for (const hs of TUNE.scanH) {
         res.scanPoints++;
-        S.om.x = x; S.om.y = TUNE.safeY;
-        if (!castRay(x, TUNE.safeY, d.dx, d.dy, TUNE.rayMax).hit) { res.scanMiss++; if (bad.length < 5) bad.push({ sd, scanMissX: x }); }
+        if (!aimAt(x, FLOOR - hs, -1)) { res.scanMiss++; if (bad.length < 5) bad.push({ sd, scanMissX: x, hs }); }
       }
     }
   } finally { S = sS; NOFX = sNO; }
+  res.rerollShare = +(res.rerolls / Math.max(1, res.tries)).toFixed(3);
   return res;
 }
-STARS.angle = [360, 540]; STARS.finger = [320, 420]; // по calib{n:30} на seed 1…30 и 101…130 (60 раундов, см. отчёт): ★★ = 0,9 × медиана бота 0,5, ★★★ = 0,95 × медиана бота 0,75, до 10 м
-setAim(AIM, false);
+STARS = [890, 1140]; // по calib{n:30} на seed 1…30 и 101…130 (60 раундов): ★★ = 0,9 × медиана бота 0,5, ★★★ = 0,95 × медиана бота 0,75, до 10 м
 newRound(QS.has("seed") ? +QS.get("seed") : undefined);
 if (QS.has("bot")) { const b = QS.get("bot"); setBot(b === "naive" ? { naive: true } : b === "lazy" ? { lazy: true } : { skill: +b }); newRound(S.seed); }
 draw();
