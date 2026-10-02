@@ -178,8 +178,10 @@
   },
   "eatOut": {
    "base": "half",
-   "armsFrom": "chew",
-   "note": "exit from eating: mouth closed and lids half at the squash peak, hands still at the face (lowered over the next 90 ms)"
+   "front": ["paw_fl", "paw_fr"
+   ],
+   "bones": {"arm_l": {"r": 122.188, "s": [1, 1]}, "fore_l": {"r": 130.152}, "paw_fl": {"r": 129.16, "s": [1.089, 1.089]}, "arm_r": {"r": 50, "s": [1, 1]}, "fore_r": {"r": -100}, "paw_fr": {"r": 10, "s": [1.069, 1.069]}},
+   "note": "exit from eating: mouth closed and lids half at the squash peak, left paw still at the face (arms of chew), right paw already under the right mouth corner (rig 2.4, D-74: at the cheek the closed mouth line crossed it; lowered over the next 90 ms)"
   },
   "handsDown": {
    "base": "half",
@@ -296,8 +298,10 @@
   },
   "eatGulp": {
    "base": "wide2",
-   "armsFrom": "chew",
-   "note": "next candy of a series: the mouth opens for the gulp while the front paws stay at the mouth"
+   "front": ["paw_fl", "paw_fr"
+   ],
+   "bones": {"arm_l": {"r": 90.2}, "fore_l": {"r": 80.2}, "paw_fl": {"r": 69.2, "s": [1.089, 1.089]}, "arm_r": {"r": 157.9}, "fore_r": {"r": -91.8}, "paw_fr": {"r": -50.1, "s": [1.069, 1.069]}},
+   "note": "next candy of a series: the mouth opens for the gulp, the front paws at the mouth corners (rig 2.4, D-74: the artist's pose, paws never cover the open mouth)"
   },
   "waveA": {
    "base": "wave1",
