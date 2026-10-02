@@ -56,7 +56,7 @@ const CLEAN = {
   aimMode: "roof", rayAngle: 55, aimCone: 30, liftDy: 60, roofInset: 8, aimHyst: 6, ropeMin: 80, ropeMax: 600,
   reel: 0, reelMin: 120, elastic: 0, pumpOn: false, pumpSpeed: 300, pumpDL: 120, pumpZone: 25, vDrag: 1,
   swingOn: false, swingMin: 350, backDragOn: false, backDrag: 0.985,
-  ownOn: false, ownPoint: "corner", ownPad: 40,
+  ownOn: false, ownPoint: "corner", ownPad: 40, ctrAhead: 0,
   // отпускание
   boostOn: false, sweetBoost: 1.08, sweetMin: 25, sweetMax: 60, liftOn: false, sweetLift: 160,
   // дома (применяются при «Новый мир» / «Рестарт»)
@@ -105,19 +105,21 @@ const TARZAN = Object.assign({}, CLEAN, { pumpOn: true, pumpSpeed: 350, pumpDL: 
 const GLIDER = Object.assign({}, CLEAN, { vDrag: 0.95, reel: 300, capVx: 1100, startMode: "roof" });
 const HOPPER = Object.assign({}, CLEAN, { gravity: 2200, reel: 450, reelMin: 70, rayAngle: 65, ropeMin: 60, ropeMax: 340, liftDy: 40, capVy: 1800,
   gapMin: 80, gapMax0: 150, gapGrow: 0.002, gapCap: 220, hMin0: 380, hMax: 620, jumpVx: 350, jumpVy: -750, zoom: 0.45, startMode: "roof" });
-const FAR = Object.assign({}, CLEAN, { reel: 250, rayAngle: 48, ropeMax: 800, capVx: 1300, gapMin: 260, gapMax0: 380, gapGrow: 0.003, gapCap: 520,
+// «Дальнобой» и пять его вариаций (D-70, D-75): прицел «центр крыши» — верёвка всегда к центру крыши ближайшего дома впереди
+// (свой дом, пока его центр впереди хотя бы на 30 u; иначе следующий дом; не достаёт и он — промах); отличаются миром и физикой
+// liftDy 100: крыша выше Ома Нома хотя бы на 100 u — он не проходит под самой точкой ближе reelMin и верёвка не дёргает при натяжении
+const CENTER = { aimMode: "center", ownOn: true, ownPoint: "center", ctrAhead: 30, liftDy: 100 };
+const FAR = Object.assign({}, CLEAN, CENTER, { reel: 330, rayAngle: 48, ropeMax: 800, capVx: 1300, gapMin: 260, gapMax0: 380, gapGrow: 0.003, gapCap: 520,
   hMin0: 560, hMinG: 0.4, hMax: 880, wMin: 90, wMax0: 160, wFloor: 120, zoom: 0.3, camTopMargin: 200, startMode: "roof" });
-// Пять вариаций «Дальнобоя» (D-70): правило «свой дом» включено (передний угол крыши), отличаются миром и физикой
-const FAR_OWN = Object.assign({}, FAR, { ownOn: true, ownPoint: "corner" });
-const SKY = Object.assign({}, FAR_OWN, { ropeMax: 850, skyP: 0.4, skyWMin: 350, skyWMax: 700, skyHMin: 800, skyHMax: 1050,
-  wMin: 70, wMax0: 130, wFloor: 100, hMin0: 500, hMinG: 0.3, hMax: 750, gapMin: 240, gapMax0: 360, gapCap: 420, zoom: 0.28, camTopMargin: 220 });
-const CANYON = Object.assign({}, FAR_OWN, { gravity: 1000, reel: 220, rayAngle: 42, ropeMax: 1050, capVx: 1500, capVy: 1800,
+const SKY = Object.assign({}, FAR, { reel: 300, ropeMax: 1150, skyP: 0.4, skyWMin: 350, skyWMax: 700, skyHMin: 800, skyHMax: 1050,
+  wMin: 70, wMax0: 130, wFloor: 100, hMin0: 700, hMinG: 0.3, hMax: 950, gapMin: 240, gapMax0: 360, gapCap: 420, zoom: 0.28, camTopMargin: 220 });
+const CANYON = Object.assign({}, FAR, { gravity: 1000, reel: 300, rayAngle: 42, ropeMax: 1050, capVx: 1500, capVy: 1800,
   gapMin: 420, gapMax0: 560, gapCap: 700, hMin0: 750, hMinG: 0.3, hMax: 1050, wMin: 80, wMax0: 140, wFloor: 110, zoom: 0.24, camTopMargin: 260 });
-const PEAKS = Object.assign({}, FAR_OWN, { reel: 300, rayAngle: 55, ropeMax: 750, dhMin: 220, dhMax: 450, hMin0: 350, hMinG: 0, hMax: 1000,
+const PEAKS = Object.assign({}, FAR, { reel: 380, rayAngle: 55, ropeMax: 950, dhMin: 220, dhMax: 450, hMin0: 350, hMinG: 0, hMax: 1000,
   wMin: 120, wMax0: 260, wFloor: 160, gapMin: 200, gapMax0: 320, gapCap: 380 });
-const ROOFS = Object.assign({}, FAR_OWN, { gravity: 1600, reel: 350, rayAngle: 52, ropeMax: 600, hMin0: 380, hMinG: 0.2, hMax: 560,
+const ROOFS = Object.assign({}, FAR, { gravity: 1600, reel: 350, rayAngle: 52, ropeMax: 750, hMin0: 530, hMinG: 0.2, hMax: 710,
   wMin: 220, wMax0: 420, wFloor: 260, gapMin: 160, gapMax0: 240, gapCap: 300, zoom: 0.36, camTopMargin: 160 });
-const MOON = Object.assign({}, FAR_OWN, { gravity: 650, airDrag: 0.9998, reel: 140, rayAngle: 45, ropeMax: 950, capVx: 1100,
+const MOON = Object.assign({}, FAR, { gravity: 650, airDrag: 0.9998, reel: 180, rayAngle: 45, ropeMax: 850, capVx: 1100,
   gapMin: 380, gapMax0: 500, gapCap: 650, hMin0: 600, hMinG: 0.3, hMax: 950, dhMax: 200, wMin: 60, wMax0: 110, wFloor: 80, zoom: 0.26, camTopMargin: 240 });
 const PRESETS = { spider: SPIDER, pend: PEND, rocket: ROCKET, light: LIGHT, rubber: RUBBER, swing: SWING, tarzan: TARZAN, glider: GLIDER, hopper: HOPPER, far: FAR,
   sky: SKY, canyon: CANYON, peaks: PEAKS, roofs: ROOFS, moon: MOON, pull: PULL, clean: CLEAN, v1: V1, v2: V2 };
@@ -134,12 +136,12 @@ const PR_NOTE = {
   tarzan: "Длинные лианы, высокие дома, сильный бросок. Энергия — раскачка и буст ×1,35, если отпустить на подъёме 15…70°.",
   glider: "Падение тормозится сильнее, чем полёт вперёд: парит и медленно снижается. Энергия — подтяжка 300 u/с.",
   hopper: "Гравитация 2200, короткие верёвки, частые перескоки с крыши на крышу. Энергия — подтяжка 450 u/с и прыжок 750 с крыши/земли.",
-  far: "Редкие узкие дома, широкие пропасти, длинные перелёты, камера дальше. Энергия — подтяжка 250 u/с.",
-  sky: "Широкие небоскрёбы (350…700) вперемешку с узкими башнями; свой дом — за передний угол. Подтяжка 250 u/с.",
-  canyon: "Пропасти 420…700, высокие узкие башни, верёвка до 1050, g 1000, камера дальше всех. Подтяжка 220 u/с.",
-  peaks: "Соседние дома отличаются по высоте на 220…450 (350…1000), луч 55°. Подтяжка 300 u/с.",
-  roofs: "Низкие широкие крыши, узкие щели, тяжёлый (g 1600), верёвка ≤ 600 — часто свой дом. Подтяжка 350 u/с.",
-  moon: "g 650, почти без сопротивления — медленные дуги; тонкие башни ровной линией, пропасти 380…650. Подтяжка 140 u/с.",
+  far: "Редкие узкие дома, широкие пропасти, длинные перелёты, камера дальше. Верёвка — всегда в центр крыши. Энергия — подтяжка 330 u/с.",
+  sky: "Широкие небоскрёбы (350…700) вперемешку с узкими башнями; верёвка — в центр крыши, до 1150. Подтяжка 300 u/с.",
+  canyon: "Пропасти 420…700, высокие узкие башни, верёвка до 1050 — в центр крыши, g 1000, камера дальше всех. Подтяжка 300 u/с.",
+  peaks: "Соседние дома отличаются по высоте на 220…450 (350…1000); верёвка — в центр крыши, до 950. Подтяжка 380 u/с.",
+  roofs: "Невысокие широкие крыши (530…710), узкие щели, тяжёлый (g 1600), верёвка ≤ 750 — в центр крыши. Подтяжка 350 u/с.",
+  moon: "g 650, почти без сопротивления — медленные дуги; тонкие башни ровной линией, пропасти 380…650, верёвка ≤ 850 — в центр крыши. Подтяжка 180 u/с.",
   pull: "Эталон: «Чистый» + подтяжка 200 u/с, старт с крыши.",
   clean: "Эталон без энергии: только гравитация и сопротивление — честно затухает.",
   v1: "Эталон: hook-rnf-v1 (луч до стены, низкие частые дома, буст ×1,12, батут).",
@@ -162,7 +164,7 @@ const SPEC = [
     ["ceilOn", "Потолок y 0 — удар vy × −0,3 (v1)", "bool"],
   ]],
   ["Верёвка", "", [
-    ["aimMode", "Прицел", "sel", [["roof", "к ребру крыши (v2)"], ["ray", "луч до стены/крыши (v1)"]]],
+    ["aimMode", "Прицел", "sel", [["roof", "к ребру крыши (v2)"], ["ray", "луч до стены/крыши (v1)"], ["center", "центр крыши: ближайший дом впереди, иначе следующий"]]],
     ["rayAngle", "Угол луча, ° вверх-вправо", 20, 80, 1],
     ["aimCone", "Конус прицела ±°", 5, 60, 1],
     ["liftDy", "Крыша выше центра хотя бы на, u", 0, 200, 1],
@@ -182,8 +184,9 @@ const SPEC = [
     ["backDragOn", "Гашение обратного маха (v2)", "bool"],
     ["backDrag", "…× за тик при vx < 0", 0.95, 1, 0.0005],
     ["ownOn", "Свой дом: летит в ширине дома ниже крыши — цепляется к этому же дому", "bool"],
-    ["ownPoint", "…точка на крыше", "sel", [["ray", "по лучу, дальше — передний угол"], ["corner", "передний угол"], ["perp", "поперёк скорости (без рывка)"]]],
+    ["ownPoint", "…точка на крыше", "sel", [["ray", "по лучу, дальше — передний угол"], ["corner", "передний угол"], ["perp", "поперёк скорости (без рывка)"], ["center", "центр крыши (без сдвигов)"]]],
     ["ownPad", "…зона начинается до левой стены за, u", 0, 200, 5],
+    ["ctrAhead", "Центр крыши впереди хотя бы на, u (ближе — уже «над головой», цель — следующий дом)", 0, 200, 5],
   ]],
   ["Отпускание", "Окно «вжух» — угол скорости вправо-вверх в момент отпускания.", [
     ["boostOn", "Буст «вжух» (v1, v2)", "bool"],
@@ -254,7 +257,7 @@ const SPEC_KEYS = []; for (const g of SPEC) for (const f of g[2]) SPEC_KEYS.push
 const W = 320, H = 480, DT = 1 / 60, NSUB = 8, FLOOR = 462;
 const SIZE = { omFeet: 30, omTop: 36, mouthDy: 10, candyR: 20 };
 const START = { x: 80, y: 300, boxX0: 40, boxX1: 120, boxTop: 330 };
-const STORE = "lab.hook-tune.v4", BEST_KEY = "lab.best.hook-tune";
+const STORE = "lab.hook-tune.v5", BEST_KEY = "lab.best.hook-tune";
 const rad = (d) => d * Math.PI / 180;
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -324,6 +327,7 @@ function castRay(ox, oy, dx, dy, maxT) { // v1: вход в стену/крыш�
 // «Свой дом» (D-70): Ом Ном в ширине дома (от x0 − ownPad до x1) и ниже крыши хотя бы на liftDy — точка на крыше этого дома
 // впереди или над ним (не позади): «ray» — где луч rayAngle пересекает высоту крыши, дальше переднего угла — передний угол;
 // «corner» — передний угол; «perp» — точка, направление на которую поперёк скорости (верёвка сразу натянута без потери).
+// «center» (D-75) — центр крыши, без сдвигов по крыше: не годится — правило не действует (см. centerOf).
 // Длина вне [ropeMin, ropeMax] — точка сдвигается вдоль крыши до границы; не вышло — правило не действует (обычный прицел).
 function ownHouse(x) {
   const bl = S.WD.bld, b = bl[firstIdx(bl, x)]; // первый дом, чья правая стена правее Ома Нома
@@ -331,6 +335,7 @@ function ownHouse(x) {
 }
 function ownAim(x, y, vx, vy) {
   const b = ownHouse(x); if (!b) return null;
+  if (TUNE.ownPoint === "center") return centerOf(b, x, y, true);
   const ins = TUNE.roofInset, dy = y - b.top;
   if (dy < TUNE.liftDy || dy > TUNE.ropeMax) return null;
   const lo = Math.max(b.x0 + ins, x), hi = b.x1 - ins; if (hi < lo) return null;
@@ -342,8 +347,29 @@ function ownAim(x, y, vx, vy) {
   const L = Math.hypot(px - x, dy);
   return { x: px, y: b.top, dev: Math.abs(Math.atan2(dy, px - x) * 180 / Math.PI - TUNE.rayAngle), L, house: b.id, own: true };
 }
+// «Центр крыши» (D-75): точка — всегда центр крыши cx = (x0 + x1) / 2, никаких сдвигов. Годится, если центр впереди Ома Нома
+// хотя бы на ctrAhead (cx − x > ctrAhead; 0 — просто впереди), крыша выше его хотя бы на liftDy и длина в [ropeMin, ropeMax]. Порядок: ближайший дом, чей центр впереди
+// (это «свой дом», если Ом Ном уже в его зоне x ≥ x0 − ownPad), не годится — следующий дом; не годится и он — цели нет (промах).
+// ownOn выкл. — дома, в чьей зоне Ом Ном уже летит, пропускаются (цель только впереди).
+function centerOf(b, x, y, own) {
+  const cx = (b.x0 + b.x1) / 2, dy = y - b.top;
+  if (!(cx - x > TUNE.ctrAhead) || dy < TUNE.liftDy) return null;
+  const L = Math.hypot(cx - x, dy);
+  if (L < TUNE.ropeMin || L > TUNE.ropeMax) return null;
+  return { x: cx, y: b.top, dev: Math.abs(Math.atan2(dy, cx - x) * 180 / Math.PI - TUNE.rayAngle), L, house: b.id, own, ctr: true };
+}
+function centerAimIn(list, x, y) {
+  let n = 0;
+  for (let i = firstIdx(list, x); i < list.length && n < 2; i++) {
+    const b = list[i], own = b.x0 - TUNE.ownPad <= x;
+    if (!((b.x0 + b.x1) / 2 - x > TUNE.ctrAhead) || (own && !TUNE.ownOn)) continue;
+    n++; const c = centerOf(b, x, y, own); if (c) return c;
+  }
+  return null;
+}
 function aimAt(x, y, prevId) {
   if (TUNE.ownOn) { const o = ownAim(x, y, S.om.vx, S.om.vy); if (o) return o; }
+  if (TUNE.aimMode === "center") return centerAimIn(S.WD.bld, x, y);
   if (TUNE.aimMode === "ray") { const a = rad(TUNE.rayAngle); return castRay(x, y, Math.cos(a), -Math.sin(a), TUNE.ropeMax); }
   const bl = S.WD.bld; return aimIn(bl, firstIdx(bl, x + TUNE.roofInset), x, y, prevId);
 }
@@ -365,8 +391,13 @@ function newWorld(seed) {
   return WD;
 }
 function reachOK(A, B) {
-  if (!TUNE.reachCheck || TUNE.aimMode !== "roof") return true;
   const list = [A, B];
+  if (TUNE.reachCheck && TUNE.aimMode === "center") { // с любого x от A.x0 до B.x0 на двух высотах есть цель — центр A или B
+    for (let x = Math.floor(A.x0 / 5) * 5; x <= B.x0 + 5; x += 5)
+      for (const hs of [200, 380]) if (!centerAimIn(list, x, FLOOR - hs)) return false;
+    return true;
+  }
+  if (!TUNE.reachCheck || TUNE.aimMode !== "roof") return true;
   for (let x = Math.floor(A.x0 / 5) * 5; x <= B.x0 + 5; x += 5)
     for (const hs of [200, 380]) if (!aimIn(list, 0, x, FLOOR - hs, -1)) return false;
   return true;
@@ -746,7 +777,10 @@ function draw() {
     else { const a = rad(TUNE.rayAngle), L = S.shotT > 0 ? 160 : 90; ctx.strokeStyle = S.shotT > 0 ? "rgba(180,40,40,.8)" : "rgba(40,40,60,.35)";
       ctx.beginPath(); ctx.moveTo(v.x, v.y); ctx.lineTo(v.x + Math.cos(a) * L, v.y - Math.sin(a) * L); ctx.stroke(); }
     ctx.setLineDash([]);
-    if (S.tgt) { ctx.fillStyle = S.tgt.own ? COL.own : COL.roofLit; ctx.beginPath(); ctx.arc(S.tgt.x, S.tgt.y, 4.5 * u, 0, 7); ctx.fill(); }
+    if (S.tgt && S.tgt.ctr) { // центр крыши: заметная точка с белым ободком — видно заранее, куда прицепится
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(S.tgt.x, S.tgt.y, 9 * u, 0, 7); ctx.fill();
+      ctx.fillStyle = S.tgt.own ? COL.own : COL.roofLit; ctx.beginPath(); ctx.arc(S.tgt.x, S.tgt.y, 6.5 * u, 0, 7); ctx.fill();
+    } else if (S.tgt) { ctx.fillStyle = S.tgt.own ? COL.own : COL.roofLit; ctx.beginPath(); ctx.arc(S.tgt.x, S.tgt.y, 4.5 * u, 0, 7); ctx.fill(); }
   }
   // след ~3 с: точки каждые 0,1 с; красная — в этой 0,1 с был скачок скорости (рывок: изменение за тик резко другое)
   if (DEBUG && S.trail.length > 1) {
@@ -903,7 +937,8 @@ function syncUi() {
   }
   for (const k of ["restitution", "groundFric"]) ctl[k].el.classList.toggle("dis", TUNE.groundMode !== "bounce");
   for (const k of ["bounceUp", "bounceVx"]) ctl[k].el.classList.toggle("dis", TUNE.groundMode !== "tramp");
-  for (const k of ["aimCone", "liftDy", "roofInset", "aimHyst", "reachCheck"]) ctl[k].el.classList.toggle("dis", TUNE.aimMode !== "roof");
+  for (const k of ["aimCone", "roofInset", "aimHyst"]) ctl[k].el.classList.toggle("dis", TUNE.aimMode !== "roof");
+  for (const k of ["liftDy", "reachCheck"]) ctl[k].el.classList.toggle("dis", TUNE.aimMode === "ray");
   const nCh = Object.keys(diffFromPreset()).length;
   document.getElementById("prNote").textContent = PR_NAME[PRESET] + (nCh ? " (+ " + nCh + " изм.)" : "") + ": " + PR_NOTE[PRESET];
   document.querySelectorAll("[data-pr]").forEach((b) => b.classList.toggle("on", b.dataset.pr === PRESET));
