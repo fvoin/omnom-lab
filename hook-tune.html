@@ -25,6 +25,9 @@
       <div class="row">
         <button data-pr="swing">Раскачка</button><button data-pr="tarzan">Тарзан</button><button data-pr="glider">Планер</button><button data-pr="hopper">Кузнечик</button><button data-pr="far">Дальнобой</button>
       </div>
+      <div class="row">
+        <button data-pr="sky">Небоскрёбы</button><button data-pr="canyon">Каньон</button><button data-pr="peaks">Горы</button><button data-pr="roofs">Крыши</button><button data-pr="moon">Луна</button>
+      </div>
       <div class="preset-note" id="prNote"></div>
       <div class="row more">
         <span class="preset-note">Эталоны:</span><button data-pr="pull">Подтяжка</button><button data-pr="clean">Чистый</button><button data-pr="v1">v1</button><button data-pr="v2">v2</button>
@@ -53,11 +56,13 @@ const CLEAN = {
   aimMode: "roof", rayAngle: 55, aimCone: 30, liftDy: 60, roofInset: 8, aimHyst: 6, ropeMin: 80, ropeMax: 600,
   reel: 0, reelMin: 120, elastic: 0, pumpOn: false, pumpSpeed: 300, pumpDL: 120, pumpZone: 25, vDrag: 1,
   swingOn: false, swingMin: 350, backDragOn: false, backDrag: 0.985,
+  ownOn: false, ownPoint: "corner", ownPad: 40,
   // отпускание
   boostOn: false, sweetBoost: 1.08, sweetMin: 25, sweetMax: 60, liftOn: false, sweetLift: 160,
   // дома (применяются при «Новый мир» / «Рестарт»)
   hMin0: 440, hMinG: 0.6, hMax: 720, wMin: 110, wMax0: 220, wShrink: 0.002, wFloor: 160,
   gapMin: 140, gapMax0: 220, gapGrow: 0.004, gapCap: 380, reachCheck: true, firstX0: 200, firstW: 180, firstH: 560,
+  dhMin: 0, dhMax: 0, skyP: 0, skyWMin: 300, skyWMax: 600, skyHMin: 700, skyHMax: 1000,
   // камера
   zoom: 0.4, camSmooth: 0.35, lookahead: 0.1, camAnchor: 0.35, camTopMargin: 120, camGround: 60,
   zoomSpeedOn: false, zoomFast: 0.32, zoomV0: 500, zoomV1: 900, zoomLerp: 0.06, rotAlong: true,
@@ -102,10 +107,23 @@ const HOPPER = Object.assign({}, CLEAN, { gravity: 2200, reel: 450, reelMin: 70,
   gapMin: 80, gapMax0: 150, gapGrow: 0.002, gapCap: 220, hMin0: 380, hMax: 620, jumpVx: 350, jumpVy: -750, zoom: 0.45, startMode: "roof" });
 const FAR = Object.assign({}, CLEAN, { reel: 250, rayAngle: 48, ropeMax: 800, capVx: 1300, gapMin: 260, gapMax0: 380, gapGrow: 0.003, gapCap: 520,
   hMin0: 560, hMinG: 0.4, hMax: 880, wMin: 90, wMax0: 160, wFloor: 120, zoom: 0.3, camTopMargin: 200, startMode: "roof" });
+// Пять вариаций «Дальнобоя» (D-70): правило «свой дом» включено (передний угол крыши), отличаются миром и физикой
+const FAR_OWN = Object.assign({}, FAR, { ownOn: true, ownPoint: "corner" });
+const SKY = Object.assign({}, FAR_OWN, { ropeMax: 850, skyP: 0.4, skyWMin: 350, skyWMax: 700, skyHMin: 800, skyHMax: 1050,
+  wMin: 70, wMax0: 130, wFloor: 100, hMin0: 500, hMinG: 0.3, hMax: 750, gapMin: 240, gapMax0: 360, gapCap: 420, zoom: 0.28, camTopMargin: 220 });
+const CANYON = Object.assign({}, FAR_OWN, { gravity: 1000, reel: 220, rayAngle: 42, ropeMax: 1050, capVx: 1500, capVy: 1800,
+  gapMin: 420, gapMax0: 560, gapCap: 700, hMin0: 750, hMinG: 0.3, hMax: 1050, wMin: 80, wMax0: 140, wFloor: 110, zoom: 0.24, camTopMargin: 260 });
+const PEAKS = Object.assign({}, FAR_OWN, { reel: 300, rayAngle: 55, ropeMax: 750, dhMin: 220, dhMax: 450, hMin0: 350, hMinG: 0, hMax: 1000,
+  wMin: 120, wMax0: 260, wFloor: 160, gapMin: 200, gapMax0: 320, gapCap: 380 });
+const ROOFS = Object.assign({}, FAR_OWN, { gravity: 1600, reel: 350, rayAngle: 52, ropeMax: 600, hMin0: 380, hMinG: 0.2, hMax: 560,
+  wMin: 220, wMax0: 420, wFloor: 260, gapMin: 160, gapMax0: 240, gapCap: 300, zoom: 0.36, camTopMargin: 160 });
+const MOON = Object.assign({}, FAR_OWN, { gravity: 650, airDrag: 0.9998, reel: 140, rayAngle: 45, ropeMax: 950, capVx: 1100,
+  gapMin: 380, gapMax0: 500, gapCap: 650, hMin0: 600, hMinG: 0.3, hMax: 950, dhMax: 200, wMin: 60, wMax0: 110, wFloor: 80, zoom: 0.26, camTopMargin: 240 });
 const PRESETS = { spider: SPIDER, pend: PEND, rocket: ROCKET, light: LIGHT, rubber: RUBBER, swing: SWING, tarzan: TARZAN, glider: GLIDER, hopper: HOPPER, far: FAR,
-  pull: PULL, clean: CLEAN, v1: V1, v2: V2 };
+  sky: SKY, canyon: CANYON, peaks: PEAKS, roofs: ROOFS, moon: MOON, pull: PULL, clean: CLEAN, v1: V1, v2: V2 };
 const PR_NAME = { spider: "Паук", pend: "Маятник", rocket: "Ракета", light: "Лёгкий", rubber: "Резинка",
-  swing: "Раскачка", tarzan: "Тарзан", glider: "Планер", hopper: "Кузнечик", far: "Дальнобой", pull: "Подтяжка", clean: "Чистый", v1: "v1", v2: "v2" };
+  swing: "Раскачка", tarzan: "Тарзан", glider: "Планер", hopper: "Кузнечик", far: "Дальнобой",
+  sky: "Небоскрёбы", canyon: "Каньон", peaks: "Горы", roofs: "Крыши", moon: "Луна", pull: "Подтяжка", clean: "Чистый", v1: "v1", v2: "v2" };
 const PR_NOTE = {
   spider: "Короткие верёвки, быстрый пологий полёт над крышами. Энергия — сильная подтяжка 350 u/с, пока держишь.",
   pend: "Длинные верёвки, большие дуги между высокими домами, камера дальше. Энергия — подтяжка 150 u/с.",
@@ -117,6 +135,11 @@ const PR_NOTE = {
   glider: "Падение тормозится сильнее, чем полёт вперёд: парит и медленно снижается. Энергия — подтяжка 300 u/с.",
   hopper: "Гравитация 2200, короткие верёвки, частые перескоки с крыши на крышу. Энергия — подтяжка 450 u/с и прыжок 750 с крыши/земли.",
   far: "Редкие узкие дома, широкие пропасти, длинные перелёты, камера дальше. Энергия — подтяжка 250 u/с.",
+  sky: "Широкие небоскрёбы (350…700) вперемешку с узкими башнями; свой дом — за передний угол. Подтяжка 250 u/с.",
+  canyon: "Пропасти 420…700, высокие узкие башни, верёвка до 1050, g 1000, камера дальше всех. Подтяжка 220 u/с.",
+  peaks: "Соседние дома отличаются по высоте на 220…450 (350…1000), луч 55°. Подтяжка 300 u/с.",
+  roofs: "Низкие широкие крыши, узкие щели, тяжёлый (g 1600), верёвка ≤ 600 — часто свой дом. Подтяжка 350 u/с.",
+  moon: "g 650, почти без сопротивления — медленные дуги; тонкие башни ровной линией, пропасти 380…650. Подтяжка 140 u/с.",
   pull: "Эталон: «Чистый» + подтяжка 200 u/с, старт с крыши.",
   clean: "Эталон без энергии: только гравитация и сопротивление — честно затухает.",
   v1: "Эталон: hook-rnf-v1 (луч до стены, низкие частые дома, буст ×1,12, батут).",
@@ -158,6 +181,9 @@ const SPEC = [
     ["swingMin", "…касательная скорость не меньше, u/с", 0, 900, 5],
     ["backDragOn", "Гашение обратного маха (v2)", "bool"],
     ["backDrag", "…× за тик при vx < 0", 0.95, 1, 0.0005],
+    ["ownOn", "Свой дом: летит в ширине дома ниже крыши — цепляется к этому же дому", "bool"],
+    ["ownPoint", "…точка на крыше", "sel", [["ray", "по лучу, дальше — передний угол"], ["corner", "передний угол"], ["perp", "поперёк скорости (без рывка)"]]],
+    ["ownPad", "…зона начинается до левой стены за, u", 0, 200, 5],
   ]],
   ["Отпускание", "Окно «вжух» — угол скорости вправо-вверх в момент отпускания.", [
     ["boostOn", "Буст «вжух» (v1, v2)", "bool"],
@@ -179,6 +205,13 @@ const SPEC = [
     ["gapMax0", "Промежуток макс. в начале, u", 0, 700, 5],
     ["gapGrow", "…рост на u пути", 0, 0.02, 0.0005],
     ["gapCap", "…не больше, u", 0, 900, 5],
+    ["dhMin", "Перепад высот с соседом не меньше, u (0 — любой)", 0, 600, 5],
+    ["dhMax", "Перепад высот с соседом не больше, u (0 — любой)", 0, 800, 5],
+    ["skyP", "Небоскрёбы: доля домов (0 — нет)", 0, 1, 0.01],
+    ["skyWMin", "…ширина от, u", 100, 1200, 10],
+    ["skyWMax", "…ширина до, u", 100, 1200, 10],
+    ["skyHMin", "…высота от, u", 200, 1300, 10],
+    ["skyHMax", "…высота до, u", 200, 1300, 10],
     ["reachCheck", "Проверка досягаемости при генерации (v2)", "bool"],
     ["firstX0", "Первый дом: x, u", 120, 600, 5],
     ["firstW", "Первый дом: ширина, u", 40, 400, 5],
@@ -213,14 +246,15 @@ const SPEC = [
     ["startMode", "Старт", "sel", [["roof", "с крыши первого дома"], ["box", "с коробки (v1, v2)"]]],
   ]],
 ];
-const WORLD_KEYS = new Set(["hMin0", "hMinG", "hMax", "wMin", "wMax0", "wShrink", "wFloor", "gapMin", "gapMax0", "gapGrow", "gapCap", "reachCheck", "firstX0", "firstW", "firstH", "startMode"]);
+const WORLD_KEYS = new Set(["hMin0", "hMinG", "hMax", "wMin", "wMax0", "wShrink", "wFloor", "gapMin", "gapMax0", "gapGrow", "gapCap", "reachCheck", "firstX0", "firstW", "firstH", "startMode",
+  "dhMin", "dhMax", "skyP", "skyWMin", "skyWMax", "skyHMin", "skyHMax"]);
 const SPEC_KEYS = []; for (const g of SPEC) for (const f of g[2]) SPEC_KEYS.push(f[0]);
 
 // ---- Константы мира ---------------------------------------------------------------------------------------------
 const W = 320, H = 480, DT = 1 / 60, NSUB = 8, FLOOR = 462;
 const SIZE = { omFeet: 30, omTop: 36, mouthDy: 10, candyR: 20 };
 const START = { x: 80, y: 300, boxX0: 40, boxX1: 120, boxTop: 330 };
-const STORE = "lab.hook-tune.v3", BEST_KEY = "lab.best.hook-tune";
+const STORE = "lab.hook-tune.v4", BEST_KEY = "lab.best.hook-tune";
 const rad = (d) => d * Math.PI / 180;
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -287,7 +321,29 @@ function castRay(ox, oy, dx, dy, maxT) { // v1: вход в стену/крыш�
   }
   return bb ? { x: ox + dx * bestT, y: oy + dy * bestT, L: bestT, dev: 0, house: bb.id } : null;
 }
+// «Свой дом» (D-70): Ом Ном в ширине дома (от x0 − ownPad до x1) и ниже крыши хотя бы на liftDy — точка на крыше этого дома
+// впереди или над ним (не позади): «ray» — где луч rayAngle пересекает высоту крыши, дальше переднего угла — передний угол;
+// «corner» — передний угол; «perp» — точка, направление на которую поперёк скорости (верёвка сразу натянута без потери).
+// Длина вне [ropeMin, ropeMax] — точка сдвигается вдоль крыши до границы; не вышло — правило не действует (обычный прицел).
+function ownHouse(x) {
+  const bl = S.WD.bld, b = bl[firstIdx(bl, x)]; // первый дом, чья правая стена правее Ома Нома
+  return b && b.x0 - TUNE.ownPad <= x ? b : null;
+}
+function ownAim(x, y, vx, vy) {
+  const b = ownHouse(x); if (!b) return null;
+  const ins = TUNE.roofInset, dy = y - b.top;
+  if (dy < TUNE.liftDy || dy > TUNE.ropeMax) return null;
+  const lo = Math.max(b.x0 + ins, x), hi = b.x1 - ins; if (hi < lo) return null;
+  let px = TUNE.ownPoint === "corner" ? hi : TUNE.ownPoint === "perp" ? (vx > 1 ? x + dy * vy / vx : hi) : x + dy / Math.tan(rad(TUNE.rayAngle));
+  px = clamp(px, lo, hi);
+  const dxMax = Math.sqrt(TUNE.ropeMax * TUNE.ropeMax - dy * dy), dxMin = dy < TUNE.ropeMin ? Math.sqrt(TUNE.ropeMin * TUNE.ropeMin - dy * dy) : 0;
+  px = Math.min(px, x + dxMax); px = Math.max(px, x + dxMin);
+  if (px < lo - 1e-6 || px > hi + 1e-6) return null;
+  const L = Math.hypot(px - x, dy);
+  return { x: px, y: b.top, dev: Math.abs(Math.atan2(dy, px - x) * 180 / Math.PI - TUNE.rayAngle), L, house: b.id, own: true };
+}
 function aimAt(x, y, prevId) {
+  if (TUNE.ownOn) { const o = ownAim(x, y, S.om.vx, S.om.vy); if (o) return o; }
   if (TUNE.aimMode === "ray") { const a = rad(TUNE.rayAngle); return castRay(x, y, Math.cos(a), -Math.sin(a), TUNE.ropeMax); }
   const bl = S.WD.bld; return aimIn(bl, firstIdx(bl, x + TUNE.roofInset), x, y, prevId);
 }
@@ -315,6 +371,17 @@ function reachOK(A, B) {
     for (const hs of [200, 380]) if (!aimIn(list, 0, x, FLOOR - hs, -1)) return false;
   return true;
 }
+// перепад высот с соседом: не меньше dhMin (уводит в сторону, где есть место), не больше dhMax; без случайных чисел
+function heightStep(hA, h) {
+  if (!(TUNE.dhMin > 0) && !(TUNE.dhMax > 0)) return h;
+  const top = Math.max(TUNE.hMax, TUNE.skyP > 0 ? TUNE.skyHMax : 0), bot = 60;
+  if (TUNE.dhMin > 0 && Math.abs(h - hA) < TUNE.dhMin) {
+    let d = h >= hA ? 1 : -1; if (hA + d * TUNE.dhMin > top || hA + d * TUNE.dhMin < bot) d = -d;
+    h = hA + d * TUNE.dhMin;
+  }
+  if (TUNE.dhMax > 0) h = clamp(h, hA - TUNE.dhMax, hA + TUNE.dhMax);
+  return clamp(h, bot, Math.max(bot, top, hA));
+}
 function genMore(WD, xTo) {
   if (!WD.auto) return;
   while (WD.bld[WD.bld.length - 1].x1 < xTo) {
@@ -324,6 +391,8 @@ function genMore(WD, xTo) {
       g = lerp(TUNE.gapMin, gapMaxAt(d0), r.next());
       w = lerp(TUNE.wMin, wMaxAt(A.x1 + g), r.next());
       h = lerp(Math.max(40, hMinAt(g)), Math.max(40, TUNE.hMax), r.next());
+      if (TUNE.skyP > 0 && r.next() < TUNE.skyP) { w = lerp(TUNE.skyWMin, TUNE.skyWMax, r.next()); h = lerp(TUNE.skyHMin, TUNE.skyHMax, r.next()); }
+      h = heightStep(A.h, h);
       B = mkHouse(A.id + 1, A.x1 + g, w, h, g);
       ok = reachOK(A, B); if (k > 0) WD.rerolls++;
     }
@@ -359,7 +428,7 @@ function newRound(seed) {
     seed: seed >>> 0, WD: newWorld(seed >>> 0), steps: 0, time: 0, held: false, paused: S ? S.paused : false,
     om: { x: START.x, y: START.y, vx: 0, vy: 0, grounded: true, rot: 0 }, x0: START.x, pendCatch: false,
     rope: null, tgt: null, cand: [], ci: 0, maxX: START.x, noPressUntil: 0, shotT: 0,
-    catches: 0, misses: 0, sweet: 0, bounces: 0, candies: 0, tension: 0,
+    catches: 0, ownCatches: 0, misses: 0, sweet: 0, bounces: 0, candies: 0, tension: 0,
     log: [], trail: [], lastCatch: null, lastRelease: null, flash: [],
     cam: { x: 0, y: 0, vx: 0, vy: 0, vxs: 0, vys: 0, zoom: TUNE.zoom, spS: 0 },
   };
@@ -501,14 +570,14 @@ function catchAt(t) {
     if (vt < TUNE.swingMin) { o.vx += (TUNE.swingMin - vt) * tx; o.vy += (TUNE.swingMin - vt) * ty; extra = 1; }
   }
   const vK = speed();
-  const r = S.rope = { ax: t.x, ay: t.y, L, L0: L, house: t.house, taut: false, phi: 0, w: 0, rd: 0, E0: 0, Emax: 0, Emin: 0, swings: 0, wSign: 0, reelUsed: false, extra };
+  const r = S.rope = { ax: t.x, ay: t.y, L, L0: L, house: t.house, own: !!t.own, taut: false, phi: 0, w: 0, rd: 0, E0: 0, Emax: 0, Emin: 0, swings: 0, wSign: 0, reelUsed: false, extra };
   if (TUNE.elastic <= 0) tautCheck(r, "catch");
   r.E0 = r.Emax = r.Emin = energy();
-  S.catches++; S.tgt = null;
+  S.catches++; if (t.own) S.ownCatches++; S.tgt = null;
   const v1 = speed();
   S.lastCatch = { vBefore: v0, vKick: vK, vAfter: v1, EBefore: E0, EAfter: r.E0, L, taut: r.taut };
   logEv({ type: "catch", vBefore: +v0.toFixed(1), vKick: +vK.toFixed(1), vAfter: +v1.toFixed(1), jump: +((v1 / Math.max(1, v0) - 1) * 100).toFixed(2),
-    EBefore: +E0.toFixed(0), EAfter: +r.E0.toFixed(0), L: +L.toFixed(1), taut: r.taut, swingKick: !!extra });
+    EBefore: +E0.toFixed(0), EAfter: +r.E0.toFixed(0), L: +L.toFixed(1), taut: r.taut, swingKick: !!extra, own: !!t.own });
   flash(t.x, t.y, "#2f9e5b");
 }
 function release() {
@@ -615,7 +684,7 @@ function camStep(snap) {
 
 // ---- Рисование ----------------------------------------------------------------------------------------------------
 const COL = { sky: "#cfe6f2", h1: "#8d9cc0", h2: "#7686ae", roof: "#3f4c74", roofLit: "#f0b400", ground: "#6f8f45", groundTop: "#4c6a2c",
-  crate: "#b98a52", rope: "#3a2a1a", ink: "#1f2433", candy: "#e8412f" };
+  crate: "#b98a52", own: "#22a25a", rope: "#3a2a1a", ink: "#1f2433", candy: "#e8412f" };
 let scale = 1, dpr = 1, ip = 1;
 function fit() {
   const r = stage.getBoundingClientRect();
@@ -663,7 +732,7 @@ function draw() {
   for (let i = firstIdx(bl, xa); i < bl.length; i++) {
     const b = bl[i]; if (b.x0 > xb) break;
     ctx.fillStyle = b.id % 2 ? COL.h2 : COL.h1; ctx.fillRect(b.x0, b.top, b.x1 - b.x0, FLOOR - b.top + 1);
-    ctx.fillStyle = b.id === litId ? COL.roofLit : COL.roof; ctx.fillRect(b.x0, b.top - 2.5 * u, b.x1 - b.x0, 5 * u);
+    ctx.fillStyle = b.id === litId ? (S.tgt.own ? COL.own : COL.roofLit) : COL.roof; ctx.fillRect(b.x0, b.top - 2.5 * u, b.x1 - b.x0, 5 * u);
   }
   // земля и коробка
   ctx.fillStyle = COL.ground; ctx.fillRect(xa, FLOOR, xb - xa, H / z + 400);
@@ -673,11 +742,11 @@ function draw() {
   // цель до нажатия: пунктир к точке; цели нет — короткий серый луч
   if (!r) {
     ctx.lineWidth = 1.5 * u; ctx.setLineDash([5 * u, 5 * u]);
-    if (S.tgt) { ctx.strokeStyle = "rgba(200,140,0,.8)"; ctx.beginPath(); ctx.moveTo(v.x, v.y); ctx.lineTo(S.tgt.x, S.tgt.y); ctx.stroke(); }
+    if (S.tgt) { ctx.strokeStyle = S.tgt.own ? "rgba(30,150,80,.9)" : "rgba(200,140,0,.8)"; ctx.beginPath(); ctx.moveTo(v.x, v.y); ctx.lineTo(S.tgt.x, S.tgt.y); ctx.stroke(); }
     else { const a = rad(TUNE.rayAngle), L = S.shotT > 0 ? 160 : 90; ctx.strokeStyle = S.shotT > 0 ? "rgba(180,40,40,.8)" : "rgba(40,40,60,.35)";
       ctx.beginPath(); ctx.moveTo(v.x, v.y); ctx.lineTo(v.x + Math.cos(a) * L, v.y - Math.sin(a) * L); ctx.stroke(); }
     ctx.setLineDash([]);
-    if (S.tgt) { ctx.fillStyle = COL.roofLit; ctx.beginPath(); ctx.arc(S.tgt.x, S.tgt.y, 4.5 * u, 0, 7); ctx.fill(); }
+    if (S.tgt) { ctx.fillStyle = S.tgt.own ? COL.own : COL.roofLit; ctx.beginPath(); ctx.arc(S.tgt.x, S.tgt.y, 4.5 * u, 0, 7); ctx.fill(); }
   }
   // след ~3 с: точки каждые 0,1 с; красная — в этой 0,1 с был скачок скорости (рывок: изменение за тик резко другое)
   if (DEBUG && S.trail.length > 1) {
@@ -719,7 +788,7 @@ function drawDebug() {
     r ? "T " + fmt(S.tension / g, 2) + " g · L " + fmt(r.L) + " u · " + (TUNE.elastic > 0 ? "упругая" : r.taut ? "натянута" : "провисла") : "в полёте" + (o.grounded ? " (стоит)" : ""),
     "зацеп " + (lc ? fmt(lc.vBefore) + "→" + fmt(lc.vAfter) + " u/с (" + (lc.vAfter >= lc.vBefore ? "+" : "") + fmt((lc.vAfter / Math.max(1, lc.vBefore) - 1) * 100, 1) + " %)" : "—"),
     "отпуск " + (lr ? fmt(lr.vBefore) + "→" + fmt(lr.vAfter) + " u/с, " + fmt(lr.ang) + "°" + (lr.sweet ? " вжух" : "") : "—"),
-    "зацепов " + S.catches + " · промахов " + S.misses + " · земля " + S.bounces + " · seed " + S.seed,
+    "зацепов " + S.catches + (TUNE.ownOn ? " (свой дом " + S.ownCatches + ")" : "") + " · промахов " + S.misses + " · земля " + S.bounces + " · seed " + S.seed,
   ];
   ctx.textAlign = "left"; ctx.font = "600 8px ui-monospace,Menlo,monospace";
   let wMax = 0; for (const s of lines) wMax = Math.max(wMax, ctx.measureText(s).width);
@@ -824,7 +893,7 @@ function buildPanel() {
   }
 }
 const DEP = { capVx: "capOn", capVy: "capOn", swingMin: "swingOn", backDrag: "backDragOn", sweetBoost: "boostOn", sweetLift: "liftOn",
-  zoomFast: "zoomSpeedOn", zoomV0: "zoomSpeedOn", zoomV1: "zoomSpeedOn", zoomLerp: "zoomSpeedOn", candyKick: "kickOn", reelMin: "reel", pumpSpeed: "pumpOn", pumpDL: "pumpOn", pumpZone: "pumpOn" };
+  zoomFast: "zoomSpeedOn", zoomV0: "zoomSpeedOn", zoomV1: "zoomSpeedOn", zoomLerp: "zoomSpeedOn", candyKick: "kickOn", reelMin: "reel", ownPoint: "ownOn", ownPad: "ownOn", skyWMin: "skyP", skyWMax: "skyP", skyHMin: "skyP", skyHMax: "skyP", pumpSpeed: "pumpOn", pumpDL: "pumpOn", pumpZone: "pumpOn" };
 function syncUi() {
   const p = PRESETS[PRESET];
   for (const k of SPEC_KEYS) {
@@ -886,7 +955,7 @@ document.getElementById("bCopy").addEventListener("click", copyTune);
 document.getElementById("cDebug").addEventListener("change", (e) => { DEBUG = e.target.checked; save(); });
 document.getElementById("drawerBtn").addEventListener("click", () => { drawerOpen = !drawerOpen; save(); syncUi(); });
 document.querySelectorAll("[data-sp]").forEach((b) => b.addEventListener("click", () => setSpeed(b.dataset.sp)));
-document.querySelectorAll("[data-pr]").forEach((b) => b.addEventListener("click", () => applyPreset(b.dataset.pr)));
+document.querySelectorAll("[data-pr]").forEach((b) => { b.title = PR_NOTE[b.dataset.pr] || ""; b.addEventListener("click", () => applyPreset(b.dataset.pr)); });
 // кнопки не должны оставлять фокус (пробел — это «держать»)
 document.querySelectorAll("button").forEach((b) => b.addEventListener("mouseup", () => b.blur()));
 new ResizeObserver(() => draw()).observe(stage);
@@ -900,10 +969,10 @@ window.__game = {
       steps: S.steps, time: S.time, seed: S.seed, held: S.held, paused: S.paused, speedMul: SPEED, preset: PRESET, debug: DEBUG, drawerOpen,
       om: { x: o.x, y: o.y, vx: o.vx, vy: o.vy, grounded: o.grounded, rot: o.rot }, speed: speed(),
       energy: { E: e, h: e / TUNE.gravity, rope0: r ? r.E0 : null, ropeDelta: r && r.E0 ? e / r.E0 - 1 : null },
-      rope: r ? { ax: r.ax, ay: r.ay, L: r.L, house: r.house, taut: r.taut, tension: S.tension, tensionG: S.tension / TUNE.gravity } : null,
-      target: t ? { x: t.x, y: t.y, dev: t.dev, L: t.L, house: t.house } : null,
+      rope: r ? { ax: r.ax, ay: r.ay, L: r.L, house: r.house, own: r.own, taut: r.taut, tension: S.tension, tensionG: S.tension / TUNE.gravity } : null,
+      target: t ? { x: t.x, y: t.y, dev: t.dev, L: t.L, house: t.house, own: !!t.own } : null,
       cam: { x: c.x, y: c.y, zoom: c.zoom, vx: c.vx, vy: c.vy }, zoom: c.zoom,
-      dist: distM(), best, catches: S.catches, misses: S.misses, sweet: S.sweet, bounces: S.bounces, candies: S.candies,
+      dist: distM(), best, catches: S.catches, ownCatches: S.ownCatches, misses: S.misses, sweet: S.sweet, bounces: S.bounces, candies: S.candies,
       lastCatch: S.lastCatch, lastRelease: S.lastRelease, log: S.log.slice(-40),
       houses: S.WD.bld.filter((b) => b.x1 > c.x - 100 && b.x0 < c.x + W / c.zoom + 100).map((b) => ({ id: b.id, x0: b.x0, x1: b.x1, top: b.top, h: b.h })),
       gen: { houses: S.WD.bld.length, rerolls: S.WD.rerolls, fails: S.WD.fails }, worldDirty,
