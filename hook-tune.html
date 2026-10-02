@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="data:,">
 <title>Крючки — настройка</title>
-<style>:root{--bg:#1d2333;--fg:#f3f5fa;--muted:#a9b1c6;--card:#2a3148;--card2:#323b57;--line:#3d4766;--acc:#ffd166;--add:#ff9f6b}*{box-sizing:border-box}html,body{background:var(--bg);height:100%;color:var(--fg);margin:0;font:13px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{flex-direction:column;height:100dvh;display:flex}header{flex:none;align-items:center;gap:10px;padding:6px 12px;display:flex}header a{color:var(--muted);font-size:13px;text-decoration:none}header h1{margin:0;font-size:15px;font-weight:700}#app{flex:1;min-height:0;display:flex}#stage{touch-action:none;-webkit-user-select:none;user-select:none;flex:1;min-width:0;min-height:0;position:relative}canvas{touch-action:none;border-radius:8px;display:block;position:absolute}#panel{background:var(--card);border-left:1px solid var(--line);flex-direction:column;flex:none;width:370px;min-height:0;display:flex}.phead{border-bottom:1px solid var(--line);flex-direction:column;flex:none;gap:6px;padding:8px 10px 6px;display:flex}.row{flex-wrap:wrap;align-items:center;gap:5px;display:flex}.pbody{-webkit-overflow-scrolling:touch;flex:1;padding:4px 10px 16px;overflow:auto}button{font:inherit;color:var(--fg);background:var(--card2);border:1px solid var(--line);cursor:pointer;border-radius:8px;padding:5px 9px;font-weight:600}button.on{background:var(--acc);color:#222;border-color:var(--acc)}button.warn{box-shadow:0 0 0 2px var(--add)}#drawerBtn{display:none}.preset-note{color:var(--muted);font-size:12px}.row3{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;display:grid}.pr3{flex-direction:column;gap:2px;min-width:0;display:flex}.row2{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;display:grid}.pr3 button{width:100%}.row2 .pr3 button{padding:7px 9px;font-size:14px}.arch{border-bottom:0;padding:0}.lowrow button{padding:4px 9px}.lowrow.dis{opacity:.4;pointer-events:none}.arch summary{color:var(--muted);padding:2px 0;font-size:12px}.arch[open]{flex-direction:column;gap:5px;padding-bottom:4px;display:flex}.pr3 span{color:var(--muted);text-align:center;white-space:nowrap;text-overflow:ellipsis;font-size:10.5px;line-height:1.15;overflow:hidden}details{border-bottom:1px solid var(--line);padding:4px 0}summary{cursor:pointer;color:var(--acc);padding:5px 0;font-size:13px;font-weight:700}.gnote{color:var(--muted);margin:0 0 4px;font-size:11px}.f{grid-template-columns:1fr 74px;align-items:center;gap:2px 6px;padding:3px 0;display:grid}.f label{color:var(--fg);grid-column:1/3;font-size:12px}.f input[type=range]{width:100%;margin:0}.f input[type=number]{width:74px;font:inherit;color:var(--fg);border:1px solid var(--line);background:#141a29;border-radius:6px;padding:3px 4px}.f.dis{opacity:.45}.t{align-items:center;gap:6px;padding:4px 0;font-size:12px;display:flex}.t select{font:inherit;color:var(--fg);border:1px solid var(--line);background:#141a29;border-radius:6px;padding:3px 4px}.add{color:var(--add);border:1px solid var(--add);border-radius:4px;margin-left:4px;padding:0 3px;font-size:10px;font-weight:700}.ch{color:var(--acc)}#copyBox{width:100%;height:140px;color:var(--fg);border:1px solid var(--acc);background:#141a29;border-radius:6px;font:11px/1.25 ui-monospace,Menlo,monospace;display:none}#toast{background:var(--acc);color:#222;z-index:3;pointer-events:none;border-radius:8px;padding:4px 10px;font-weight:700;display:none;position:absolute;top:10px;left:50%;transform:translate(-50%)}@media (width<=760px){header{padding:4px 10px}#app{flex-direction:column}#panel{border-left:0;border-top:1px solid var(--line);width:auto;max-height:48%}#panel.closed{max-height:none}#panel.closed .pbody,#panel.closed .more{display:none}#drawerBtn{display:inline-block}.phead button{padding:4px 7px;font-size:12px}.row{gap:4px}}</style>
+<style>:root{--bg:#1d2333;--fg:#f3f5fa;--muted:#a9b1c6;--card:#2a3148;--card2:#323b57;--line:#3d4766;--acc:#ffd166;--add:#ff9f6b}*{box-sizing:border-box}html,body{background:var(--bg);height:100%;color:var(--fg);margin:0;font:13px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{flex-direction:column;height:100dvh;display:flex}header{flex:none;align-items:center;gap:10px;padding:6px 12px;display:flex}header a{color:var(--muted);font-size:13px;text-decoration:none}header h1{margin:0;font-size:15px;font-weight:700}#app{flex:1;min-height:0;display:flex}#stage{touch-action:none;-webkit-user-select:none;user-select:none;flex:1;min-width:0;min-height:0;position:relative}canvas{touch-action:none;border-radius:8px;display:block;position:absolute}#panel{background:var(--card);border-left:1px solid var(--line);flex-direction:column;flex:none;width:370px;min-height:0;display:flex}.phead{border-bottom:1px solid var(--line);flex-direction:column;flex:none;gap:6px;padding:8px 10px 6px;display:flex}.row{flex-wrap:wrap;align-items:center;gap:5px;display:flex}.pbody{-webkit-overflow-scrolling:touch;flex:1;padding:4px 10px 16px;overflow:auto}button{font:inherit;color:var(--fg);background:var(--card2);border:1px solid var(--line);cursor:pointer;border-radius:8px;padding:5px 9px;font-weight:600}button.on{background:var(--acc);color:#222;border-color:var(--acc)}button.warn{box-shadow:0 0 0 2px var(--add)}#drawerBtn{display:none}.preset-note{color:var(--muted);font-size:12px}.row3{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;display:grid}.pr3{flex-direction:column;gap:2px;min-width:0;display:flex}.row2{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;display:grid}.pr3 button{width:100%}.row2 .pr3 button{padding:7px 9px;font-size:14px}.arch{border-bottom:0;padding:0}.lowrow button{padding:4px 9px}.lowrow.dis{opacity:.4;pointer-events:none}.hrow{grid-template-columns:auto 1fr 3.6em;align-items:center;gap:2px 8px;font-size:13px;display:grid}.hrow input{width:100%;margin:0}.hrow b{text-align:right;font-variant-numeric:tabular-nums}.hrow.dis{opacity:.4;pointer-events:none}.cwarn{color:#d9534f;min-height:0;font-size:12px}.arch summary{color:var(--muted);padding:2px 0;font-size:12px}.arch[open]{flex-direction:column;gap:5px;padding-bottom:4px;display:flex}.pr3 span{color:var(--muted);text-align:center;white-space:nowrap;text-overflow:ellipsis;font-size:10.5px;line-height:1.15;overflow:hidden}details{border-bottom:1px solid var(--line);padding:4px 0}summary{cursor:pointer;color:var(--acc);padding:5px 0;font-size:13px;font-weight:700}.gnote{color:var(--muted);margin:0 0 4px;font-size:11px}.f{grid-template-columns:1fr 74px;align-items:center;gap:2px 6px;padding:3px 0;display:grid}.f label{color:var(--fg);grid-column:1/3;font-size:12px}.f input[type=range]{width:100%;margin:0}.f input[type=number]{width:74px;font:inherit;color:var(--fg);border:1px solid var(--line);background:#141a29;border-radius:6px;padding:3px 4px}.f.dis{opacity:.45}.t{align-items:center;gap:6px;padding:4px 0;font-size:12px;display:flex}.t select{font:inherit;color:var(--fg);border:1px solid var(--line);background:#141a29;border-radius:6px;padding:3px 4px}.add{color:var(--add);border:1px solid var(--add);border-radius:4px;margin-left:4px;padding:0 3px;font-size:10px;font-weight:700}.ch{color:var(--acc)}#copyBox{width:100%;height:140px;color:var(--fg);border:1px solid var(--acc);background:#141a29;border-radius:6px;font:11px/1.25 ui-monospace,Menlo,monospace;display:none}#toast{background:var(--acc);color:#222;z-index:3;pointer-events:none;border-radius:8px;padding:4px 10px;font-weight:700;display:none;position:absolute;top:10px;left:50%;transform:translate(-50%)}@media (width<=760px){header{padding:4px 10px}#app{flex-direction:column}#panel{border-left:0;border-top:1px solid var(--line);width:auto;max-height:48%}#panel.closed{max-height:none}#panel.closed .pbody,#panel.closed .more{display:none}#drawerBtn{display:inline-block}.phead button{padding:4px 7px;font-size:12px}.row{gap:4px}}</style>
 </head>
 <body>
 <header><a href="index.html">← Лаборатория</a><h1>Крючки — настройка</h1></header>
@@ -24,6 +24,9 @@
         <div class="pr3"><button data-pr="sparse">Редко</button><span>≈ 37 конфет на 100 м</span></div>
       </div>
       <div class="row lowrow" id="lowRow"><span class="preset-note">Конфеты внизу:</span><button data-dn="path">по пути</button><button data-dn="circle">дугой</button><button data-dn="off">нет</button></div>
+      <div class="hrow" id="hRow"><span>Высота конфет</span><input type="range" id="cH" min="1" max="18" step="0.5"><b id="cHv"></b>
+        <span>Разброс</span><input type="range" id="cS" min="0" max="200" step="5"><b id="cSv"></b></div>
+      <div class="cwarn" id="cWarn"></div>
       <div class="preset-note" id="prNote"></div>
       <details class="more arch" id="archive"><summary>Архив</summary>
         <div class="row3">
@@ -183,6 +186,11 @@ const LOW_OV = {
   sparse: { path: {}, circle: { dnMode: "circle", dnWhich: "alt", chMin: 1, chMax: 2, rowN: 2, star2: 63, star3: 135 }, off: { dnMode: "off", chMin: 1, chMax: 2, rowN: 2, star2: 41, star3: 90 } }, // off: Обычный 46, Сборщик 111
 };
 let LOWER = "path";
+// Реплика 2 (пользователь): ползунки «Высота» и «Разброс» цепочек на виду. Цепочка ставится по пути призраков (база by), в кадре — y по формуле:
+// высота над землёй = CANDH + (база − CH_REF) × CANDSP; не ниже 35 u. Меняется на лету у всех уже поставленных конфет.
+const CH_REF = 510, CH_FALL = 140; // CH_REF — средняя высота цепочек «как поставили призраки» (u над землёй); ниже CH_FALL опорные игроки без падения не пролетают
+let CANDH = 360, CANDSP = 0.6; // по умолчанию 9 м и 60 % (раньше — медиана 12,75 м и 100 %)
+const adjY = (by) => FLOOR - Math.max(35, CANDH + (FLOOR - by - CH_REF) * CANDSP);
 const curPreset = () => (LOW_OV[PRESET] ? Object.assign({}, PRESETS[PRESET], LOW_OV[PRESET][LOWER] || {}) : PRESETS[PRESET]);
 const PRESETS = { dense: DENSE, sparse: SPARSE, fire: FIRE, web: WEB, full: FULL, spider: SPIDER, pend: PEND, rocket: ROCKET, light: LIGHT, rubber: RUBBER, swing: SWING, tarzan: TARZAN, glider: GLIDER, hopper: HOPPER, far: FAR,
   sky: SKY, canyon: CANYON, peaks: PEAKS, roofs: ROOFS, moon: MOON, pull: PULL, clean: CLEAN, v1: V1, v2: V2 };
@@ -407,7 +415,7 @@ const SPEC_KEYS = []; for (const g of SPEC) for (const f of g[2]) SPEC_KEYS.push
 const W = 320, H = 480, DT = 1 / 60, NSUB = 8, FLOOR = 462;
 const SIZE = { omFeet: 30, omTop: 36, mouthDy: 10, candyR: 20 };
 const START = { x: 80, y: 300, boxX0: 40, boxX1: 120, boxTop: 330 };
-const STORE = "lab.hook-tune.v13", BEST_KEY = "lab.best.hook-tune";
+const STORE = "lab.hook-tune.v14", BEST_KEY = "lab.best.hook-tune";
 const bestKey87 = () => "lab.best.hook-d87-" + PRESET + (LOW_OV[PRESET] ? (LOWER !== "path" ? "-" + LOWER : "-p80") : ""); // рекорд — свой у каждого набора и «конфет внизу»
 const rad = (d) => d * Math.PI / 180;
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -711,7 +719,7 @@ function placeChain(WD, pts, nr, grp, minH) {
     for (let d = 0; d <= TUNE.pStep / 2 && sv + d <= sMax; d += 10) { const [x, y] = at(sv + d);
       const oh = inHouseBody(WD, x, y);
       if (y > FLOOR - Math.max(120, minH || 0) || x < WD.bld[0].x1 + 40 || (oh && !TUNE.pOverHouse)) continue; // не на крыше старта; на фоне дома — только с pOverHouse
-      const c = addCandSorted(WD, x, y, g); if (c) { if (oh) c.oh = true; list.push(c); } return sv + d; }
+      const c = addCandSorted(WD, x, y, g); if (c) { if (oh) c.oh = true; c.by = y; c.y = adjY(y); list.push(c); } return sv + d; }
     return sv;
   };
   let sv = TUNE.pStart * Lr;
@@ -758,7 +766,7 @@ function inHouseBody(WD, x, y) {
 function addCandSorted(WD, x, y, grp) { // вставка на место по x; ближе 50 u к соседней — не ставим
   const L = WD.cand; if (x < (WD.streamX || -1e9)) { WD.late = (WD.late || 0) + 1; return null; } // уже подано в кадр — не вставляем
   let i = L.length; while (i > 0 && L[i - 1].x > x) i--;
-  for (let j = Math.max(0, i - 10); j < Math.min(L.length, i + 10); j++) if (Math.hypot(L[j].x - x, L[j].y - y) < 50) return null;
+  for (let j = Math.max(0, i - 10); j < Math.min(L.length, i + 10); j++) if (Math.hypot(L[j].x - x, (L[j].by != null ? L[j].by : L[j].y) - y) < 50) return null; // сравнение — по базе (до ползунков)
   const c = { x, y, grp, gn: 1 }; L.splice(i, 0, c); return c;
 }
 function setStreet(houses) { // dev: улица вместо генератора, [{x0, w, h}]
@@ -1640,13 +1648,15 @@ function newWorldBtn() { restart((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
 let PRESET = "dense", worldDirty = false, drawerOpen = false;
 const ctl = {};
 function save() {
-  try { localStorage.setItem(STORE, JSON.stringify({ preset: PRESET, tune: TUNE, ui: { debug: DEBUG, speed: SPEED, drawer: drawerOpen, lower: LOWER } })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ preset: PRESET, tune: TUNE, ui: { debug: DEBUG, speed: SPEED, drawer: drawerOpen, lower: LOWER, candH: CANDH, candSp: CANDSP } })); } catch (e) {}
 }
 function load() {
   let d = null;
   try { d = JSON.parse(localStorage.getItem(STORE) || "null"); } catch (e) { d = null; }
   if (!d || typeof d !== "object") return;
   if (d.ui && LOW_OV.dense[d.ui.lower]) LOWER = d.ui.lower;
+  if (d.ui && typeof d.ui.candH === "number") CANDH = clamp(d.ui.candH, 40, 720);
+  if (d.ui && typeof d.ui.candSp === "number") CANDSP = clamp(d.ui.candSp, 0, 2);
   if (PRESETS[d.preset]) { PRESET = d.preset; Object.assign(TUNE, curPreset()); }
   if (d.tune) for (const k of SPEC_KEYS) if (k in d.tune && typeof d.tune[k] === typeof CLEAN[k]) TUNE[k] = d.tune[k];
   if (d.ui) { DEBUG = d.ui.debug === true; if ([0.25, 0.5, 1].includes(d.ui.speed)) SPEED = d.ui.speed; drawerOpen = !!d.ui.drawer; }
@@ -1674,6 +1684,13 @@ function applyPreset(name) {
   if (!PRESETS[name]) return false;
   PRESET = name; Object.assign(TUNE, curPreset()); save(); restart(); return true;
 }
+function setCandAdj(hM, spP) { // ползунки: высота в м (1…18), разброс в % (0…200); конфеты двигаются сразу, раунд не перезапускается
+  if (hM != null && isFinite(+hM)) CANDH = clamp(+hM, 1, 18) * 40;
+  if (spP != null && isFinite(+spP)) CANDSP = clamp(+spP, 0, 200) / 100;
+  for (const c of S.WD.cand) if (c.by != null) c.y = adjY(c.by);
+  save(); syncUi(); return true;
+}
+function candLowShare() { let n = 0, lo = 0; for (const c of S.WD.cand) if (c.by != null) { n++; if (FLOOR - c.y < CH_FALL) lo++; } return n ? lo / n : 0; }
 function setLower(m) { // «Конфеты внизу: по пути | дугой | нет» (только для «Густо» / «Редко»)
   if (!LOW_OV.dense[m]) return false; LOWER = m;
   if (LOW_OV[PRESET]) { Object.assign(TUNE, curPreset()); restart(); }
@@ -1743,6 +1760,11 @@ function syncUi() {
   document.querySelectorAll("[data-sp]").forEach((b) => b.classList.toggle("on", +b.dataset.sp === SPEED));
   document.querySelectorAll("[data-dn]").forEach((b) => b.classList.toggle("on", !!LOW_OV[PRESET] && b.dataset.dn === LOWER));
   document.getElementById("lowRow").classList.toggle("dis", !LOW_OV[PRESET]);
+  { const on = !!LOW_OV[PRESET] && LOWER === "path"; document.getElementById("hRow").classList.toggle("dis", !on);
+    document.getElementById("cH").value = CANDH / 40; document.getElementById("cS").value = Math.round(CANDSP * 100);
+    document.getElementById("cHv").textContent = String(+(CANDH / 40).toFixed(1)).replace(".", ",") + " м"; document.getElementById("cSv").textContent = Math.round(CANDSP * 100) + " %";
+    const ls = on ? candLowShare() : 0;
+    document.getElementById("cWarn").textContent = ls > 0.1 ? "На этой высоте боты падают: " + Math.round(ls * 100) + " % конфет ниже 3,5 м — так низко без касания земли не пролететь" : ""; }
   document.getElementById("bPause").classList.toggle("on", !!(S && S.paused));
   document.getElementById("bWorld").classList.toggle("warn", worldDirty);
   document.getElementById("cDebug").checked = DEBUG;
@@ -1794,6 +1816,8 @@ document.getElementById("cDebug").addEventListener("change", (e) => { DEBUG = e.
 document.getElementById("drawerBtn").addEventListener("click", () => { drawerOpen = !drawerOpen; save(); syncUi(); });
 document.querySelectorAll("[data-sp]").forEach((b) => b.addEventListener("click", () => setSpeed(b.dataset.sp)));
 document.querySelectorAll("[data-dn]").forEach((b) => b.addEventListener("click", () => setLower(b.dataset.dn)));
+document.getElementById("cH").addEventListener("input", (e) => setCandAdj(e.target.value, null));
+document.getElementById("cS").addEventListener("input", (e) => setCandAdj(null, e.target.value));
 document.querySelectorAll("[data-pr]").forEach((b) => { b.title = PR_NOTE[b.dataset.pr] || ""; b.addEventListener("click", () => applyPreset(b.dataset.pr)); });
 // кнопки не должны оставлять фокус (пробел — это «держать»)
 document.querySelectorAll("button").forEach((b) => b.addEventListener("mouseup", () => b.blur()));
@@ -1805,7 +1829,7 @@ window.__game = {
   getState() {
     const o = S.om, r = S.rope, c = S.cam, e = energy(), t = S.tgt;
     return {
-      steps: S.steps, time: S.time, seed: S.seed, held: S.held, paused: S.paused, speedMul: SPEED, preset: PRESET, lower: LOW_OV[PRESET] ? LOWER : null, debug: DEBUG, drawerOpen,
+      steps: S.steps, time: S.time, seed: S.seed, held: S.held, paused: S.paused, speedMul: SPEED, preset: PRESET, lower: LOW_OV[PRESET] ? LOWER : null, candyAdj: { h: CANDH / 40, sp: Math.round(CANDSP * 100), lowShare: +candLowShare().toFixed(3) }, debug: DEBUG, drawerOpen,
       om: { x: o.x, y: o.y, vx: o.vx, vy: o.vy, grounded: o.grounded, rot: o.rot }, speed: speed(),
       energy: { E: e, h: e / TUNE.gravity, rope0: r ? r.E0 : null, ropeDelta: r && r.E0 ? e / r.E0 - 1 : null },
       rope: r ? { ax: r.ax, ay: r.ay, L: r.L, house: r.house, own: r.own, taut: r.taut, tension: S.tension, tensionG: S.tension / TUNE.gravity } : null,
@@ -1853,6 +1877,7 @@ window.__game = {
     else if (a === "street") { setStreet((p && p.houses) || []); ensureWorld(); updateTarget(); }
     else if (a === "candies") { S.cand = ((p && p.list) || []).map((q, i) => ({ x: q.x, y: q.y, grp: q.grp != null ? q.grp : 1000 + i, gn: q.gn || 1 })); } // dev: свои конфеты
     else if (a === "autoplay") return setAuto(p && p.bot);
+    else if (a === "candyAdj") return setCandAdj(p && p.h, p && p.sp); // ползунки «Высота» (м) и «Разброс» (%)
     else if (a === "lower") return setLower(p && (p.mode || p)); // «Конфеты внизу»: path | circle | off
     else if (a === "next") nextRound(); // итог → новый раунд (как тап по карточке)
   },
