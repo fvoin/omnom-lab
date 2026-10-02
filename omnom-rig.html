@@ -209,7 +209,7 @@ function rigBuild(J, CJ) {
   REST = J.anchors.pupils.rest; TRAVEL = J.anchors.pupils.travel;
   for (const fn of ["body", "eyes", "lids"]) { const F = J.families[fn]; R.fam[fn] = { members: F.members, slots: F.slots }; }
   J.shapes.forEach((s, i) => {
-    const o = { id: s.id, pi: R.bi[s.part], part: s.part, z: shadeZ(J, s, "z"), zFront: shadeZ(J, s, "zFront"), zFace: shadeZ(J, s, "zFace"), fill: s.fill, opacity: s.opacity, blur: s.blur,
+    const o = { id: s.id, pi: R.bi[s.part], part: s.part, z: shadeZ(J, s, "z"), zFront: shadeZ(J, s, "zFront"), zFace: shadeZ(J, s, "zFace"), zOver: shadeZ(J, s, "zOverMouth"), frontHide: !!s.frontHide, fill: s.fill, opacity: s.opacity, blur: s.blur,
       clip: s.clip || null, hidden: !!s.hidden, fam: null, morph: null, path: null, ord: i, mouth: false, nums: null };
     let fam = null; for (const fn of ["body", "eyes", "lids"]) if (R.fam[fn].slots.includes(s.id)) fam = fn;
     if (fam) { o.fam = fam; const F = J.families[fam]; o.morph = makeMorph(F.members.map((m) => F.forms[m][s.id])); }
@@ -221,7 +221,10 @@ function rigBuild(J, CJ) {
   // риг 2.4 (D-74): у формы цепочки с zFront две копии — отдельные записи в списке рисования (ez хранится на копии):
   // fe — «над глазами» на zFront, клип по frontClipAny (eyes.outline); ff — «на лице» на zFace (под ртом), без маски лица
   for (const o of R.shapes) if (o.chain >= 0 && o.zFront != null) { o.fe = Object.assign({}, o, { copy: true, lk: 1, fe: null, ff: null });
-    if (o.zFace != null) o.ff = Object.assign({}, o, { copy: true, lk: 0, fe: null, ff: null, fca: null }); }
+    if (o.zFace != null) o.ff = Object.assign({}, o, { copy: true, lk: 0, fe: null, ff: null, fca: null });
+    // риг 2.5 (D-79): копия «над ртом» (fo) на zOverMouth 590–598 в позах faceOverMouth; у контура слитой цепочки — клип по skin.overMouthClipAny
+    if (o.zOver != null) { o.fo = Object.assign({}, o, { copy: true, lk: 2, fe: null, ff: null, fo: null, fca: null });
+      if (o.noFace) o.foM = Object.assign({}, o.fo, { fca: SK.overMouthClipAny || [] }); } }
   for (const g in J.families.mouth.groups) { const G = J.families.mouth.groups[g];
     R.mouth[g] = { members: G.members, slots: G.slots.map((sl, i) => ({ id: sl.id, pi: MOUTH, part: "mouth", z: sl.z, fill: sl.fill,
       clip: sl.clip || null, ord: 1000 + i, mouth: true, fam: "mouth", morph: makeMorph(G.members.map((m) => G.forms[m][sl.id])),
@@ -237,6 +240,7 @@ function rigBuild(J, CJ) {
     for (const id in c.bones || {}) setBone(P, id, c.bones[id], false);
     if (c.armsFrom) copyArms(P, R.poses[c.armsFrom]);
     if (c.front) P.front = new Set(c.front);
+    P.over = !!c.faceOverMouth;   // риг 2.5: флаг позы, от base не наследуется
     for (const f in c.forms || {}) P[f] = oneHot(R.fam[f].members.length, R.fam[f].members.indexOf(c.forms[f]));
     R.poses[n] = P; todo.splice(i, 1); }
   if (todo.length) throw new Error("позы clips.json не собрались: " + todo.join(", "));
@@ -257,15 +261,15 @@ function rigBuild(J, CJ) {
 // иначе при повороте кости тень доли / ростка, ушедшей под заливку тела, всплывает пятном поверх тела (D-56 п. 4)
 function shadeZ(J, s, key) { const z = s[key]; if (z == null || !/\.shade\d+$/.test(s.id) || !s.clip || s.clip.length !== 1) return z;
   const f = J.shapes.find((q) => q.id === s.clip[0]); if (!f || f.part !== s.part || f[key] == null) return z;
-  const zf = f[key]; return zf >= 200 && zf < 400 && z >= 400 && z < 500 ? zf + 0.5 : (zf >= 850 || (zf >= 480 && zf < 500)) && z > zf ? zf + 0.5 : z; }   // zFace 2.4: тень лапы 488 → 486.5
+  const zf = f[key]; return zf >= 200 && zf < 400 && z >= 400 && z < 500 ? zf + 0.5 : (zf >= 850 || (zf >= 480 && zf < 500) || (zf >= 590 && zf < 600)) && z > zf ? zf + 0.5 : z; }   // 2.5: zOverMouth 598 → 596.5   // zFace 2.4: тень лапы 488 → 486.5
 function bbox(n) { let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (let i = 0; i + 1 < n.length; i += 2) { x0 = Math.min(x0, n[i]); x1 = Math.max(x1, n[i]); y0 = Math.min(y0, n[i + 1]); y1 = Math.max(y1, n[i + 1]); } return [x0, y0, x1, y1]; }
 
 // ---- позы: кости (tx, ty, r, sx, sy), веса форм, группа рта, наборы show/hide/front -----------------
 const EMPTY = new Set();
 function newPose() { const b = new Float64Array(R.NB * 5); for (let i = 0; i < R.NB; i++) { b[i * 5 + 3] = 1; b[i * 5 + 4] = 1; }
   return { b, body: Float64Array.of(1, 0, 0), eyes: Float64Array.of(1, 0, 0), lids: Float64Array.of(1, 0, 0, 0, 0, 0),
-    mg: "closed", mw: Float64Array.of(1), show: EMPTY, hide: EMPTY, front: EMPTY }; }
-function clonePose(P) { return { b: P.b.slice(), body: P.body.slice(), eyes: P.eyes.slice(), lids: P.lids.slice(), mg: P.mg, mw: P.mw.slice(), show: P.show, hide: P.hide, front: P.front }; }
+    mg: "closed", mw: Float64Array.of(1), show: EMPTY, hide: EMPTY, front: EMPTY, over: false }; }
+function clonePose(P) { return { b: P.b.slice(), body: P.body.slice(), eyes: P.eyes.slice(), lids: P.lids.slice(), mg: P.mg, mw: P.mw.slice(), show: P.show, hide: P.hide, front: P.front, over: P.over }; }
 function oneHot(n, i) { const a = new Float64Array(n); a[i] = 1; return a; }
 function setBone(P, id, v, add) { const k = R.bi[id] * 5; if (k !== k) return;
   if (v.t) { P.b[k] = (add ? P.b[k] : 0) + v.t[0]; P.b[k + 1] = (add ? P.b[k + 1] : 0) + v.t[1]; }
@@ -277,7 +281,7 @@ function poseFromJson(p) { const P = newPose(), f = p.forms || {};
   if (f.lids) P.lids = oneHot(6, R.fam.lids.members.indexOf(f.lids));
   if (f.mouth) { P.mg = f.mouth[0]; const G = R.mouth[P.mg]; P.mw = oneHot(G.members.length, G.members.indexOf(f.mouth[1])); }
   for (const id in p.bones || {}) setBone(P, id, p.bones[id], false);
-  if (p.show) P.show = new Set(p.show); if (p.front) P.front = new Set(p.front);
+  if (p.show) P.show = new Set(p.show); if (p.front) P.front = new Set(p.front); P.over = !!p.faceOverMouth;
   // зрачки под закрытыми веками (blink, chew2) не прячем: веки их и так закрывают, а при открытии век белок не пустеет
   if (p.hide) { const closed = f.lids === "blink" || f.lids === "chew2"; const h = p.hide.filter((b) => !(closed && /^pupil_/.test(b))); if (h.length) P.hide = new Set(h); }
   return P; }
@@ -288,9 +292,9 @@ function lerpPose(A, B, u, mode) { const O = clonePose(A);
     else O.b[i] = A.b[i] + (B.b[i] - A.b[i]) * u; }
   for (const f of ["body", "eyes", "lids"]) for (let i = 0; i < O[f].length; i++) O[f][i] = A[f][i] + (B[f][i] - A[f][i]) * u;
   if (A.mg === B.mg) { for (let i = 0; i < O.mw.length; i++) O.mw[i] = A.mw[i] + (B.mw[i] - A.mw[i]) * u;
-    const S = u < 0.5 ? A : B; O.show = S.show; O.hide = S.hide; O.front = S.front; }
+    const S = u < 0.5 ? A : B; O.show = S.show; O.hide = S.hide; O.front = S.front; O.over = S.over; }
   else { const takeB = mode === "B" || (mode === "mid" && u >= 0.5); const S = takeB ? B : A;
-    O.mg = S.mg; O.mw = S.mw.slice(); O.show = S.show; O.hide = S.hide; O.front = S.front; }
+    O.mg = S.mg; O.mw = S.mw.slice(); O.show = S.show; O.hide = S.hide; O.front = S.front; O.over = S.over; }
   return O; }
 function copyArms(P, Q) { const f = new Set([...P.front].filter((p) => !ARM_IDS.includes(p)));
   for (const id of ARM_IDS) { const k = R.bi[id] * 5; for (let j = 0; j < 5; j++) P.b[k + j] = Q.b[k + j]; if (Q.front.has(id)) f.add(id); }
@@ -376,7 +380,8 @@ function layerMerge(Bp, Rp, w, aw, mask, faceOnly, hold, legsW) {
     if ([...Bp.hide].some((p) => p.includes("."))) { const hd = new Set(O.hide); for (const p of Bp.hide) if (p.includes(".")) hd.add(p); O.hide = hd; } }
   if (!faceOnly && mask && aw > 0) { const drv = (id) => ARM_IDS.includes(id) && aw * mask[R.arm[R.bi[id]]] >= 0.5; let ch = false;
     for (const id of ARM_IDS) if (drv(id) && Bp.front.has(id) !== Rp.front.has(id)) ch = true;
-    if (ch) { const f = new Set(); for (const p of Bp.front) if (!drv(p)) f.add(p); for (const p of Rp.front) if (drv(p)) f.add(p); O.front = f; } }
+    if (ch) { const f = new Set(); for (const p of Bp.front) if (!drv(p)) f.add(p); for (const p of Rp.front) if (drv(p)) f.add(p); O.front = f; }
+    O.over = ARM_IDS.some(drv) ? Rp.over : Bp.over; }
   return O; }
 
 // ---- пружины -------------------------------------------------------------------------------------
@@ -395,12 +400,12 @@ function ptStep(s, dt, tx, ty, f, z) { const w = 2 * Math.PI * f; const n = 2, h
 function newDS() { const v = new Float64Array(R.NB * 5);
   return { v, over: new Array(R.NB).fill(null), world: Array.from({ length: R.NB }, () => [1, 0, 0, 1, 0, 0]), loc: [1, 0, 0, 1, 0, 0],
     body: Float64Array.of(1, 0, 0), eyes: Float64Array.of(1, 0, 0), lids: Float64Array.of(1, 0, 0, 0, 0, 0), mg: "closed", mw: Float64Array.of(1),
-    show: EMPTY, hide: EMPTY, front: EMPTY, shadowA: 1, shadowS: 1, place: mT(0, 0) }; }
+    show: EMPTY, hide: EMPTY, front: EMPTY, fom: false, shadowA: 1, shadowS: 1, place: mT(0, 0) }; }
 function dsWorld(ds) { for (let j = 0; j < R.NB; j++) { const i = R.order[j], p = R.parts[i];
   const L = ds.over[i] || boneLocal(p.pivot, ds.v, i * 5, ds.loc);
   mmul(p.pi < 0 ? ds.place : ds.world[p.pi], L, ds.world[i]); } }
 function dsFromPose(P, place, noShadow) { const ds = newDS(); ds.v.set(P.b); ds.body.set(P.body); ds.eyes.set(P.eyes); ds.lids.set(P.lids);
-  ds.mg = P.mg; ds.mw = P.mw.slice(); ds.show = P.show; ds.hide = P.hide; ds.front = P.front; ds.place = place; if (noShadow) ds.shadowA = 0; dsWorld(ds); return ds; }
+  ds.mg = P.mg; ds.mw = P.mw.slice(); ds.show = P.show; ds.hide = P.hide; ds.front = P.front; ds.fom = !!P.over; ds.place = place; if (noShadow) ds.shadowA = 0; dsWorld(ds); return ds; }
 function famW(s, ds) { return s.fam === "mouth" ? ds.mw : ds[s.fam]; }
 function shapePath(s, ds) { return s.morph ? morphPath(s.morph, famW(s, ds)) : s.path; }
 function resolveShape(id, ds) { return R.byId[id] || R.mouth[ds.mg].byId[id]; }
@@ -418,32 +423,34 @@ const TM = [1, 0, 0, 1, 0, 0], TC = [1, 0, 0, 1, 0, 0], TW = [1, 0, 0, 1, 0, 0];
 // Итог: тело ≤ 406 < складки 450–455 < рука на лице 480–488 < рот 500–599 < глаза 600–643 < рука над глазами 850–866.
 // Плавность: ds.frontW[часть] 0..1 — вес «часть спереди» (догоняет front за MERGE_FADE, 3 кадра при 60 fps), ds.mergeA[c] — вес слияния
 // цепочки c (вверх сразу, вниз за MERGE_FADE). Складка — min(merge, frontW). Нет весов в ds (статичные позы рига) — веса 0 / 1 по front.
-const FACE_MARK = { ez: 499.5, ord: -1, mark: true };   // служебная запись: здесь кладутся слои копий «на лице» (до рта)
+const FACE_MARK = { ez: 499.5, ord: -1, mark: true }, OVER_MARK = { ez: 599.5, ord: -1, mark: 2 };   // 2.5: слой копий «над ртом» — после рта, до глаз   // служебная запись: здесь кладутся слои копий «на лице» (до рта)
 function drawRig(ctx, V, ds) {
   const list = R.list; list.length = 0;
   const MA = ds.mergeA, FW = ds.frontW, mL = ds.front.has("arm_l"), mR = ds.front.has("arm_r");
-  for (const s of R.shapes) { if (s.hidden && !ds.show.has(s.id)) continue; if (ds.hide.has(s.part) || ds.hide.has(s.id)) continue;   // hide: кости или отдельные формы (складки долей в hang / fly, риг 2.1)
+  for (const s of R.shapes) { if (s.hidden && !ds.show.has(s.id)) continue; if (ds.hide.has(s.part) || ds.hide.has(s.id)) continue;
+    if (s.frontHide && ds.front.has(s.part)) continue;   // 2.5: складки долей не рисуем, пока лапа спереди (она не на земле)   // hide: кости или отдельные формы (складки долей в hang / fly, риг 2.1)
     const ch = s.chain;
     if (ch < 0 || !(s.fe || s.mergeOnly)) { s.ez = s.zFront != null && ds.front.has(s.part) ? s.zFront : s.z; s.ea = 1; list.push(s); continue; }
     const m = MA ? MA[ch] : (ch ? mR : mL) ? 1 : 0, w = FW ? FW[s.pi] : ds.front.has(s.part) ? 1 : 0;
     if (s.mergeOnly) { const a = Math.min(m, w); if (a <= 0.004) continue; s.ez = s.z; s.ea = a; list.push(s); continue; }
     s.ez = s.z; s.ea = 1; list.push(s);
     if (w <= 0.004) continue;
-    if (s.ff) { const f = s.noFace ? Math.max(0, w - m) : w; if (f > 0.004) { s.ff.ez = s.zFace; s.ff.ea = f; list.push(s.ff); } }
+    if (ds.fom && s.fo) { if (w >= 0.5) { const c = s.foM && m >= 0.5 ? s.foM : s.fo; c.ez = s.zOver; c.ea = 1; list.push(c); } }   // 2.5: над ртом, без альфы (переключение при w 0,5, как в Unity): полупрозрачная лапа на красном рту — «призрак»; край контура — только на рту
+    else if (s.ff) { const f = s.noFace ? Math.max(0, w - m) : w; if (f > 0.004) { s.ff.ez = s.zFace; s.ff.ea = f; list.push(s.ff); } }
     s.fe.ez = s.zFront; s.fe.ea = w; list.push(s.fe); }
   for (const s of R.mouth[ds.mg].slots) { s.ez = s.z; list.push(s); }
-  list.push(FACE_MARK);
+  list.push(FACE_MARK); list.push(OVER_MARK);
   list.sort((a, b) => a.ez - b.ez || a.ord - b.ord || (a.copy ? 1 : 0) - (b.copy ? 1 : 0));
   // копии с весом < 1 (3 кадра появления / ухода) — в свой слой, слой одним drawImage с альфой: иначе полупрозрачная тёмная форма
   // контура просвечивает сквозь полупрозрачную заливку и лапа темнеет целиком. Слоёв по два на цепочку: «на лице» (lk 0) кладётся
   // на FACE_MARK (ez 499.5, сразу перед ртом), «над глазами» (lk 1) — в конце.
-  const LA = drawRig.la || (drawRig.la = [0, 0, 0, 0]); LA[0] = LA[1] = LA[2] = LA[3] = 0;
+  const LA = drawRig.la || (drawRig.la = [0, 0, 0, 0, 0, 0]); LA.fill(0);
   for (const s of list) if (s.copy) { const k = s.lk * 2 + s.chain; LA[k] = Math.max(LA[k], s.ea); }
-  const lay = drawRig.lay || (drawRig.lay = [null, null, null, null]);
-  for (let k = 0; k < 4; k++) lay[k] = LA[k] > 0.004 && LA[k] < 0.996 ? rigLayer(ctx, k) : null;
+  const lay = drawRig.lay || (drawRig.lay = [null, null, null, null, null, null]);
+  for (let k = 0; k < 6; k++) lay[k] = LA[k] > 0.004 && LA[k] < 0.996 ? rigLayer(ctx, k) : null;
   const put = (k) => { if (!lay[k]) return; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = LA[k]; ctx.drawImage(lay[k].canvas, 0, 0); ctx.restore(); };
   for (const s of list) {
-    if (s.mark) { put(0); put(1); continue; }
+    if (s.mark) { if (s.mark === 2) { put(4); put(5); } else { put(0); put(1); } continue; }
     if (s.blur) { if (ds.shadowA <= 0.01) continue; shapeM(s, ds, V, TM); const k = ds.shadowS;
       ctx.setTransform(TM[0], TM[1], TM[2], TM[3], TM[4], TM[5]); ctx.globalAlpha = s.opacity * ds.shadowA;
       ctx.translate(SH_IMG.cx, SH_IMG.cy); ctx.scale(k, k); ctx.translate(-SH_IMG.cx, -SH_IMG.cy);
@@ -608,7 +615,7 @@ function omStep(om, dt) {
     om.blinkE = e; if (e > 0) for (let i = 0; i < 6; i++) lids[i] = lerp(lids[i], i === iBlink ? 1 : 0, e); }
   // 7. собираем DS
   ds.v.set(P.b); ds.body.set(P.body); ds.eyes.set(P.eyes); ds.lids.set(lids);
-  ds.mg = om.shown.mg; ds.mw = om.shown.mw; ds.show = P.show; ds.hide = P.hide; ds.front = P.front;
+  ds.mg = om.shown.mg; ds.mw = om.shown.mw; ds.show = P.show; ds.hide = P.hide; ds.front = P.front; ds.fom = !!P.over;
   { const st = dt / MERGE_FADE;   // риг 2.3: веса слияния цепочек (вверх сразу, вниз за MERGE_FADE) и «часть спереди» (оба направления)
     for (let q = 0; q < 2; q++) om.mA[q] = P.front.has(q ? "arm_r" : "arm_l") ? 1 : Math.max(0, om.mA[q] - st);
     for (const i of CHAIN_PI) { const tg = P.front.has(R.parts[i].id) ? 1 : 0; om.wF[i] = tg ? Math.min(1, om.wF[i] + st) : Math.max(0, om.wF[i] - st); }

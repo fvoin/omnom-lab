@@ -1,13 +1,13 @@
 {
  "character": "omnom",
- "version": 3,
+ "version": 4,
  "decision": "D-51",
- "madeBy": "studio programmer (run 2026-09-30-offline-games), lab prototype games/lab/omnom-rig.html v2 (reviews game-designer-rig-1, art-director-rig-1); to be moved next to omnom_rig.json by the art director; v3 programmer (D-56, rig data v2)",
+ "madeBy": "studio programmer (run 2026-09-30-offline-games), lab prototype games/lab/omnom-rig.html v2 (reviews game-designer-rig-1, art-director-rig-1); to be moved next to omnom_rig.json by the art director; v3 programmer (D-56, rig data v2); v4 = 2.5 eat poses by the art director (art-director-46, D-79), file moved next to omnom_rig.json (D-80)",
  "units": "time in s; sq > 0 = stretch up, sq < 0 = squash; body scale around the feet sx = 1/(1+sq), sy = 1+sq (volume kept); lift = rig px up; lean = deg, + clockwise on screen; open = minimum mouth open 0..1; glance = gaze direction (-1..1) when the game gives no look target",
  "layersNote": "Two layers. BASE = body state (layer base): stand (idle, aim, anticipate), hang, fly - loops, never end by themselves; the game switches them. REACT = face and hands over the base (layer react): eat, joy, oops, whoosh, shrug, reach, wave, blink - when a reaction ends the body returns to the CURRENT base, not to idle. Merge: face bones (head, mouth, eyes, pupils, lids, sprout, body) = base + w * (reaction - neutral pose) (t, r added, s multiplied); body/eyes/lids form weights = lerp(base, reaction, w); mouth group, show/hide = reaction's when w >= 0.5; arms = front paws (arm/fore/paw_fl|paw_fr) = lerp(base, reaction, aw) only for the arms the state lets go: stand both, hang only the right paw (the left one is the grip_l on the rope), fly both; legs (paw_bl/paw_br) and root = base only; sq, lean added; lift added only when standing. w = key w * fade-in (clip fade) * fade-out (last fadeOut s); aw = key aw * the same (0 for clips with arms false).",
  "keysNote": "pose = pose name (omnom_rig.json poses or this file's poses) or {name: weight}; a key without pose keeps the previous pose; sq/lift/lean/open/glance/w/aw carry forward; bones = additive offsets for this key only ({t:[x,y], r: deg, s:[x,y] multiplies}); lids = replace lid weights for this key only. ease = how the segment ENDING at this key runs: lin, in, out, inout, hold (jump at the key). Mouth group switches (closed / open / sad / chew) happen exactly at the key where the new group appears - author those keys at a squash peak (D-51). A group change that is not authored (fade, the open param, a reaction over a different base face) is delayed by blipMs/2 and gets a small squash blip.",
  "partsNote": "Parametric clips (intro / loop / outro) take dur and rate from the game: loop keys (t in (0, cycle]) repeat round((dur - intro end - outro length) / (cycle / rate)) times, stretched to fill dur exactly; 0 repeats = the short version (joy 0.6: jump and joy without the second bounce). replayFrom: the same reaction played again before its outro starts jumps straight to that time (eat: the gulp at the squash peak, hands stay at the face).",
- "posesNote": "custom pose = base pose + bones (set, not added) + front (parts drawn in front) + armsFrom (copy arm/fore/hand bones and their front flags from another pose) + forms (replace body / eyes / lids form).",
+ "posesNote": "custom pose = base pose + bones (set, not added) + front (parts drawn in front) + armsFrom (copy arm/fore/hand bones and their front flags from another pose) + forms (replace body / eyes / lids form). 2.5: faceOverMouth (bool, per pose, NOT inherited from the base) - the face copies of the arms in front are drawn over the mouth (see README rig, \"Лапы на рту\"); switches together with front.",
  "motion": {
   "squash": {
    "f": 4.8,
@@ -43,10 +43,15 @@
   "sprout": {
    "f": 2.3,
    "zeta": 0.22,
-   "gains": [0.28, 0.36, 0.46
+   "gains": [
+    0.28,
+    0.36,
+    0.46
    ],
    "maxDeg": 20,
-   "tip": [316, 58
+   "tip": [
+    316,
+    58
    ],
    "note": "tip point on a spring in world space; deflection angle around sprout1 split over 3 links (gains); lag 80-120 ms (D-51). Rig 2.1: asymmetric limit - bending down-right (+) the bulb reaches the head: the artist's limit +25, at +25 the bulb already touches the head outline in the lab render, so +20; up-left (-) to -40",
    "minDeg": -40
@@ -61,7 +66,9 @@
     "paw_br": 0.28
    },
    "maxDeg": 10,
-   "point": [281, 455
+   "point": [
+    281,
+    455
    ],
    "note": "dangle only in the air (rope, flight), back lobes (legs) only, pivot at the hip (rig 2.1+): max 10 deg (D-66 polish p.11, was 14 - with the hip pivot the foot swung wide)"
   },
@@ -77,7 +84,9 @@
    "closeMs": 50,
    "holdMs": 30,
    "openMs": 50,
-   "everyS": [2, 5
+   "everyS": [
+    2,
+    5
    ],
    "note": "D-66 polish p.5: 130 ms (close 50 ease-in, hold 30, open 50 (1-u)^3, D-51); auto blink never in the first 150 ms of a base clip, never with open > 0.3 (candy near), never inside a reaction - a skipped blink comes 300 ms after it"
   },
@@ -99,13 +108,21 @@
   },
   "open": {
    "stops": [
-    ["neutral", 0
+    [
+     "neutral",
+     0
     ],
-    ["ajar", 0.3
+    [
+     "ajar",
+     0.3
     ],
-    ["wide", 0.65
+    [
+     "wide",
+     0.65
     ],
-    ["wide2", 1
+    [
+     "wide2",
+     1
     ]
    ],
    "near": 30,
@@ -144,48 +161,198 @@
  "poses": {
   "chewA": {
    "base": "chew",
+   "front": [
+    "arm_l",
+    "fore_l",
+    "paw_fl",
+    "arm_r",
+    "fore_r",
+    "paw_fr"
+   ],
+   "faceOverMouth": true,
    "bones": {
-    "mouth": {
-     "s": [1, 1.04
+    "arm_l": {
+     "r": -66.0,
+     "s": [
+      1,
+      1
+     ]
+    },
+    "fore_l": {
+     "r": 64.9,
+     "s": [
+      1,
+      1
      ]
     },
     "paw_fl": {
-     "r": 6
+     "r": 171.1,
+     "s": [
+      0.9,
+      0.9
+     ]
+    },
+    "arm_r": {
+     "r": 12.0,
+     "s": [
+      1,
+      1
+     ]
+    },
+    "fore_r": {
+     "r": -0.4,
+     "s": [
+      1,
+      1
+     ]
     },
     "paw_fr": {
-     "r": -6
+     "r": 178.4,
+     "s": [
+      0.9,
+      0.9
+     ]
+    },
+    "mouth": {
+     "s": [
+      1,
+      1.04
+     ]
     }
-   }
+   },
+   "note": "chew 1: both paws on the ends of the chewing line, the middle of the line stays open (rig 2.5 (D-79): paws AT the mouth, whole arm chain in front and merged with the body (2.3 shared contour + crease, no outline over the body skin); faceOverMouth = the face copy of the arms is drawn OVER the mouth (dark edge only where the paw lies on the mouth / teeth))"
   },
   "chewB": {
    "base": "chew2",
+   "front": [
+    "arm_l",
+    "fore_l",
+    "paw_fl",
+    "arm_r",
+    "fore_r",
+    "paw_fr"
+   ],
+   "faceOverMouth": true,
    "bones": {
-    "mouth": {
-     "s": [1.1, 0.74
+    "arm_l": {
+     "r": -35.9,
+     "s": [
+      1,
+      1
+     ]
+    },
+    "fore_l": {
+     "r": 28.8,
+     "s": [
+      1,
+      1
      ]
     },
     "paw_fl": {
-     "r": -6
+     "r": -174.9,
+     "s": [
+      0.9,
+      0.9
+     ]
+    },
+    "arm_r": {
+     "r": 10.9,
+     "s": [
+      1,
+      1
+     ]
+    },
+    "fore_r": {
+     "r": -0.4,
+     "s": [
+      1,
+      1
+     ]
     },
     "paw_fr": {
-     "r": 6
+     "r": -178.5,
+     "s": [
+      0.9,
+      0.9
+     ]
+    },
+    "mouth": {
+     "s": [
+      1.1,
+      0.74
+     ]
     },
     "head": {
-     "t": [0, 2
+     "t": [
+      0,
+      2
      ]
     }
-   }
+   },
+   "note": "chew 2 (eyes closed): the paws swap heights / tilt against chewA (rig 2.5 (D-79): paws AT the mouth, whole arm chain in front and merged with the body (2.3 shared contour + crease, no outline over the body skin); faceOverMouth = the face copy of the arms is drawn OVER the mouth (dark edge only where the paw lies on the mouth / teeth))"
   },
   "eatOut": {
    "base": "half",
-   "front": ["paw_fl", "paw_fr"
+   "front": [
+    "arm_l",
+    "fore_l",
+    "paw_fl",
+    "arm_r",
+    "fore_r",
+    "paw_fr"
    ],
-   "bones": {"arm_l": {"r": 122.188, "s": [1, 1]}, "fore_l": {"r": 130.152}, "paw_fl": {"r": 129.16, "s": [1.089, 1.089]}, "arm_r": {"r": 50, "s": [1, 1]}, "fore_r": {"r": -100}, "paw_fr": {"r": 10, "s": [1.069, 1.069]}},
-   "note": "exit from eating: mouth closed and lids half at the squash peak, left paw still at the face (arms of chew), right paw already under the right mouth corner (rig 2.4, D-74: at the cheek the closed mouth line crossed it; lowered over the next 90 ms)"
+   "faceOverMouth": true,
+   "bones": {
+    "arm_l": {
+     "r": -55.8,
+     "s": [
+      1,
+      1
+     ]
+    },
+    "fore_l": {
+     "r": 64.4,
+     "s": [
+      1,
+      1
+     ]
+    },
+    "paw_fl": {
+     "r": 161.4,
+     "s": [
+      0.9,
+      0.9
+     ]
+    },
+    "arm_r": {
+     "r": 10.9,
+     "s": [
+      1,
+      1
+     ]
+    },
+    "fore_r": {
+     "r": -0.4,
+     "s": [
+      1,
+      1
+     ]
+    },
+    "paw_fr": {
+     "r": 179.5,
+     "s": [
+      0.9,
+      0.9
+     ]
+    }
+   },
+   "note": "exit: mouth closed + half lids at the squash peak, paws still on the mouth (on the fangs) (rig 2.5 (D-79): paws AT the mouth, whole arm chain in front and merged with the body (2.3 shared contour + crease, no outline over the body skin); faceOverMouth = the face copy of the arms is drawn OVER the mouth (dark edge only where the paw lies on the mouth / teeth))"
   },
   "handsDown": {
    "base": "half",
-   "front": ["paw_fl", "paw_fr"
+   "front": [
+    "paw_fl",
+    "paw_fr"
    ],
    "bones": {
     "arm_l": {
@@ -212,22 +379,36 @@
   "joyUp": {
    "base": "joy",
    "armsFrom": "fly",
-   "front": ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"
+   "front": [
+    "arm_l",
+    "fore_l",
+    "paw_fl",
+    "arm_r",
+    "fore_r",
+    "paw_fr"
    ],
    "note": "jump of joy: arms raised in front; legs half way to the fly pose (D-66 polish p.3, clip joy has legs: true)",
    "bones": {
     "paw_bl": {
-     "t": [4.48, 12.9
+     "t": [
+      4.48,
+      12.9
      ],
      "r": -30.69,
-     "s": [1, 1.03
+     "s": [
+      1,
+      1.03
      ]
     },
     "paw_br": {
-     "t": [5.92, 16.65
+     "t": [
+      5.92,
+      16.65
      ],
      "r": 35.89,
-     "s": [1, 1.011
+     "s": [
+      1,
+      1.011
      ]
     }
    }
@@ -244,11 +425,15 @@
    },
    "bones": {
     "pupil_l": {
-     "s": [0.6, 0.6
+     "s": [
+      0.6,
+      0.6
      ]
     },
     "pupil_r": {
-     "s": [0.6, 0.6
+     "s": [
+      0.6,
+      0.6
      ]
     }
    },
@@ -263,7 +448,9 @@
    "bones": {
     "arm_l": {
      "r": 112,
-     "s": [1.05, 1.05
+     "s": [
+      1.05,
+      1.05
      ]
     },
     "fore_l": {
@@ -271,12 +458,16 @@
     },
     "paw_fl": {
      "r": -70,
-     "s": [0.85, 0.85
+     "s": [
+      0.85,
+      0.85
      ]
     },
     "arm_r": {
      "r": -112,
-     "s": [1.05, 1.05
+     "s": [
+      1.05,
+      1.05
      ]
     },
     "fore_r": {
@@ -284,12 +475,20 @@
     },
     "paw_fr": {
      "r": 70,
-     "s": [0.85, 0.85
+     "s": [
+      0.85,
+      0.85
      ]
     }
    },
    "note": "dead end of the box: front paws out to the sides, forearms up (palms up), wide face",
-   "front": ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"
+   "front": [
+    "arm_l",
+    "fore_l",
+    "paw_fl",
+    "arm_r",
+    "fore_r",
+    "paw_fr"
    ]
   },
   "shrugOut": {
@@ -298,68 +497,227 @@
   },
   "eatGulp": {
    "base": "wide2",
-   "front": ["paw_fl", "paw_fr"
+   "front": [
+    "arm_l",
+    "fore_l",
+    "paw_fl",
+    "arm_r",
+    "fore_r",
+    "paw_fr"
    ],
-   "bones": {"arm_l": {"r": 90.2}, "fore_l": {"r": 80.2}, "paw_fl": {"r": 69.2, "s": [1.089, 1.089]}, "arm_r": {"r": 157.9}, "fore_r": {"r": -91.8}, "paw_fr": {"r": -50.1, "s": [1.069, 1.069]}},
-   "note": "next candy of a series: the mouth opens for the gulp, the front paws at the mouth corners (rig 2.4, D-74: the artist's pose, paws never cover the open mouth)"
+   "faceOverMouth": true,
+   "bones": {
+    "arm_l": {
+     "r": -9.1,
+     "s": [
+      1,
+      1
+     ]
+    },
+    "fore_l": {
+     "r": 0.5,
+     "s": [
+      1,
+      1
+     ]
+    },
+    "paw_fl": {
+     "r": 168.6,
+     "s": [
+      0.9,
+      0.9
+     ]
+    },
+    "arm_r": {
+     "r": 27.8,
+     "s": [
+      1,
+      1
+     ]
+    },
+    "fore_r": {
+     "r": -58.2,
+     "s": [
+      1,
+      1
+     ]
+    },
+    "paw_fr": {
+     "r": -129.6,
+     "s": [
+      0.9,
+      0.9
+     ]
+    }
+   },
+   "note": "next candy of a series / gulp: wide2 mouth, the paws come up to the LOWER mouth corners and lie on the lip (rig 2.5 (D-79): paws AT the mouth, whole arm chain in front and merged with the body (2.3 shared contour + crease, no outline over the body skin); faceOverMouth = the face copy of the arms is drawn OVER the mouth (dark edge only where the paw lies on the mouth / teeth))"
   },
   "waveA": {
    "base": "wave1",
-   "front": ["arm_l", "fore_l", "paw_fl"
+   "front": [
+    "arm_l",
+    "fore_l",
+    "paw_fl"
    ],
    "note": "D-66: the raised front paw is drawn IN FRONT of the body (whole arm chain); the swap with the body happens mid-arc, where the arm is out to the side (smallest visible change)"
   },
   "waveB": {
    "base": "wave2",
-   "front": ["arm_l", "fore_l", "paw_fl"
+   "front": [
+    "arm_l",
+    "fore_l",
+    "paw_fl"
    ]
   },
   "reachF": {
    "base": "reach",
-   "front": ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"
+   "front": [
+    "arm_l",
+    "fore_l",
+    "paw_fl",
+    "arm_r",
+    "fore_r",
+    "paw_fr"
    ],
-   "bones": {"arm_r": {"r": -150}, "fore_r": {"r": -30}},
+   "bones": {
+    "arm_r": {
+     "r": -150
+    },
+    "fore_r": {
+     "r": -30
+    }
+   },
    "note": "rig 2.3 (D-73): the right paw is raised out of the body side (upper arm out, forearm up); the rig reach pose kept it as a check mark over the chest, which dissolves in the shared contour"
   },
   "joyF": {
    "base": "joy",
-   "front": ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"
+   "front": [
+    "arm_l",
+    "fore_l",
+    "paw_fl",
+    "arm_r",
+    "fore_r",
+    "paw_fr"
    ]
   },
   "handsMid": {
    "base": "half",
-   "front": ["paw_fl", "paw_fr"
+   "front": [
+    "arm_l",
+    "fore_l",
+    "paw_fl",
+    "arm_r",
+    "fore_r",
+    "paw_fr"
    ],
    "bones": {
     "arm_l": {
-     "r": 90
+     "r": -22.9,
+     "s": [
+      1.0,
+      1.0
+     ]
     },
     "fore_l": {
-     "r": -160
+     "r": 32.2,
+     "s": [
+      1.0,
+      1.0
+     ]
     },
     "paw_fl": {
-     "r": 60
+     "r": 80.7,
+     "s": [
+      0.95,
+      0.95
+     ]
     },
     "arm_r": {
-     "r": 50
+     "r": 2.4,
+     "s": [
+      1.0,
+      1.0
+     ]
     },
     "fore_r": {
-     "r": -90
+     "r": -0.2,
+     "s": [
+      1.0,
+      1.0
+     ]
     },
     "paw_fr": {
-     "r": 5
+     "r": 89.8,
+     "s": [
+      0.95,
+      0.95
+     ]
     }
    },
-   "note": "polish (D-66): midpoint of the eat exit chosen by search so the paws go from the mouth to the ground almost in a straight line (the left paw used to swing out wide to the side, 78 px off the line; now 1.3 px, the right 33 -> 8)"
+   "note": "eat exit midpoint (eat only): shortest-angle midpoint of eatOut and handsDown, chain still merged, paws below the mouth (no faceOverMouth); handsDown (shared with shrug) is unchanged"
   },
   "gulpMid": {
    "base": "wide2",
-   "armsFrom": "handsMid",
-   "note": "polish: the paws go up to the mouth along the same near-straight path as on the exit (not out wide to the side)"
+   "front": [
+    "arm_l",
+    "fore_l",
+    "paw_fl",
+    "arm_r",
+    "fore_r",
+    "paw_fr"
+   ],
+   "faceOverMouth": true,
+   "bones": {
+    "arm_l": {
+     "r": -4.6,
+     "s": [
+      1.0,
+      1.0
+     ]
+    },
+    "fore_l": {
+     "r": 0.2,
+     "s": [
+      1.0,
+      1.0
+     ]
+    },
+    "paw_fl": {
+     "r": 84.3,
+     "s": [
+      0.95,
+      0.95
+     ]
+    },
+    "arm_r": {
+     "r": 13.9,
+     "s": [
+      1.0,
+      1.0
+     ]
+    },
+    "fore_r": {
+     "r": -29.1,
+     "s": [
+      1.0,
+      1.0
+     ]
+    },
+    "paw_fr": {
+     "r": -64.8,
+     "s": [
+      0.95,
+      0.95
+     ]
+    }
+   },
+   "note": "way up to the gulp: shortest-angle midpoint of rest arms and eatGulp (no armsFrom handsMid any more) (rig 2.5 (D-79): paws AT the mouth, whole arm chain in front and merged with the body (2.3 shared contour + crease, no outline over the body skin); faceOverMouth = the face copy of the arms is drawn OVER the mouth (dark edge only where the paw lies on the mouth / teeth))"
   },
   "handsDownO": {
    "base": "neutral",
-   "front": ["paw_fl", "paw_fr"
+   "front": [
+    "paw_fl",
+    "paw_fr"
    ],
    "bones": {
     "arm_l": {
@@ -422,24 +780,32 @@
       {
        "t": 0,
        "pose": "neutral",
-       "glance": [0, 0
+       "glance": [
+        0,
+        0
        ]
       },
       {
        "t": 0.45,
-       "glance": [-1, -0.35
+       "glance": [
+        -1,
+        -0.35
        ],
        "ease": "hold"
       },
       {
        "t": 1.35,
-       "glance": [0.9, 0.15
+       "glance": [
+        0.9,
+        0.15
        ],
        "ease": "hold"
       },
       {
        "t": 2.3,
-       "glance": [0, 0
+       "glance": [
+        0,
+        0
        ],
        "ease": "hold"
       },
@@ -613,7 +979,9 @@
    "fade": 0.05,
    "dur": 1.4,
    "rate": 1,
-   "lengths": [1, 1.4
+   "lengths": [
+    1,
+    1.4
    ],
    "replayFrom": null,
    "note": "D-66 (user: 'eat even slower'): 1.4 s by default. Gulp 0.22 s (wide2 -> chew at the squash peak at 0.12, paws to the mouth) -> chew loop (cycle 0.4 = 2 bites, fitted into dur: 0.22 s per switch at 1.4) -> exit 0.3 s: squash peak = mouth closed + lids half, paws down in front of the belly to the ground. Series: dur 1.0, every next candy restarts with replayIntro (a full gulp). Option k (lab slider 'eat speed'): all times x k (k = slider / 1.4), so a faster eat stays a whole eat. Polish D-66 p.4/6: per chew switch body s.y 0.97 <-> 1.02, head +2 px on chewB, paws at the mouth alternate +-6 deg, eyes glance down to the centre",
@@ -651,7 +1019,9 @@
       "t": 0.2,
       "pose": "chewB",
       "sq": -0.03,
-      "glance": [0.1, 0.7
+      "glance": [
+       0.1,
+       0.7
       ],
       "ease": "inout"
      },
@@ -659,7 +1029,9 @@
       "t": 0.4,
       "pose": "chewA",
       "sq": 0.02,
-      "glance": [0.1, 0.7
+      "glance": [
+       0.1,
+       0.7
       ],
       "ease": "inout"
      }
@@ -720,7 +1092,10 @@
    "fade": 0.06,
    "dur": 0.9,
    "rate": 1,
-   "lengths": [0.6, 0.9, 1.4
+   "lengths": [
+    0.6,
+    0.9,
+    1.4
    ],
    "note": "crouch (switch to joy at its peak) -> jump with raised arms (lift only when standing) -> land squash -> bounce loop (0 at 0.6 s, 1 at 0.9, 2 at 1.4) -> rebound, squash peak = half lids + closed mouth, arms down 90 ms",
    "intro": [
@@ -973,7 +1348,9 @@
        "r": -10
       },
       "head": {
-       "t": [0, 6
+       "t": [
+        0,
+        6
        ]
       }
      },
@@ -999,7 +1376,9 @@
        "r": -8
       },
       "head": {
-       "t": [0, 5
+       "t": [
+        0,
+        5
        ]
       }
      },
@@ -1052,7 +1431,9 @@
      "pose": "ajar",
      "sq": -0.06,
      "lean": 1,
-     "glance": [-1, -0.1
+     "glance": [
+      -1,
+      -0.1
      ],
      "ease": "out"
     },
@@ -1108,7 +1489,9 @@
      "pose": "reachF",
      "sq": 0,
      "lean": -3,
-     "glance": [-1, -0.1
+     "glance": [
+      -1,
+      -0.1
      ],
      "ease": "inout"
     },
@@ -1117,7 +1500,9 @@
      "pose": "neutral",
      "sq": -0.05,
      "lean": 0,
-     "glance": [0, 0
+     "glance": [
+      0,
+      0
      ],
      "ease": "in"
     },
@@ -1259,5 +1644,6 @@
    ]
   }
  },
- "rigNote": "v3 (D-56): works on omnom_rig.json version 2 - arms = front paws (body > arm > fore > paw_fl / paw_fr; paw_f* take only r and a uniform s), legs = back lobes paw_bl / paw_br (the only dangle springs), hang = grip_l (child of arm_l) shown, arm_l / fore_l / paw_fl hidden; on the rope arm_l turns the grip along the rope (motion.hang) and anchors.hands.grip_l is pinned to the rope end. Pose patches hangRig / flyRig / flyWideRig / sadRig removed: rig v2 poses are used as is."
+ "rigNote": "v3 (D-56): works on omnom_rig.json version 2 - arms = front paws (body > arm > fore > paw_fl / paw_fr; paw_f* take only r and a uniform s), legs = back lobes paw_bl / paw_br (the only dangle springs), hang = grip_l (child of arm_l) shown, arm_l / fore_l / paw_fl hidden; on the rope arm_l turns the grip along the rope (motion.hang) and anchors.hands.grip_l is pinned to the rope end. Pose patches hangRig / flyRig / flyWideRig / sadRig removed: rig v2 poses are used as is.",
+ "revision": "2.5 (rig)"
 }
