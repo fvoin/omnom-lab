@@ -26,11 +26,12 @@
    "zeta": 0.7,
    "r": 0,
    "hangK": 0.6,
-   "hangMaxDeg": 40,
-   "flyMaxDeg": 60,
+   "hangMaxDeg": 26,
+   "flyMaxDeg": 25,
    "fallK": 1.5,
    "grabS": 0.2,
-   "note": "whole-body tilt: on a rope exactly 0.6 of the rope angle, max +-40 deg, around the grip (after a grab: smooth blend from the flight tilt over grabS); in flight along the velocity: rising = 90 - elevation (body axis along v), falling = 90 + elevation * fallK (feet swing down to grab), max +-60 (at the apex of a flight the body lies at 60, not 90: a face lying on its side read badly while eating), around the body centre"
+   "note": "whole-body tilt: on a rope 0.6 of the rope angle, max +-26 (D-51; D-66 polish p.9, was 40), around the grip; in flight along the velocity (rising = 90 - elevation, falling = 90 + elevation * fallK) but max +-25 (was 60) with first-order smoothing tau 80 ms, around the body centre",
+   "flyTauMs": 80
   },
   "head": {
    "f": 5.5,
@@ -54,13 +55,15 @@
    "f": 2.5,
    "zeta": 0.18,
    "gains": {
+    "paw_fl": 0.32,
+    "paw_fr": 0.25,
     "paw_bl": 0.2,
     "paw_br": 0.28
    },
-   "maxDeg": 14,
+   "maxDeg": 10,
    "point": [281, 455
    ],
-   "note": "dangle only in the air (rope, flight); only the back lobes (legs): the front paws ride on the arm chain"
+   "note": "dangle only in the air (rope, flight), back lobes (legs) only, pivot at the hip (rig 2.1+): max 10 deg (D-66 polish p.11, was 14 - with the hip pivot the foot swung wide)"
   },
   "gaze": {
    "tauMs": 70,
@@ -71,12 +74,12 @@
    "note": "pupils first (exp. smoothing tau), body lean follows the same look 100 ms later; each pupil clamped into the travel ellipse of ITS eye (omnom_rig.json anchors.pupils)"
   },
   "blink": {
-   "closeMs": 45,
+   "closeMs": 50,
    "holdMs": 30,
-   "openMs": 110,
+   "openMs": 50,
    "everyS": [2, 5
    ],
-   "note": "close ease-in (u^2), hold, open fast then slowing down: closed = (1-u)^3 -> at 133 ms from the start the eye is ~89 % open, fully open at 185 ms"
+   "note": "D-66 polish p.5: 130 ms (close 50 ease-in, hold 30, open 50 (1-u)^3, D-51); auto blink never in the first 150 ms of a base clip, never with open > 0.3 (candy near), never inside a reaction - a skipped blink comes 300 ms after it"
   },
   "breath": {
    "periodS": 1.6,
@@ -145,6 +148,12 @@
     "mouth": {
      "s": [1, 1.04
      ]
+    },
+    "paw_fl": {
+     "r": 6
+    },
+    "paw_fr": {
+     "r": -6
     }
    }
   },
@@ -153,6 +162,16 @@
    "bones": {
     "mouth": {
      "s": [1.1, 0.74
+     ]
+    },
+    "paw_fl": {
+     "r": -6
+    },
+    "paw_fr": {
+     "r": 6
+    },
+    "head": {
+     "t": [0, 2
      ]
     }
    }
@@ -193,12 +212,28 @@
    "armsFrom": "fly",
    "front": ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"
    ],
-   "note": "jump of joy: arms raised (fly arms) on the take-off, in front of the body"
+   "note": "jump of joy: arms raised in front; legs half way to the fly pose (D-66 polish p.3, clip joy has legs: true)",
+   "bones": {
+    "paw_bl": {
+     "t": [4.48, 12.9
+     ],
+     "r": -30.69,
+     "s": [1, 1.03
+     ]
+    },
+    "paw_br": {
+     "t": [5.92, 16.65
+     ],
+     "r": 35.89,
+     "s": [1, 1.011
+     ]
+    }
+   }
   },
   "joyOut": {
-   "base": "half",
+   "base": "neutral",
    "armsFrom": "joyF",
-   "note": "exit from joy: lids half, mouth closed at the squash peak, arms (still in front) start down"
+   "note": "exit from joy: open eyes (no half lids - read as sleepy, D-66 polish p.3), mouth closed at the squash peak, arms start down"
   },
   "startle": {
    "base": "ajar",
@@ -315,6 +350,40 @@
    "base": "wide2",
    "armsFrom": "handsMid",
    "note": "polish: the paws go up to the mouth along the same near-straight path as on the exit (not out wide to the side)"
+  },
+  "handsDownO": {
+   "base": "neutral",
+   "front": ["paw_fl", "paw_fr"
+   ],
+   "bones": {
+    "arm_l": {
+     "r": 10
+    },
+    "fore_l": {
+     "r": 0
+    },
+    "paw_fl": {
+     "r": 0
+    },
+    "arm_r": {
+     "r": -6
+    },
+    "fore_r": {
+     "r": 0
+    },
+    "paw_fr": {
+     "r": 0
+    }
+   },
+   "note": "handsDown with open eyes (exit of joy)"
+  },
+  "reachHold": {
+   "base": "reachF",
+   "bones": {
+    "fore_l": {
+     "r": 3
+    }
+   }
   }
  },
  "clips": {
@@ -541,7 +610,7 @@
    "lengths": [1, 1.4
    ],
    "replayFrom": null,
-   "note": "D-66 (user: 'eat even slower'): 1.4 s by default. Gulp 0.22 s (wide2 -> chew at the squash peak at 0.12, paws to the mouth) -> chew loop (cycle 0.4 = 2 bites, fitted into dur: 0.22 s per switch at 1.4) -> exit 0.3 s: squash peak = mouth closed + lids half, paws down in front of the belly to the ground. Series: dur 1.0, every next candy restarts with replayIntro (a full gulp). Option k (lab slider 'eat speed'): all times x k (k = slider / 1.4), so a faster eat stays a whole eat",
+   "note": "D-66 (user: 'eat even slower'): 1.4 s by default. Gulp 0.22 s (wide2 -> chew at the squash peak at 0.12, paws to the mouth) -> chew loop (cycle 0.4 = 2 bites, fitted into dur: 0.22 s per switch at 1.4) -> exit 0.3 s: squash peak = mouth closed + lids half, paws down in front of the belly to the ground. Series: dur 1.0, every next candy restarts with replayIntro (a full gulp). Option k (lab slider 'eat speed'): all times x k (k = slider / 1.4), so a faster eat stays a whole eat. Polish D-66 p.4/6: per chew switch body s.y 0.97 <-> 1.02, head +2 px on chewB, paws at the mouth alternate +-6 deg, eyes glance down to the centre",
    "intro": [
     {
      "t": 0,
@@ -575,13 +644,17 @@
      {
       "t": 0.2,
       "pose": "chewB",
-      "sq": -0.06,
+      "sq": -0.03,
+      "glance": [0.1, 0.7
+      ],
       "ease": "inout"
      },
      {
       "t": 0.4,
       "pose": "chewA",
-      "sq": 0.03,
+      "sq": 0.02,
+      "glance": [0.1, 0.7
+      ],
       "ease": "inout"
      }
     ]
@@ -758,7 +831,7 @@
     },
     {
      "t": 0.17,
-     "pose": "handsDown",
+     "pose": "handsDownO",
      "sq": 0.02,
      "ease": "inout"
     },
@@ -769,7 +842,8 @@
      "aw": 0,
      "ease": "out"
     }
-   ]
+   ],
+   "legs": true
   },
   "oops": {
    "layer": "react",
@@ -959,7 +1033,7 @@
    "arms": true,
    "dur": 1.42,
    "fade": 0.06,
-   "note": "hint without text: dip, reach out to the left (viewer side), wiggle the paw, back",
+   "note": "hint without text: dip, reach out to the left (viewer side) with the paw in front; D-66 polish p.6/7: eyes follow the paw, hold 0.45-1.12 breathes (s.y +-1.5 %) and the forearm strains +-3 deg at 2.5 Hz",
    "keys": [
     {
      "t": 0,
@@ -972,6 +1046,8 @@
      "pose": "ajar",
      "sq": -0.06,
      "lean": 1,
+     "glance": [-1, -0.1
+     ],
      "ease": "out"
     },
     {
@@ -983,49 +1059,51 @@
     },
     {
      "t": 0.45,
+     "pose": "reachF",
      "sq": 0,
      "lean": -4,
      "ease": "inout"
     },
     {
-     "t": 0.62,
+     "t": 0.65,
+     "pose": "reachHold",
+     "sq": 0.015,
      "bones": {
       "paw_fl": {
-       "r": 14
-      },
-      "fore_l": {
+       "r": 10
+      }
+     },
+     "ease": "inout"
+    },
+    {
+     "t": 0.85,
+     "pose": "reachF",
+     "sq": -0.015,
+     "bones": {
+      "paw_fl": {
        "r": -6
       }
      },
      "ease": "inout"
     },
     {
-     "t": 0.78,
+     "t": 1.05,
+     "pose": "reachHold",
+     "sq": 0.015,
      "bones": {
       "paw_fl": {
-       "r": -8
-      },
-      "fore_l": {
-       "r": 4
+       "r": 8
       }
      },
      "ease": "inout"
     },
     {
-     "t": 0.94,
-     "bones": {
-      "paw_fl": {
-       "r": 12
-      },
-      "fore_l": {
-       "r": -5
-      }
-     },
-     "ease": "inout"
-    },
-    {
-     "t": 1.12,
+     "t": 1.15,
+     "pose": "reachF",
+     "sq": 0,
      "lean": -3,
+     "glance": [-1, -0.1
+     ],
      "ease": "inout"
     },
     {
@@ -1033,6 +1111,8 @@
      "pose": "neutral",
      "sq": -0.05,
      "lean": 0,
+     "glance": [0, 0
+     ],
      "ease": "in"
     },
     {
@@ -1051,75 +1131,99 @@
     {
      "t": 0,
      "pose": "neutral",
-     "sq": 0
+     "sq": 0,
+     "lean": 0
     },
     {
-     "t": 0.08,
+     "t": 0.12,
      "pose": "waveA",
-     "sq": -0.06,
+     "sq": -0.05,
+     "lean": -3,
+     "bones": {
+      "head": {
+       "r": 2
+      }
+     },
      "ease": "out"
     },
     {
-     "t": 0.2,
-     "pose": "waveB",
-     "sq": 0.04,
-     "bones": {
-      "arm_l": {
-       "r": -16
-      },
-      "paw_fl": {
-       "r": -22
-      }
-     },
-     "ease": "inout"
-    },
-    {
-     "t": 0.33,
+     "t": 0.233,
      "pose": "waveA",
-     "sq": 0,
+     "sq": 0.02,
+     "lean": -3,
      "bones": {
-      "arm_l": {
-       "r": 14
+      "fore_l": {
+       "r": 18
       },
       "paw_fl": {
-       "r": 20
+       "r": -12
+      },
+      "head": {
+       "r": 2
       }
      },
      "ease": "inout"
     },
     {
-     "t": 0.46,
-     "pose": "waveB",
-     "sq": 0.03,
-     "bones": {
-      "arm_l": {
-       "r": -16
-      },
-      "paw_fl": {
-       "r": -22
-      }
-     },
-     "ease": "inout"
-    },
-    {
-     "t": 0.59,
+     "t": 0.345,
      "pose": "waveA",
-     "sq": 0,
+     "sq": -0.01,
+     "lean": -3,
      "bones": {
-      "arm_l": {
+      "fore_l": {
+       "r": -18
+      },
+      "paw_fl": {
        "r": 12
       },
-      "paw_fl": {
-       "r": 18
+      "head": {
+       "r": 2
       }
      },
      "ease": "inout"
     },
     {
-     "t": 0.7,
+     "t": 0.458,
+     "pose": "waveA",
+     "sq": 0.02,
+     "lean": -3,
+     "bones": {
+      "fore_l": {
+       "r": 18
+      },
+      "paw_fl": {
+       "r": -12
+      },
+      "head": {
+       "r": 2
+      }
+     },
+     "ease": "inout"
+    },
+    {
+     "t": 0.57,
+     "pose": "waveA",
+     "sq": 0,
+     "lean": -2,
+     "bones": {
+      "fore_l": {
+       "r": -14
+      },
+      "paw_fl": {
+       "r": 10
+      },
+      "head": {
+       "r": 1
+      }
+     },
+     "ease": "inout"
+    },
+    {
+     "t": 0.69,
      "pose": "neutral",
      "sq": -0.05,
-     "ease": "in"
+     "lean": 0,
+     "ease": "inout"
     },
     {
      "t": 0.8,
@@ -1127,7 +1231,7 @@
      "ease": "out"
     }
    ],
-   "note": "D-66: hand in front of the body; polish: a wider wave (arm +-16, paw +-22 deg) so it reads as waving, not a raised hand"
+   "note": "D-66 polish p.2: raise 0.12 s ease-out, 2 wave cycles in 0.45 s by the forearm (fore_l +-18) with the paw flapping the other way (+-12), body 3 deg toward the waving side, head 2 deg the other way; lower 0.12 s; the paw is in front of the body"
   },
   "blink": {
    "layer": "react",

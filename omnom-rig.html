@@ -184,7 +184,7 @@ function morphPath(m, w) { let key = ""; for (let i = 0; i < w.length; i++) key 
 function polyArea(n) { let a = 0; const L = n.length - (n.length % 2); for (let i = 0; i < L; i += 2) { const j = (i + 2) % L; a += n[i] * n[j + 1] - n[j] * n[i + 1]; } return Math.abs(a) / 2; }
 
 const R = { J: null, parts: [], bi: {}, NB: 0, shapes: [], byId: {}, fam: {}, mouth: {}, poses: {}, mot: null, clips: {}, CP: null, list: [], arm: [], side: [], noAdd: [] };
-let LEG_K = [], HEAD, BODY, MOUTH, PUPL, PUPR, SPR1, SPR2, SPR3, GRIP, ARML, ROOT, SHADOW;
+let LEGS = [], HEAD, BODY, MOUTH, PUPL, PUPR, SPR1, SPR2, SPR3, GRIP, ARML, ROOT, SHADOW;
 let FEET, CENTER, MOUTH_O, MOUTH_PT, REST, TRAVEL, GRIP_HANG, GRIP_PT, GRIP_OFF = 0, SH_IMG = null;
 // руки = передние лапы (риг v2, D-56): цепочки body → arm → fore → paw_f*; задние доли paw_bl / paw_br — ноги
 const ARM_IDS = ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"];
@@ -195,7 +195,7 @@ function rigBuild(J, CJ) {
   R.J = J; R.mot = CJ.motion;
   J.parts.forEach((p, i) => { R.bi[p.id] = i; });   // в json v2 ребёнок может стоять раньше родителя (paw_fl → fore_l): индексы, потом родители, мир — по порядку обхода
   J.parts.forEach((p) => R.parts.push({ id: p.id, pi: p.parent ? R.bi[p.parent] : -1, pivot: p.pivot }));
-  R.NB = R.parts.length; LEG_K = ["paw_bl", "paw_br"].map((n) => R.bi[n] * 5); R.order = []; { const seen = new Set(), add = (i) => { if (seen.has(i)) return; const q = R.parts[i].pi; if (q >= 0) add(q); seen.add(i); R.order.push(i); }; for (let i = 0; i < R.NB; i++) add(i); }
+  R.NB = R.parts.length; LEGS = ["paw_bl", "paw_br"].map((n) => R.bi[n]); R.order = []; { const seen = new Set(), add = (i) => { if (seen.has(i)) return; const q = R.parts[i].pi; if (q >= 0) add(q); seen.add(i); R.order.push(i); }; for (let i = 0; i < R.NB; i++) add(i); }
   [ROOT, BODY, HEAD, MOUTH, PUPL, PUPR, SPR1, SPR2, SPR3, GRIP, ARML, SHADOW] =
     ["root", "body", "head", "mouth", "pupil_l", "pupil_r", "sprout1", "sprout2", "sprout3", "grip_l", "arm_l", "shadow"].map((n) => R.bi[n]);
   for (let i = 0; i < R.NB; i++) { const id = R.parts[i].id, a = ARM_IDS.indexOf(id);
@@ -322,20 +322,27 @@ function sampleKeys(keys, t) { let i = 0; while (i < keys.length - 2 && t >= key
   let u0 = b.t > a.t ? clamp((t - a.t) / (b.t - a.t), 0, 1) : 1; if (t >= b.t - 1e-6) u0 = 1;   // 1e-6: сумма шагов 1/60 не дотягивает до ключа
   const u = b.ease(u0), up = b.pe(u0);
   const P = up >= 1 ? clonePose(b.P) : lerpPose(a.P, b.P, up, "A");
+  if (up > 0 && up < 1) armBend(P, a.P, b.P, up);
   return { P, sq: lerp(a.sq, b.sq, u), lift: lerp(a.lift, b.lift, u), lean: lerp(a.lean, b.lean, u), open: lerp(a.open, b.open, u),
     glance: [lerp(a.glance[0], b.glance[0], u), lerp(a.glance[1], b.glance[1], u)], w: lerp(a.w, b.w, u), aw: lerp(a.aw, b.aw, u) }; }
+// полировка D-66 п. 1: при большом повороте плеча (> 40°) локоть сгибается по дуге (sin), лапа идёт по кривой, а не прямой трубкой;
+// левая (слева от зрителя) — «+» поднимает предплечье, правая — «−»; ≤ 38°, к концу движения изгиб уходит
+const BEND = [["arm_l", "fore_l", 1], ["arm_r", "fore_r", -1]];
+function armBend(P, A, B, u) { for (const [a, f, sg] of BEND) { const ka = R.bi[a] * 5 + 2; let d = B.b[ka] - A.b[ka]; d = Math.abs(((d + 540) % 360) - 180);
+  if (d <= 40) continue; P.b[R.bi[f] * 5 + 2] += sg * Math.min(38, (d - 40) * 0.45 + 20) * Math.sin(Math.PI * Math.min(1, u / 0.8)); } }
 function openPose(o) { const st = R.mot.open.stops; let i = 0; while (i < st.length - 2 && o > st[i + 1][1]) i++;
   const u = clamp((o - st[i][1]) / (st[i + 1][1] - st[i][1]), 0, 1); return lerpPose(R.poses[st[i][0]], R.poses[st[i + 1][0]], u, "mid"); }
 // ---- слои: реакция (лицо и руки) поверх состояния тела ----------------------------------------------
 // лицо и тело: база + w·(реакция − нейтральная поза) (t, r складываются, s умножается); формы — lerp; группа рта и show/hide — реакции при w ≥ 0,5;
 // руки — lerp(база, реакция, aw) только у рук, которые отпускает состояние (mask); лапы и корень — только база.
 // faceOnly (параметр open): руки не трогаем, show/hide базы, закрытый рот параметра не закрывает открытый рот базы (fly — ajar).
-function layerMerge(Bp, Rp, w, aw, mask, faceOnly, hold) {
+function layerMerge(Bp, Rp, w, aw, mask, faceOnly, hold, legsW) {
   const O = clonePose(Bp), N = R.poses.neutral.b;
   for (let i = 0; i < R.NB; i++) { const k = i * 5, side = R.arm[i];
     if (side >= 0) { const a = mask ? aw * mask[side] : 0;
       if (a > 0) { for (let j = 0; j < 5; j++) { if (j === 2) { let d = Rp.b[k + 2] - Bp.b[k + 2]; d = ((d + 540) % 360) - 180; O.b[k + 2] = Bp.b[k + 2] + d * a; } else O.b[k + j] = lerp(Bp.b[k + j], Rp.b[k + j], a); } }
       continue; }
+    if (legsW > 0 && (i === LEGS[0] || i === LEGS[1])) { for (let j = 0; j < 5; j++) O.b[k + j] = j === 2 ? Bp.b[k + 2] + legsW * (((Rp.b[k + 2] - Bp.b[k + 2] + 540) % 360) - 180) : lerp(Bp.b[k + j], Rp.b[k + j], legsW); continue; }   // клип с legs: ноги реакции (прыжок радости)
     if (R.noAdd[i] || w <= 0) continue;
     // зрачки — не сумма, а смешивание: смещения позы полёта и лица реакции (рот по open, «вжух», ест) вместе уводили зрачок за белок (до 220 px)
     if (i === PUPL || i === PUPR) { for (let j = 0; j < 5; j++) if (j !== 2) O.b[k + j] = lerp(Bp.b[k + j], Rp.b[k + j], w); continue; }
@@ -425,7 +432,7 @@ function makeOm(seed) {
     blink: { next: 1.2, t0: -9 }, noAutoBlink: false,
     shown: { mg: "closed", mw: Float64Array.of(1) }, pend: null, mgB: "closed", mgX: null,
     simT: 0, rng: mulberry(seed || 7), place: { x: 160, y: 344, piv: FEET, rot: 0, flip: 1, fx: 1 },
-    ds: newDS(), pupilNorm: [0, 0], groupSwitches: 0, sv: [1, 0, 1], svOk: false, dm: [1, 0, 0, 1, 0, 0], axisDev: 0, rope: null, armRope: 0, armRopeLeft: 0, lastSq: 0, lastLift: 0, lastLean: 0, wR: 0, aw: 0, armMask: [1, 1], state: "stand", open: 0, stretch: 0, tremble: 0 };
+    ds: newDS(), pupilNorm: [0, 0], groupSwitches: 0, sv: [1, 0, 1], svOk: false, xEnd: -9, dm: [1, 0, 0, 1, 0, 0], axisDev: 0, rope: null, armRope: 0, armRopeLeft: 0, lastSq: 0, lastLift: 0, lastLean: 0, wR: 0, aw: 0, armMask: [1, 1], state: "stand", open: 0, stretch: 0, tremble: 0 };
   om.B.keys = om.B.def.variants.breath.keys;
   computePlace(om); om.ds = dsFromPose(R.poses.neutral, om.ds.place); return om;
 }
@@ -468,13 +475,7 @@ function omStep(om, dt) {
   if (B.def.openParam) { open = Math.max(om.p.open, Kb.open, B.def.minOpen || 0);
     if (open > 0.001) P = layerMerge(P, openPose(open), clamp(open / 0.15, 0, 1), 0, null, true); }
   if (B.fade) { B.fade.t += dt; const u = clamp(B.fade.t / B.fade.dur, 0, 1), F0 = B.fade.from, P1 = P; P = lerpPose(F0, P1, smooth(u), "B");
-    // ноги (задние доли) при смене состояния: выпускаем — сначала под тело по x, потом вниз; убираем — наоборот (риг 2.1: при общей
-    // линейной интерполяции нога на 0,25 перехода выходила сбоку из-под тела)
-    for (const k of LEG_K) { const dy = P1.b[k + 1] - F0.b[k + 1]; if (Math.abs(dy) < 1) continue;
-      const early = smooth(clamp(u / 0.5, 0, 1)), late = smooth(clamp((u - 0.12) / 0.88, 0, 1)), ex = dy > 0 ? early : late, ey = dy > 0 ? late : early;
-      P.b[k] = lerp(F0.b[k], P1.b[k], ex); P.b[k + 1] = lerp(F0.b[k + 1], P1.b[k + 1], ey);
-      let dr = P1.b[k + 2] - F0.b[k + 2]; dr = ((dr + 540) % 360) - 180; P.b[k + 2] = F0.b[k + 2] + dr * ey;
-      P.b[k + 3] = lerp(F0.b[k + 3], P1.b[k + 3], ey); P.b[k + 4] = lerp(F0.b[k + 4], P1.b[k + 4], ey); }
+    // ноги — общий переход ease-in-out: с опорой в бедре (риг 2.1+) он чистый; поэтапный выпуск давал «шпагат» на 50–83 мс (D-66 п. 8)
     if (u >= 1) B.fade = null; }
   om.lastBase = P;
   // руки, которые реакция может взять: маска состояния, смена — плавно за 0,1 с (повис посреди еды — левая рука уходит на верёвку, а не прыгает)
@@ -483,14 +484,14 @@ function omStep(om, dt) {
   let sqK = Kb.sq, lift = Kb.lift, leanK = Kb.lean, glance = Kb.glance, wR = 0, aw = 0, Kr = null;
   // 2. реакция поверх базы
   let X = om.X;
-  if (X) { X.t += dt; if (X.t >= X.dur) { om.X = null; if (X.then) { const th = typeof X.then === "string" ? { clip: X.then } : X.then; omReact(om, th.clip, th); } X = om.X; } }
+  if (X) { X.t += dt; if (X.t >= X.dur) { om.X = null; om.xEnd = om.simT; if (X.then) { const th = typeof X.then === "string" ? { clip: X.then } : X.then; omReact(om, th.clip, th); } X = om.X; } }
   if (X) {
     if (X.def.blink && !X.blinked) { om.blink.t0 = om.simT; X.blinked = true; }
     Kr = sampleKeys(X.keys, Math.min(X.t, X.dur));
     const fi = X.fadeIn > 0 ? smooth(clamp(X.t / X.fadeIn, 0, 1)) : 1;
     const fo = smooth(clamp((X.dur - X.t) / (X.def.fadeOut != null ? X.def.fadeOut : M.react.fadeOut), 0, 1));
     wR = clamp(Kr.w, 0, 1) * fi * fo; aw = X.def.arms ? clamp(Kr.aw, 0, 1) * fi * fo : 0;
-    P = layerMerge(P, Kr.P, wR, aw, om.armMask, false, STATE_ARMS[state]);
+    P = layerMerge(P, Kr.P, wR, aw, om.armMask, false, STATE_ARMS[state], X.def.legs && state === "stand" ? wR : 0);
     sqK += wR * Kr.sq; lift += wR * Kr.lift * (air ? 0 : 1); leanK += wR * Kr.lean;
     if (Kr.glance[0] || Kr.glance[1]) glance = Kr.glance; }
   if (om.xf) { om.xf.t += dt; const u = clamp(om.xf.t / om.xf.dur, 0, 1); P = lerpPose(om.xf.from, P, smooth(u), "B"); if (u >= 1) om.xf = null; }
@@ -536,8 +537,10 @@ function omStep(om, dt) {
   // 6. моргание: закрыть 45 мс (u²), пауза 30, открыть 110 мс быстро и с замедлением к концу ((1−u)³) — на 133 мс глаз открыт ≈ 89 %
   const Bk = M.blink, lids = P.lids.slice(), iBlink = R.fam.lids.members.indexOf("blink");
   if (!B.def.noBlink && !om.noAutoBlink && om.simT >= om.blink.next) {
-    if (lids[0] > 0.6 && !P.hide.has("pupil_l") && !om.X) om.blink.t0 = om.simT;
-    om.blink.next = om.simT + Bk.everyS[0] + om.rng() * (Bk.everyS[1] - Bk.everyS[0]); }
+    // полировка D-66 п. 5: не в первые 150 мс клипа, не при открытом рте (open > 0,3 — конфета рядом), не внутри реакции (ест, радость…);
+    // пропущенное — через 300 мс после конца реакции (повтор проверки каждые 50 мс)
+    const ok = lids[0] > 0.6 && !P.hide.has("pupil_l") && !om.X && B.t >= 0.15 && open <= 0.3 && om.simT - om.xEnd >= 0.3;
+    if (ok) { om.blink.t0 = om.simT; om.blink.next = om.simT + Bk.everyS[0] + om.rng() * (Bk.everyS[1] - Bk.everyS[0]); } else om.blink.next = om.simT + 0.05; }
   { const bt = (om.simT - om.blink.t0) * 1000, c = Bk.closeMs, h = Bk.holdMs, o = Bk.openMs;
     let e = 0; if (bt >= 0 && bt < c) e = (bt / c) ** 2; else if (bt >= c && bt < c + h) e = 1; else if (bt >= c + h && bt < c + h + o) e = (1 - (bt - c - h) / o) ** 3;
     om.blinkE = e; if (e > 0) for (let i = 0; i < 6; i++) lids[i] = lerp(lids[i], i === iBlink ? 1 : 0, e); }
@@ -770,7 +773,8 @@ function swStep(sw, dt) {
   }
   // на верёвке — ровно 0,6 угла (≤ ±40°), после зацепа плавно из наклона полёта за grabS; в полёте — пружина к «вдоль скорости»
   if (sw.ph === "hang") { sw.grabT += dt; const u = smooth(clamp(sw.grabT / R.mot.tilt.grabS, 0, 1)); sw.pl.rot = lerp(sw.rot0, swTiltTarget(sw), u); sodReset(sw.tilt, sw.pl.rot); }
-  else sw.pl.rot = clamp(sodStep(sw.tilt, dt, swTiltTarget(sw)), -75, 75);
+  else { const T = R.mot.tilt;   // полировка D-66 п. 9: в полёте ≤ flyMaxDeg и сглаживание первого порядка τ flyTauMs (без перехлёста пружины)
+    if (T.flyTauMs) sw.pl.rot += (swTiltTarget(sw) - sw.pl.rot) * (1 - Math.exp(-dt / (T.flyTauMs / 1000))); else sw.pl.rot = clamp(sodStep(sw.tilt, dt, swTiltTarget(sw)), -75, 75); }
   sw.speed = Math.hypot(sw.vel[0], sw.vel[1]);
 }
 // план: прогон физики без рига → крыши (по зацепам) и конфеты (в точке рта: низ первого маха, вершина первого полёта, серия из 2 у последней вершины)
@@ -815,7 +819,7 @@ function swingStep(dt) {
   om.p.dir = sw.speed > 1 ? toLocalDir(sw.vel[0], sw.vel[1]) : [0, -1];
   // конфеты: рот открывается по расстоянию (far 140 u), ест на верёвке и в полёте; серия — быстрее и сразу в глоток
   const m = map(placeM(sw.pl), MOUTH_PT[0], MOUTH_PT[1]), mw = mouthWorld(); let best = null, bd = 1e9;
-  for (const c of sw.candies) { c.rot += dt * 3; if (c.st === "eaten") { c.t += dt; c.x = mw[0]; c.y = mw[1]; if (c.t > 0.08) c.st = "gone"; continue; } if (c.st !== "on") continue;
+  for (const c of sw.candies) { c.rot += dt * 3; if (c.st === "eaten") { c.t += dt; c.x = mw[0]; c.y = mw[1]; if (c.t > 0.06) c.st = "gone"; continue; } if (c.st !== "on") continue;
     const d = Math.hypot(c.x - mw[0], c.y - mw[1]);
     if (d < T.magnet) { c.x += (mw[0] - c.x) * 0.35; c.y += (mw[1] - c.y) * 0.35; }
     if (d < T.eatDist) { c.st = "eaten"; c.t = 0; sw.eats++; omReact(om, "eat", eatOpt(c.fast)); continue; }
@@ -897,7 +901,10 @@ function drawSwingBack(c) {
   c.fillStyle = C.jam; c.fillRect(x0, T.jamY, 3600, 600); c.fillStyle = C.jam2; c.fillRect(x0, T.jamY, 3600, 7);
   if (SW.ph === "hang") { const hw = gripWorld(); drawRope(c, SW.ax, SW.ay - 6, hw[0], hw[1], 5); }
 }
-function drawSwingFront(c) { for (const k of SW.candies) if (k.st === "on" || k.st === "eaten") drawCandy(c, k.x, k.y, k.rot, k.st === "eaten" ? Math.max(0, 1 - k.t / 0.08) : 1, TUNE.swing.candyR); }
+// полировка D-66 п. 12: съеденная конфета — за Омом Номом (во рту, не поверх глаз), сжимается к точке рта за 60 мс; у самого рта — уже меньше
+function candyS(k) { if (k.st === "eaten") return Math.max(0, 1 - k.t / 0.06); const mw = mouthWorld(), d = Math.hypot(k.x - mw[0], k.y - mw[1]), T = TUNE.swing; return lerp(0.7, 1, clamp((d - T.eatDist) / (T.magnet - T.eatDist), 0, 1)); }
+function drawSwingFront(c) { for (const k of SW.candies) if (k.st === "on") drawCandy(c, k.x, k.y, k.rot, candyS(k), TUNE.swing.candyR); }
+function drawSwingEaten(c) { for (const k of SW.candies) if (k.st === "eaten") drawCandy(c, k.x, k.y, k.rot, candyS(k), TUNE.swing.candyR); }
 function drawOm(c, V, view) {
   if (S.staticDS) { if (view === "rig") drawRig(c, V, S.staticDS); else { const keep = om.B.clip; om.B.clip = "@" + S.staticName; drawV2(c, V, om); om.B.clip = keep; } return; }
   if (view === "rig") drawRig(c, V, om.ds); else drawV2(c, V, om);
@@ -906,7 +913,7 @@ function drawOm(c, V, view) {
 function drawField(c, V, view, noLabel, cam) {
   c.imageSmoothingEnabled = true;
   if (S.scene === "swing" && SW) { const z = TUNE.swing.zoom, Vw = cam ? mmul(V, [z, 0, 0, z, -S.cam.x * z, -S.cam.y * z]) : V;
-    setV(c, Vw); drawSwingBack(c); drawOm(c, Vw, view); setV(c, Vw); drawSwingFront(c); }
+    setV(c, Vw); drawSwingBack(c); drawSwingEaten(c); drawOm(c, Vw, view); setV(c, Vw); drawSwingFront(c); }
   else {
     setV(c, V); drawBack(c);
     if (S.scene === "scene") { drawSling(c, false); drawAim(c); }
