@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" href="data:,">
+<title>Мармеладный дождь</title>
+<style>:root{--ink:#4a2512;--cream:#fbebd0;--cream-sh:#e9cfa3;--card:#c98a4b;--card-mid:#b8773d;--card-sh:#8f5427;--act:#e8458a;--act-low:#a82060;--act-line:#4f0c2c;--gold:#ffd23f}html,body{height:100%;color:var(--ink);margin:0;font:700 14px/1.3 Nunito,system-ui,-apple-system,sans-serif;overflow:hidden}body{-webkit-user-select:none;user-select:none;background:radial-gradient(120% 80% at 30% 0%, #d49a5e 0%, var(--card) 45%, var(--card-mid) 100%);flex-direction:column;height:100dvh;display:flex}header{grid-template-columns:auto 1fr auto;align-items:center;gap:4px 8px;padding:8px 10px 2px;display:grid}header a{color:var(--ink);background:var(--cream);box-shadow:0 2px 0 var(--cream-sh);white-space:nowrap;border-radius:10px;padding:5px 9px;font-size:13px;text-decoration:none}header h1{text-align:center;color:var(--cream);text-shadow:0 2px 0 var(--card-sh);white-space:nowrap;text-overflow:ellipsis;margin:0;font-size:17px;font-weight:900;overflow:hidden}button{font:inherit;background:var(--cream);color:var(--ink);box-shadow:0 3px 0 var(--cream-sh);cursor:pointer;touch-action:manipulation;border:0;border-radius:12px;padding:6px 11px;font-weight:800}#hud{grid-column:1/4;justify-content:center;gap:4px;font-size:13px;font-weight:900;display:flex}#hud span{background:var(--cream);box-shadow:0 2px 0 var(--cream-sh);white-space:nowrap;border-radius:12px;padding:3px 7px}#hud #gold{background:#ffe58a}#stage{touch-action:none;flex:1;min-height:0;position:relative}canvas{box-shadow:0 0 0 6px var(--card-mid), 0 0 0 9px var(--card-sh), 4px 8px 14px #4a251259;border-radius:14px;display:block;position:absolute}#end{background:#4a251261;justify-content:center;align-items:center;display:none;position:absolute;inset:0}#end .card{background:var(--cream);text-align:center;min-width:210px;box-shadow:0 6px 0 var(--cream-sh), 0 10px 24px #4a251259;border:3px solid var(--ink);border-radius:22px;padding:16px 24px 20px}#end .omEnd{pointer-events:none;height:96px;margin:-4px auto -2px;display:block}#end .stars{letter-spacing:4px;color:#e9cfa3;-webkit-text-stroke:1.5px var(--ink);font-size:34px}#end .stars b{color:var(--gold)}#end .big{margin:2px 0;font-size:30px;font-weight:900}#end p{margin:5px 0}#end .rec{color:var(--act-low);font-weight:900}#end .act{color:#fff;text-shadow:0 2px 0 var(--act-line);border:3px solid var(--act-line);background:var(--act);box-shadow:inset 0 -5px 0 var(--act-low);border-radius:999px;margin:6px 4px 0;padding:8px 26px;font-size:17px}footer{color:var(--cream);text-align:center;padding:2px 10px 8px}#rule{white-space:nowrap;text-overflow:ellipsis;text-shadow:0 1px 0 var(--card-sh);font-size:11.5px;overflow:hidden}.bar{flex-wrap:wrap;justify-content:center;align-items:center;gap:3px 6px;margin-top:5px;display:flex}.bar button{box-shadow:0 2px 0 var(--cream-sh);white-space:nowrap;border-radius:10px;padding:5px 9px;font-size:13px}#seed{opacity:.85;white-space:nowrap;font-size:11px}#tune{text-align:left;grid-template-columns:auto 1fr 2.6em;align-items:center;gap:3px 8px;max-width:420px;margin:6px auto 0;font-size:12.5px;display:none}#tune.on{display:grid}#tune input{width:100%;margin:0}</style>
+</head>
+<body>
+<header>
+  <a href="index.html">← Лаб</a>
+  <h1>Мармеладный дождь</h1>
+  <button id="restart">Заново</button>
+  <div id="hud"><span id="field">Поле 1</span><span id="shots">Конфеты 8</span><span id="gold">Золото 0/7</span><span id="score">Очки 0</span></div>
+</header>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div id="end"><div class="card">
+    <img class="omEnd" id="endOm" src="./assets/omnom/joy.png" alt="">
+    <div class="stars" id="endStars"></div>
+    <div class="big" id="endTitle">0</div>
+    <p id="endDetail"></p>
+    <p class="rec" id="endRec"></p>
+    <button class="act" id="again">Ещё</button>
+  </div></div>
+</div>
+<footer>
+  <div id="rule">Тяни пружину вниз и отпусти · в полёте тапни, куда нести пузырь · сбей все золотые — новое поле</div>
+  <div class="bar"><button id="newseed">Новый seed</button><button id="tuneBtn">Ручки</button><span id="seed"></span></div>
+  <div id="tune"></div>
+</footer>
+<script>
+"use strict";
+// ---- Ом Ном кадрами приложения (D-40, не рисунок кодом) — блок как в sling-rain.html ----
+const OMS = (() => {
+  const PX = 6.4024, PIV = [0.5366, 0.0253], MOUTH = [-2.08, -19.98];
+  const PUP = {
+    neutral: { l: { rest: [-13.93, -44.86], c: [-16.67, -45.33], r: [3.91, 3.98] },
+             r: { rest: [-0.81, -42.67], c: [2.23, -42.67], r: [6.22, 6.39] } },
+    ajar:   { l: { rest: [-13.7, -47.75], c: [-15.42, -48.29], r: [2.61, 2.51] },
+             r: { rest: [-1.6, -45.33], c: [1.92, -42.83], r: [6.06, 6.01] } },
+    wide:   { l: { rest: [-13.39, -51.18], c: [-14.79, -51.42], r: [1.98, 1.54] },
+             r: { rest: [-1.13, -48.76], c: [0.98, -45.95], r: [5.73, 5.06] } },
+    wide2:  { l: { rest: [-13.93, -52.28], c: [-14.95, -52.67], r: [1.64, 1.31] },
+             r: { rest: [-1.52, -49.54], c: [0.83, -46.58], r: [5.85, 5.25] } },
+  };
+  const LOOK = 7;
+  const NAMES = ["neutral", "ajar", "wide", "wide2", "chew", "chew2", "sad", "joy", "blink", "half", "shadow"];
+  for (const f in PUP) NAMES.push(f + "_pupils_l", f + "_pupils_r");
+  const img = {};
+  const waits = [];
+  for (const n of NAMES) {
+    const i = new Image(); img[n] = i;
+    waits.push(new Promise((res) => { i.onload = i.onerror = res; }));
+    i.src = "assets/omnom/" + n + ".png";
+  }
+  const ok = (i) => i && i.complete && i.naturalWidth > 0;
+  function eyePos(e, dx, dy) {
+    let px = e.rest[0] + dx, py = e.rest[1] + dy;
+    const qx = (px - e.c[0]) / e.r[0], qy = (py - e.c[1]) / e.r[1], ql = Math.hypot(qx, qy);
+    if (ql > 1) { px = e.c[0] + qx / ql * e.r[0]; py = e.c[1] + qy / ql * e.r[1]; }
+    return [px, py];
+  }
+  const last = { frame: null, l: null, r: null, d: null };
+  function draw(ctx, p, st) {
+    let f = p.frame || "neutral";
+    if (f === "neutral" && (performance.now() + (p.blinkOff || 0)) % 3600 < 120) f = "blink";
+    const base = img[f]; if (!ok(base)) return;
+    const flip = p.flip ? -1 : 1, fx = p.mx - flip * MOUTH[0], fy = p.fy != null ? p.fy : p.my - MOUTH[1];
+    const pw = base.naturalWidth, ph = base.naturalHeight, k = 1 / PX;
+    ctx.save();
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+    if (p.alpha != null) ctx.globalAlpha = p.alpha;
+    if (p.shadow && ok(img.shadow)) ctx.drawImage(img.shadow, fx - 32, fy - 6, 64, 12);
+    ctx.translate(fx, p.piv ? fy - p.piv : fy); if (p.rot) ctx.rotate(p.rot); if (p.piv) ctx.translate(0, p.piv);
+    ctx.scale(flip * k, k);
+    ctx.drawImage(base, -PIV[0] * pw, -(1 - PIV[1]) * ph);
+    const pu = PUP[f], pl = img[f + "_pupils_l"], pr = img[f + "_pupils_r"];
+    if (pu && ok(pl) && ok(pr)) {
+      let gx = 0, gy = 0;
+      if (p.tx != null) {
+        const pv = p.piv || 0;
+        let dx = p.tx - fx, dy = p.ty - (fy - pv);
+        if (p.rot) { const c = Math.cos(-p.rot), sn = Math.sin(-p.rot), qx = dx * c - dy * sn, qy = dx * sn + dy * c; dx = qx; dy = qy; }
+        dy -= pv; dx *= flip;
+        const ex = (pu.l.rest[0] + pu.r.rest[0]) / 2, ey = (pu.l.rest[1] + pu.r.rest[1]) / 2;
+        const vx = dx - ex, vy = dy - ey, L = Math.hypot(vx, vy) || 1, a = Math.min(1, L / 45);
+        gx = vx / L * a * LOOK; gy = vy / L * a * LOOK;
+      }
+      if (st) { st.x = st.x == null ? gx : st.x + (gx - st.x) * 0.35; st.y = st.y == null ? gy : st.y + (gy - st.y) * 0.35; gx = st.x; gy = st.y; }
+      const pL = eyePos(pu.l, gx, gy), pR = eyePos(pu.r, gx, gy);
+      ctx.drawImage(pl, -PIV[0] * pw + (pL[0] - pu.l.rest[0]) * PX, -(1 - PIV[1]) * ph + (pL[1] - pu.l.rest[1]) * PX);
+      ctx.drawImage(pr, -PIV[0] * pw + (pR[0] - pu.r.rest[0]) * PX, -(1 - PIV[1]) * ph + (pR[1] - pu.r.rest[1]) * PX);
+      last.frame = f; last.l = pL; last.r = pR; last.d = [gx, gy];
+    }
+    ctx.restore();
+  }
+  return { draw, img, PUP, eyePos, last, loaded: Promise.all(waits), ready: () => NAMES.every((n) => ok(img[n])) };
+})();
+// ---- «Мармеладный дождь» (D-95/D-97, вариация A «Пружина и труба», доведена до игры; диздок design/rain.md) ----
+// Палец внизу тянет пружину; конфета взлетает по трубе вдоль правой стены и выходит в поле сверху горизонтально.
+// Сила — куда упадёт. Цепочка по желейкам вниз, тап в полёте — пузырь несёт конфету к пальцу, тележка ловит (+1 конфета).
+// После выстрела сбитые мятные желейки «дождём» падают обратно сверху — поле не редеет. Все золотые сбиты — новое поле (+2 конфеты).
+// Конфеты кончились — итог: очки (мятная 1, золотая 5), звёзды. Проиграть нельзя.
+const TUNE = {
+  gravity: 1100,      // u/с²
+  timeScale: 1.4,     // ускорение полёта: тот же путь за 1/timeScale времени (ручка)
+  springK: 6.0,       // u/с на 1 u оттяжки (ручка): выход vx = −(40 + pull × 6,0), 40–640 u/с
+  vx0: 40,
+  pullMax: 100, pullMin: 10, pullGain: 1.4, // палец 71 u → оттяжка 100
+  tubeT: 0.25,        // с, конфета в трубе («вжух»)
+  aimPreview: 1,      // 0 — пунктир до первой желейки, 1 — плюс короткий хвост после неё (ручка)
+  candyR: 12, candyHitR: 9,
+  pegHalf: 7, pegThick: 12, pegGap: 17, pegMin: 42, pegMax: 50, jitter: 7,
+  e: 0.72, eTired: 0.3, tiredT: 3.0, // «усталость»: после 3,0 с полёта e 0,3, конфета бледнеет
+  kt: 0.98, wallE: 0.6, maxSpeed: 1126,
+  gold0: 7, goldStep: 2, goldMax: 12, // золотых на поле n: min(12, 7 + 2(n − 1)) — 7, 9, 11, 12…
+  shots: 8,           // конфет на раунд; поймал тележкой — +1, поле очищено — +clearBonus
+  clearBonus: 2,
+  refill: 1.0,        // доля сбитых мятных, которые «дождь» возвращает после выстрела (0 — поле редеет, как в A)
+  bubbleT: 0.8,       // с, пузырь (ручка)
+  bubbleSpeed: 300,   // u/с, пузырь плывёт к пальцу
+  bubbleUp: 140,      // u, куда плывёт пузырь без точки (act tap без координат): вверх
+  cartSpeed: 0.6, cartAmp: 104, catchW: 15, omScale: 0.7,
+  popGap: 0.06, popTotal: 1.0,
+  stuckV: 40, stuckT: 0.5, stuckR: 16, shotMax: 7,
+  firstTries: 60,
+  aimTries: 10, aimNoise: 3,
+  ptsMint: 1, ptsGold: 5,
+  moveFrom: 3, moveAmp: 26, movePeriod: 3.6, // с поля 3 — едущий ряд, с поля 5 — два
+  star2: 300, star3: 440, // пороги звёзд: 2★ ≈ медиана бота 0,5 (303), 3★ ≈ 0,9 × медиана бота 1 (491) — D-27, rain.md §8
+};
+const KNOBS = [
+  ["springK", "Пружина, u/с на 1 u", 4.5, 8, 0.1],
+  ["e", "Упругость желеек", 0.5, 0.95, 0.01],
+  ["refill", "Дождь: доля возврата", 0, 1, 0.1],
+  ["bubbleT", "Пузырь, с", 0.3, 1.5, 0.05],
+  ["bubbleSpeed", "Пузырь, u/с", 120, 500, 10],
+  ["catchW", "Рот тележки ±u", 8, 24, 1],
+  ["aimPreview", "Пунктир: +хвост", 0, 1, 1],
+];
+const W = 320, H = 560, DT = 1 / 60, SUB = 2;
+// Раскладка (u): труба x 290–318 по правой стене, y 54–550, колено влево, выход (286; 54); стенка x 286 от y 110 до низа.
+const TUBE = { x0: 290, x1: 318, cx: 304, top: 72, bot: 550 }, ELB = { cx: 286, cy: 72, r: 18 }, EXIT = { x: 286, y: 54 };
+const WALL_X = 286, WALL_Y = 110;
+const F = { x0: 26, x1: 278, y0: 136, y1: 426, cx: 152 }; // поле желеек, ось зеркала x 152
+const CART_C = 152, FEET_Y = 484, MOUTH_Y = 470, RAIL_Y = 504;
+const SPRING_BOT = 548, SPRING_TOP = 520; // пружина в покое; сжатие до 20 u
+const PULL_ZONE = F.y1 - 30;              // жест начинается ниже y 396 (под полем): палец не закрывает поле
+const C = {
+  paper: "#F5A9D0", paperHi: "#F9C3DF", paperLo: "#EE97C3", ink: "#4A2512", cream: "#FBEBD0", creamSh: "#E9CFA3",
+  card: "#C98A4B", cardMid: "#B8773D", cardSh: "#8F5427", candy: "#E8412F", wrap: "#FFC93C", gold: "#FFD23F", goldLit: "#FFF6B8",
+  mint: "#7FD8CC", mintLit: "#E2FFFA", mintDk: "#1E7F75", goldDk: "#B07A00",
+};
+function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function hash3(a, b, c) { let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + 0x632be5ab, 0xc2b2ae35) ^ Math.imul(c + 0x27d4eb2f, 0x165667b1); h ^= h >>> 15; return (h >>> 0) || 1; }
+
+const q = new URLSearchParams(location.search);
+for (const k in TUNE) if (q.has(k)) TUNE[k] = +q.get(k);
+let S, bot = null, QUIET = false, STATS = null;
+
+// ---- Геометрия ----
+function segEnds(p) { const c = Math.cos(p.a) * TUNE.pegHalf, s = Math.sin(p.a) * TUNE.pegHalf; p.ax = p.x - c; p.ay = p.y - s; p.bx = p.x + c; p.by = p.y + s; return p; }
+function ptSeg(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+  let t = l2 ? ((px - ax) * dx + (py - ay) * dy) / l2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
+  const qx = ax + dx * t, qy = ay + dy * t; return { d: Math.hypot(px - qx, py - qy), qx, qy };
+}
+function orient(ax, ay, bx, by, cx, cy) { return Math.sign((bx - ax) * (cy - ay) - (by - ay) * (cx - ax)); }
+function segSeg(p, o) {
+  if (orient(p.ax, p.ay, p.bx, p.by, o.ax, o.ay) * orient(p.ax, p.ay, p.bx, p.by, o.bx, o.by) < 0 &&
+      orient(o.ax, o.ay, o.bx, o.by, p.ax, p.ay) * orient(o.ax, o.ay, o.bx, o.by, p.bx, p.by) < 0) return 0;
+  return Math.min(ptSeg(p.ax, p.ay, o.ax, o.ay, o.bx, o.by).d, ptSeg(p.bx, p.by, o.ax, o.ay, o.bx, o.by).d,
+    ptSeg(o.ax, o.ay, p.ax, p.ay, p.bx, p.by).d, ptSeg(o.bx, o.by, p.ax, p.ay, p.bx, p.by).d);
+}
+// Едущая желейка (горизонтальная) занимает весь свой ход: для зазора берём отрезок от крайнего левого до крайнего правого конца.
+function swept(p) { if (!p.mv) return p; const A = Math.abs(p.mv.amp); return { ax: p.x0 - TUNE.pegHalf - A, ay: p.y, bx: p.x0 + TUNE.pegHalf + A, by: p.y }; }
+function pegGapOk(p, pegs, minD) { const a = swept(p); for (const o of pegs) if (o.alive !== false && segSeg(a, swept(o)) < minD) return false; return true; }
+function placeMoving(pegs, T) { for (const p of pegs) if (p.mv) { p.x = p.x0 + p.mv.amp * Math.sin(p.mv.w * T + p.mv.ph); segEnds(p); } }
+
+// ---- Поле по seed: едущие ряды (с поля 3), шаблон (левая половина, зеркало), разброс, зазор, добивка до 42, срез до 50 ----
+const PY0 = F.y0 + 6, PY1 = F.y1 - 6;
+function tplGrid(r, y0, y1) {
+  const out = [], rowH = 38 + r() * 6, colW = 52 + r() * 8, tilt = r() * 0.45, holes = 0.06 + r() * 0.12;
+  for (let k = 0, y = y0 + 4; y <= y1; k++, y += rowH) {
+    const off = (k % 2) * colW / 2;
+    for (let x = F.cx - off; x >= F.x0; x -= colW) if (r() >= holes) out.push({ x, y, a: (k % 2 ? 1 : -1) * tilt });
+  }
+  return out;
+}
+function tplRings(r, y0, y1) {
+  const out = [], h = y1 - y0;
+  const bR = 52 + r() * 10, by = y0 + h * 0.33, n = 11;
+  for (let i = 0; i < n; i++) { const t = Math.PI / 2 + i / n * 2 * Math.PI, x = F.cx + Math.cos(t) * bR; if (x <= F.cx + 0.5) out.push({ x, y: by + Math.sin(t) * bR, a: t + Math.PI / 2 }); }
+  const sx = 70 + r() * 12, sy = y0 + h * 0.76, sR = 32 + r() * 6, m = 7, t0 = r() * 6;
+  for (let i = 0; i < m; i++) { const t = t0 + i / m * 2 * Math.PI; out.push({ x: sx + Math.cos(t) * sR, y: sy + Math.sin(t) * sR, a: t + Math.PI / 2 }); }
+  for (let x = F.cx - 28; x >= F.x0; x -= 56) out.push({ x, y: y0, a: 0 });
+  out.push({ x: F.cx, y: sy, a: Math.PI / 2 }, { x: 42, y: by, a: 1.2 }, { x: F.cx, y: y1, a: 0 });
+  return out;
+}
+function tplArcs(r, y0, y1) {
+  const out = [], n = 7, step = (y1 - y0) / (n - 1);
+  for (let k = 0; k < n; k++) {
+    const yk = y0 + k * step, cv = (k % 2 ? 1 : -1) * (0.0022 + r() * 0.0018), off = (k % 2) * 27;
+    for (let x = F.cx - off; x >= F.x0; x -= 54) { const dx = x - F.cx, y = yk + cv * (dx * dx - 4200); if (y >= y0 - 4 && y <= y1 + 4) out.push({ x, y, a: Math.atan(2 * cv * dx) }); }
+  }
+  return out;
+}
+function tplDiamond(r, y0, y1) { // ромб из желеек «ёлочкой» + рёбра по краям
+  const out = [], cy = (y0 + y1) / 2, hh = (y1 - y0) / 2 - 10, step = 40 + r() * 4;
+  for (let y = y0 + 6; y <= y1; y += step) {
+    const w = (1 - Math.abs(y - cy) / hh) * 110 + 20;
+    for (let x = F.cx; x >= F.cx - w; x -= 50) out.push({ x, y, a: x === F.cx ? 0 : 0.5 });
+    out.push({ x: F.x0 + 12, y: y + step / 2, a: -0.9 });
+  }
+  return out;
+}
+const TEMPLATES = [["решётка", tplGrid], ["кольца", tplRings], ["дуги", tplArcs], ["ромб", tplDiamond]];
+function goldFor(field) { return Math.min(TUNE.goldMax, TUNE.gold0 + (field - 1) * TUNE.goldStep); }
+function movingRows(field) { return field >= TUNE.moveFrom + 2 ? 2 : field >= TUNE.moveFrom ? 1 : 0; }
+function cellOf(p) { const col = Math.max(0, Math.min(3, Math.floor((p.x - F.x0) / ((F.x1 - F.x0) / 4)))), row = p.y < (F.y0 + F.y1) / 2 ? 0 : 1; return row * 4 + col; }
+function newPeg(x, y, a) { return segEnds({ x, y, a, x0: x, mv: null, gold: false, lit: false, alive: true, sqT: 9, flash: 0, cd: 0, drop: 0, dropH: 0 }); }
+function genField(seed, field) {
+  const r = mulberry(hash3(seed, field, 1)), y0 = PY0, y1 = PY1;
+  const minD = TUNE.pegThick + TUNE.pegGap, pegs = [];
+  let pid = 0;
+  const inField = (p) => Math.min(p.ax, p.bx) >= F.x0 && Math.max(p.ax, p.bx) <= F.x1 && Math.min(p.ay, p.by) >= F.y0 + 3 && Math.max(p.ay, p.by) <= F.y1 - 3;
+  // едущие ряды: горизонтальные желейки через 64 u, весь ряд едет ±26 u с периодом 3,6 с
+  const nRows = movingRows(field), rowYs = nRows === 2 ? [0.3, 0.72] : [0.5];
+  for (let k = 0; k < nRows; k++) {
+    const yr = y0 + (y1 - y0) * rowYs[k] + (r() * 2 - 1) * 10, ph = r() * 6.28, dir = k % 2 ? -1 : 1;
+    pid++;
+    for (let x = F.x0 + TUNE.pegHalf + TUNE.moveAmp + 4; x <= F.x1 - TUNE.pegHalf - TUNE.moveAmp - 4; x += 64) {
+      const p = newPeg(x, yr, 0); p.mv = { amp: TUNE.moveAmp * dir, w: 2 * Math.PI / TUNE.movePeriod, ph }; p.pid = pid; pegs.push(p);
+    }
+  }
+  function add(x, y, a, jit) {
+    if (jit) { x += (r() * 2 - 1) * TUNE.jitter; y += (r() * 2 - 1) * TUNE.jitter; a += (r() * 2 - 1) * 0.15; }
+    if (Math.abs(x - F.cx) < 10) { x = F.cx; a = Math.abs(Math.sin(a)) > 0.7 ? Math.PI / 2 : 0; }
+    if (x > F.cx) return false;
+    const L = [newPeg(x, y, a)];
+    if (x < F.cx) L.push(newPeg(2 * F.cx - x, y, -a));
+    for (const p of L) if (!inField(p)) return false;
+    if (L.length === 2 && segSeg(L[0], L[1]) < minD) return false;
+    for (const p of L) if (!pegGapOk(p, pegs, minD)) return false;
+    pid++; for (const p of L) { p.pid = pid; pegs.push(p); }
+    return true;
+  }
+  const ti = Math.floor(r() * TEMPLATES.length), raw = TEMPLATES[ti][1](r, y0, y1);
+  for (const p of raw) add(p.x, p.y, p.a, true) || add(p.x, p.y, p.a, false);
+  const fill = [], st = minD + 10;
+  for (let k = 0, y = y0; y <= y1; k++, y += st * 0.8) for (let x = F.cx - (k % 2) * st / 2; x >= F.x0; x -= st) fill.push([x, y]);
+  for (let i = fill.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [fill[i], fill[j]] = [fill[j], fill[i]]; }
+  for (const [x, y] of fill) { if (pegs.length >= TUNE.pegMax) break; add(x, y, (r() * 2 - 1) * 0.9, true); }
+  for (let i = 0; pegs.length < TUNE.pegMin && i < 4000; i++) add(F.x0 + r() * (F.cx - F.x0), y0 + r() * (y1 - y0), (r() * 2 - 1) * 0.9, false);
+  while (pegs.length > TUNE.pegMax) { const id = pegs[Math.floor(r() * pegs.length)].pid; for (let i = pegs.length - 1; i >= 0; i--) if (pegs[i].pid === id) pegs.splice(i, 1); }
+  // Золотые: поле 4 × 2 клетки, в клетке ≤ ⌈n/8⌉; ≥ 2 золотые — первое касание при переборе 60 вводов; с поля 4 — сначала нижние клетки.
+  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const nG = Math.min(goldFor(field), pegs.length - 2);
+  let cap = Math.ceil(nG / 8); const cnt = new Array(8).fill(0), gold = [], firsts = [];
+  for (let i = 0; i < TUNE.firstTries; i++) { const s = simShot(pegs, TUNE.pullMin + (TUNE.pullMax - TUNE.pullMin) * i / (TUNE.firstTries - 1), 0, true); if (s.first && !firsts.includes(s.first)) firsts.push(s.first); }
+  for (const p of shuffle(firsts.slice())) { if (gold.length >= Math.min(2, nG)) break; const k = cellOf(p); if (cnt[k] < cap) { gold.push(p); cnt[k]++; } }
+  const deep = field >= 4;
+  while (gold.length < nG) {
+    let progress = false;
+    const order = deep ? shuffle([4, 5, 6, 7]).concat(shuffle([0, 1, 2, 3])) : shuffle([0, 1, 2, 3, 4, 5, 6, 7]);
+    for (const k of order) {
+      if (gold.length >= nG) break;
+      if (cnt[k] >= cap + (deep && k >= 4 ? 1 : 0)) continue;
+      const cand = pegs.filter((p) => cellOf(p) === k && !gold.includes(p));
+      if (!cand.length) continue;
+      gold.push(cand[Math.floor(r() * cand.length)]); cnt[k]++; progress = true;
+    }
+    if (!progress) cap++;
+  }
+  for (const p of gold) p.gold = true;
+  return { pegs, template: TEMPLATES[ti][0], firstGold: firsts.filter((p) => p.gold).length, firstPegs: firsts.length, moving: nRows };
+}
+
+// ---- Физика конфеты: стены 0,6, потолок, стенка x 286, желейки-капсулы (нормаль × −e, касательная × 0,98); пузырь — плывёт к точке сквозь желейки ----
+function launch(pull) { return { x: EXIT.x, y: EXIT.y, vx: -(TUNE.vx0 + pull * TUNE.springK), vy: 0, out: false, bubble: false, bubbleT: 0, btx: 0, bty: 0 }; }
+function bubbleTarget(c, x, y) { // пузырь только вверх или вбок; не выше полосы над полем; в стенах
+  const r = TUNE.candyHitR + 4;
+  if (x == null) { x = c.x; y = c.y - TUNE.bubbleUp; }
+  return { x: Math.max(r, Math.min(WALL_X - r, x)), y: Math.max(F.y0 - 28, Math.min(c.y, y)) };
+}
+function startBubble(c, x, y) { const t = bubbleTarget(c, x, y); c.bubble = true; c.bubbleT = 0; c.arrT = 0; c.btx = t.x; c.bty = t.y; return t; }
+function stepBody(c, pegs, dt, onHit, e) {
+  if (c.bubble) {
+    const dx = c.btx - c.x, dy = c.bty - c.y, d = Math.hypot(dx, dy) || 1, sp = Math.min(TUNE.bubbleSpeed, d * 5), k = Math.min(1, 7 * dt);
+    c.vx += (dx / d * sp - c.vx) * k; c.vy += (dy / d * sp - c.vy) * k;
+  } else c.vy += TUNE.gravity * dt;
+  const sp = Math.hypot(c.vx, c.vy); if (sp > TUNE.maxSpeed) { c.vx *= TUNE.maxSpeed / sp; c.vy *= TUNE.maxSpeed / sp; }
+  c.x += c.vx * dt; c.y += c.vy * dt;
+  const r = TUNE.candyHitR;
+  if (c.x < r) { c.x = r; c.vx = Math.abs(c.vx) * TUNE.wallE; }
+  if (!c.out && c.x < WALL_X - r) c.out = true; // вышла из колена — дальше стенка x 286 твёрдая на всю высоту
+  if (c.out && c.x > WALL_X - r) { c.x = WALL_X - r; c.vx = -Math.abs(c.vx) * TUNE.wallE; }
+  if (c.y < r) { c.y = r; c.vy = Math.abs(c.vy) * TUNE.wallE; }
+  if (c.bubble) return; // пузырь плывёт сквозь желейки
+  const R = r + TUNE.pegThick / 2, reach = R + TUNE.pegHalf;
+  for (const p of pegs) {
+    if (!p.alive || p.drop > 0 || Math.abs(c.x - p.x) > reach || Math.abs(c.y - p.y) > reach) continue;
+    const s = ptSeg(c.x, c.y, p.ax, p.ay, p.bx, p.by); if (s.d >= R) continue;
+    let nx = 0, ny = -1; if (s.d > 1e-6) { nx = (c.x - s.qx) / s.d; ny = (c.y - s.qy) / s.d; }
+    c.x = s.qx + nx * R; c.y = s.qy + ny * R;
+    const vn = c.vx * nx + c.vy * ny;
+    if (vn < 0) {
+      const tx = -ny, ty = nx, vt = c.vx * tx + c.vy * ty, nvn = -vn * e, nvt = vt * TUNE.kt;
+      c.vx = nx * nvn + tx * nvt; c.vy = ny * nvn + ty * nvt;
+      if (onHit) onHit(p, -vn, s.qx + nx * TUNE.pegThick / 2, s.qy + ny * TUNE.pegThick / 2);
+    }
+  }
+}
+// Один тик полёта (SUB подшагов + таймер пузыря). Возвращает true, если пузырь лопнул на этом тике.
+function flyTick(c, pegs, e, onHit) {
+  const dt = DT * TUNE.timeScale / SUB;
+  for (let s = 0; s < SUB; s++) stepBody(c, pegs, dt, onHit, e);
+  if (c.bubble) { // лопается через bubbleT или через 0,12 с после прибытия к точке
+    c.bubbleT += DT;
+    if (Math.hypot(c.btx - c.x, c.bty - c.y) < 8) c.arrT = (c.arrT || 0) + DT;
+    if (c.bubbleT >= TUNE.bubbleT || c.arrT >= 0.12) { c.bubble = false; c.arrT = 0; c.vx *= 0.3; c.vy = 0; return true; }
+  }
+  return false;
+}
+// Прогон полёта без тележки (бот, проверка поля, пунктир). c0 — конфета, t0 — время полёта, T0 — часы поля (едущие ряды).
+// o: { lit: Set уже зажжённых, tap: {t, x, y} — пузырь, first: стоп на первом касании, pts: [] — точки пути, stopHits }
+function simRun(c0, pegs, t0, T0, o) {
+  o = o || {};
+  const c = Object.assign({}, c0), lit = new Set(o.lit || []), mv = pegs.filter((p) => p.mv).map((p) => [p, p.x]);
+  let n = 0, gold = 0, firstPeg = null, hits = 0, t = t0, T = T0, tapped = false, hit1 = null;
+  const hit = (p, vn, hx, hy) => { hits++; if (!firstPeg) { firstPeg = p; hit1 = { x: hx, y: hy }; } if (!lit.has(p)) { lit.add(p); n++; if (p.gold) gold++; } };
+  while (t < TUNE.shotMax && c.y < H + 20) {
+    if (o.tap && !tapped && t >= o.tap.t) { tapped = true; startBubble(c, o.tap.x, o.tap.y); }
+    if (mv.length) placeMoving(pegs, T);
+    flyTick(c, pegs, t >= TUNE.tiredT ? TUNE.eTired : TUNE.e, hit);
+    t += DT; T += DT;
+    if (o.pts) o.pts.push({ x: c.x, y: c.y, h: hits });
+    if (o.first && firstPeg) break;
+    if (o.stopHits && hits >= o.stopHits) break;
+  }
+  for (const [p, x] of mv) { p.x = x; segEnds(p); }
+  return { n, gold, first: firstPeg, hit1, t, c };
+}
+function simShot(pegs, pull, T0, first) { return simRun(launch(pull), pegs, TUNE.tubeT, T0 + TUNE.tubeT, { first }); }
+// Путь в трубе: вверх по оси x 304 до y 72, колено — четверть круга (центр 286; 72, r 18) до выхода (286; 54) влево.
+function tubePos(y0, s) {
+  const Ls = y0 - ELB.cy;
+  if (s <= Ls) return { x: TUBE.cx, y: y0 - s };
+  const a = Math.min(Math.PI / 2, (s - Ls) / ELB.r); return { x: ELB.cx + Math.cos(a) * ELB.r, y: ELB.cy - Math.sin(a) * ELB.r };
+}
+
+// ---- Состояние раунда ----
+function newGame(seed) {
+  seed = seed == null ? (Date.now() & 0x7fffffff) : (seed >>> 0);
+  S = {
+    seed, field: 0, scene: "play", phase: "rain", t: 0, phaseT: 0, ft: 0, flightT: 0, cartPh: (seed % 628) / 100,
+    template: "", firstGold: 0, firstPegs: 0, moving: 0, pegs: [], goldTotal: 0, goldLeft: 0, mintTarget: 0,
+    shot: 0, fieldShot: 0, shotsLeft: TUNE.shots, catches: 0, chain: 0, score: 0, fieldsCleared: 0, field1Shots: null,
+    candy: null, pull: null, lastPull: 0, litOrder: [], popIdx: 0, popT: 0, popGap: TUNE.popGap, clearQ: null,
+    bubbleUsed: false, tapPt: null, stuckT: 0, anchor: null, shotGold: 0, shotScore: 0, maxChain: 0, lastShot: null, tired: false,
+    fx: [], popups: [], flyers: [], chewT: 0, sadT: 0, joyT: 0, botT: 0, botPlan: null, botWait: 0, log: [], lastAct: null, creak: 0, banner: null,
+    record: false,
+  };
+  freshCandy();
+  setField(1);
+  if (!QUIET) {
+    document.getElementById("end").style.display = "none";
+    document.getElementById("seed").textContent = "seed " + seed;
+  }
+  updateHud();
+}
+function setField(n) {
+  const f = genField(S.seed, n);
+  S.field = n; S.fieldShot = 0; S.ft = 0; S.template = f.template; S.firstGold = f.firstGold; S.firstPegs = f.firstPegs; S.moving = f.moving;
+  S.pegs = f.pegs; S.goldTotal = f.pegs.filter((p) => p.gold).length; S.goldLeft = S.goldTotal; S.mintTarget = f.pegs.length - S.goldTotal;
+  // всё поле падает дождём сверху: по столбцам слева направо, 0,8 с
+  for (const p of S.pegs) { p.drop = 0.3 + 0.45 * (p.x - F.x0) / (F.x1 - F.x0) + 0.1 * (p.y - F.y0) / (F.y1 - F.y0); p.dropH = p.y + 20; p.dropDur = 0.3; }
+  S.phase = "rain"; S.phaseT = 0;
+  if (n > 1) { S.banner = { text: "Поле " + n, t: 0 }; }
+  logEv("field", { n, pegs: S.pegs.length, gold: S.goldTotal, template: S.template });
+  updateHud();
+}
+// «Дождь» после выстрела: сбитые мятные возвращаются сверху в свободные места (доля TUNE.refill), золотые — нет.
+function refill() {
+  S.pegs = S.pegs.filter((p) => p.alive);
+  const aliveMint = S.pegs.filter((p) => !p.gold).length, want = Math.round((S.mintTarget - aliveMint) * TUNE.refill);
+  const r = mulberry(hash3(S.seed, S.field * 1000 + S.fieldShot, 7)), minD = TUNE.pegThick + TUNE.pegGap;
+  let added = 0;
+  for (let i = 0; i < want; i++) {
+    for (let k = 0; k < 300; k++) {
+      const p = newPeg(F.x0 + 8 + r() * (F.x1 - F.x0 - 16), PY0 + r() * (PY1 - PY0), (r() * 2 - 1) * 0.9);
+      if (Math.min(p.ax, p.bx) < F.x0 || Math.max(p.ax, p.bx) > F.x1 || Math.min(p.ay, p.by) < F.y0 + 3 || Math.max(p.ay, p.by) > F.y1 - 3) continue;
+      if (!pegGapOk(p, S.pegs, minD)) continue;
+      p.drop = 0.3 + 0.2 * (p.y - F.y0) / (F.y1 - F.y0) + added * 0.025; p.dropDur = p.drop - added * 0.025; p.dropH = p.y - F.y0 + 70;
+      S.pegs.push(p); added++; break;
+    }
+  }
+  if (added) { S.phase = "rain"; S.phaseT = 0; logEv("rain", { added }); }
+  return added;
+}
+function logEv(type, o) { if (QUIET) return; S.log.push(Object.assign({ t: +S.t.toFixed(2), type }, o || {})); if (S.log.length > 300) S.log.shift(); }
+function cartX() { return CART_C + TUNE.cartAmp * Math.sin(S.cartPh); }
+function restY(pull) { return SPRING_TOP - TUNE.candyR + (pull || 0) * 0.2; } // конфета на пружине
+function freshCandy() { S.candy = Object.assign(launch(0), { x: TUBE.cx, y: restY(0), vx: 0, vy: 0, vis: 1, rot: Math.PI / 2, tt: 0 }); }
+
+// ---- Звук: синтез ----
+let AC = null;
+function initAudio() { try { if (!AC) { const K = window.AudioContext || window.webkitAudioContext; if (K) AC = new K(); } if (AC && AC.state === "suspended") AC.resume(); } catch (e) { AC = null; } }
+function tone(type, f0, f1, f2, t0, dur, vol) {
+  const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t0);
+  if (f2) { o.frequency.exponentialRampToValueAtTime(f1, t0 + dur * 0.25); o.frequency.exponentialRampToValueAtTime(f2, t0 + dur); }
+  else if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol, t0 + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0 + dur + 0.03);
+}
+function sfx(kind, i, v) {
+  if (QUIET || !AC || AC.state !== "running") return;
+  try {
+    const t = AC.currentTime, st = Math.pow(2, Math.min(i || 0, 26) / 12); v = v == null ? 1 : v;
+    if (kind === "creak") tone("square", 260 + (i || 0) * 50, 200 + (i || 0) * 50, 0, t, 0.035, 0.035);
+    else if (kind === "whoosh") { tone("sawtooth", 160, 1400, 0, t, TUNE.tubeT, 0.05); tone("sine", 300, 1800, 0, t, TUNE.tubeT, 0.08); }
+    else if (kind === "boing") { const f = 247 * st; tone("triangle", f * 0.7, f * 1.25, f, t, 0.2, 0.24 * v); }
+    else if (kind === "gold") { const f = 494 * st; tone("sine", f * 2, f * 2, 0, t + 0.02, 0.18, 0.1); }
+    else if (kind === "pop") { const f = 520 * Math.pow(2, Math.min(i || 0, 30) / 24); tone("sine", f * 1.8, f * 0.6, 0, t, 0.08, 0.15); }
+    else if (kind === "plip") { const f = 700 + (i || 0) * 37; tone("sine", f, f * 0.7, 0, t, 0.05, 0.05); }
+    else if (kind === "am") { tone("triangle", 260, 170, 0, t, 0.1, 0.2); tone("triangle", 230, 150, 0, t + 0.12, 0.13, 0.2); }
+    else if (kind === "bubble") tone("sine", 280, 900, 0, t, 0.28, 0.14);
+    else if (kind === "bpop") tone("sine", 1300, 320, 0, t, 0.07, 0.14);
+    else if (kind === "catch") [784, 988, 1175, 1568].forEach((f, k) => tone("sine", f, f, 0, t + k * 0.07, 0.16, 0.11));
+    else if (kind === "chord") [523, 659, 784, 1047].forEach((f) => tone("triangle", f, f, 0, t, 0.45, 0.08));
+    else if (kind === "clear") [523, 659, 784, 1047, 1319].forEach((f, k) => tone("triangle", f, f, 0, t + k * 0.08, 0.3, 0.13));
+    else if (kind === "win") [523, 659, 784, 1047].forEach((f, k) => tone("triangle", f, f, 0, t + k * 0.09, 0.25, 0.14));
+    else if (kind === "end") [392, 523, 659].forEach((f, k) => tone("triangle", f, f, 0, t + k * 0.12, 0.25, 0.1));
+  } catch (e) {}
+}
+
+// ---- Ввод: оттяжка пружины, выстрел, тап-пузырь ----
+function startPull() { if (S.scene !== "play" || S.phase !== "aim") return false; S.phase = "drag"; S.pull = 0; S.creak = 0; return true; }
+function setPull(y) {
+  if (S.phase !== "drag") return;
+  const p = Math.max(0, Math.min(TUNE.pullMax, +y || 0)); S.pull = p; S.candy.y = restY(p);
+  const k = Math.floor(p / 10); if (k !== S.creak) { S.creak = k; sfx("creak", k); }
+}
+function cancelPull() { if (S.phase !== "drag") return; S.pull = null; S.phase = "aim"; S.lastAct = "cancelled"; S.candy.y = restY(0); }
+function release() {
+  if (S.phase !== "drag") return false;
+  const p = S.pull;
+  if (p < TUNE.pullMin) { cancelPull(); return false; }
+  S.pull = null; S.lastPull = p;
+  const c = S.candy; c.tt = 0; c.y0 = c.y; c.vexit = TUNE.vx0 + p * TUNE.springK;
+  c.Ltube = (c.y0 - ELB.cy) + Math.PI / 2 * ELB.r;
+  c.v0 = Math.max(0, 2 * c.Ltube / TUNE.tubeT - c.vexit); // скорость в трубе падает линейно до скорости выхода — без рывка на колене
+  S.phase = "tube"; S.phaseT = 0; S.flightT = 0; S.shot++; S.fieldShot++; S.shotsLeft--; S.lastAct = "shot"; S.tired = false;
+  S.chain = 0; S.bubbleUsed = false; S.tapPt = null; S.stuckT = 0; S.anchor = null; S.shotGold = 0; S.shotScore = 0; S.litOrder = [];
+  sfx("whoosh"); logEv("shot", { pull: +p.toFixed(1) }); updateHud();
+  return true;
+}
+function tap(x, y) { // в полёте: пузырь плывёт к точке (x, y) — вверх или вбок; без точки — вверх на 140 u
+  if (S.phase !== "fly" || S.bubbleUsed || !S.candy.vis) return false;
+  const t = startBubble(S.candy, x, y);
+  S.bubbleUsed = true; S.lastAct = "bubble"; S.tapPt = { x: t.x, y: t.y, t: 0 };
+  sfx("bubble"); logEv("bubble", { x: +S.candy.x.toFixed(0), y: +S.candy.y.toFixed(0), tx: +t.x.toFixed(0), ty: +t.y.toFixed(0) });
+  return true;
+}
+
+// ---- Тик ----
+function popup(x, y, text, color, size) { if (!QUIET) S.popups.push({ x, y, text, color, size: size || 16, t: 0 }); }
+function onHit(p, vn, hx, hy) {
+  if (!p) return;
+  if (vn > 25) { p.sqT = 0; if (!QUIET) S.fx.push({ k: "ring", x: hx, y: hy, t: 0 }); }
+  if (!p.lit) {
+    p.lit = true; p.flash = 0.2; S.chain++; S.litOrder.push(p); S.maxChain = Math.max(S.maxChain, S.chain);
+    if (p.gold) S.shotGold++;
+    sfx("boing", S.chain - 1); if (p.gold) sfx("gold", S.chain - 1);
+    logEv("hit", { gold: p.gold, chain: S.chain });
+  } else if (vn > 60 && p.cd <= 0) sfx("boing", S.chain - 1, 0.45);
+  p.cd = 0.08;
+}
+function popPeg(p, k, noScore) {
+  if (!p.alive) return;
+  p.alive = false;
+  if (!QUIET) S.fx.push({ k: "burst", x: p.x, y: p.y, t: 0, gold: p.gold });
+  sfx("pop", k);
+  const pts = p.gold ? TUNE.ptsGold : TUNE.ptsMint; S.score += pts; S.shotScore += pts;
+  if (p.gold) { S.goldLeft--; S.flyers.push({ x0: p.x, y0: p.y, t: 0 }); popup(p.x, p.y - 8, "+" + TUNE.ptsGold, "#B07A00", 15); }
+  updateHud();
+}
+function endShot(caught) {
+  const c = S.candy;
+  S.lastShot = { hits: S.chain, gold: S.shotGold, caught, bubble: S.bubbleUsed, flight: +S.flightT.toFixed(2), pull: +S.lastPull.toFixed(1) };
+  if (STATS) STATS.push({ flight: S.flightT, caught, chain: S.chain, gold: S.shotGold, pull: S.lastPull, bubble: S.bubbleUsed, x: c.x, fieldShot: S.fieldShot, field: S.field, shot: S.shot });
+  if (caught) {
+    S.shotsLeft++; S.catches++; S.chewT = 0.6;
+    popup(cartX(), MOUTH_Y - 34, "+1", "#A82060", 24); sfx("am"); sfx("catch");
+  } else if (Math.abs(c.x - cartX()) < 70) S.sadT = 0.8;
+  if (caught || S.shotGold >= 2 || S.chain >= 12) { popup(F.cx, 250, S.chain >= 12 && !caught && S.shotGold < 2 ? S.chain + " подряд!" : "Ух!", "#A82060", 40); sfx("chord"); S.joyT = 0.7; } // хороший выстрел
+  c.vis = 0;
+  logEv(caught ? "catch" : "lost", { hits: S.chain, gold: S.shotGold, flight: +S.flightT.toFixed(2) });
+  S.phase = "pop"; S.phaseT = 0; S.popIdx = 0; S.popT = 0;
+  S.popGap = Math.min(TUNE.popGap, TUNE.popTotal / Math.max(1, S.litOrder.length));
+  updateHud();
+}
+function afterShot() {
+  if (S.goldLeft <= 0) return startClear();
+  if (S.shotsLeft <= 0) return endRound();
+  freshCandy();
+  if (!refill()) toAim();
+}
+function toAim() { S.phase = "aim"; S.phaseT = 0; S.botT = 0; S.botPlan = null; S.chain = 0; S.tired = false; }
+function startClear() { // поле чисто: оставшиеся мятные лопаются волной сверху вниз (+1 каждая), +2 конфеты, новое поле дождём
+  S.fieldsCleared++; if (S.field === 1) S.field1Shots = S.fieldShot;
+  S.shotsLeft += TUNE.clearBonus;
+  S.clearQ = S.pegs.filter((p) => p.alive).sort((a, b) => a.y - b.y);
+  S.phase = "clear"; S.phaseT = 0; S.popIdx = 0; S.joyT = 1.4;
+  S.banner = { text: "Поле чисто!", sub: "+" + TUNE.clearBonus + " конфеты", t: 0 };
+  sfx("clear"); logEv("clear", { field: S.field, shots: S.fieldShot }); updateHud();
+}
+function stars() { return 1 + (S.score >= TUNE.star2 ? 1 : 0) + (S.score >= TUNE.star3 ? 1 : 0); }
+function endRound() {
+  S.scene = "end"; S.phase = "end"; S.botT = 0;
+  let best = 0; try { best = +(localStorage.getItem("lab.best.rain") || 0); } catch (e) {}
+  S.record = !QUIET && S.score > best;
+  if (S.record) try { localStorage.setItem("lab.best.rain", String(S.score)); } catch (e) {}
+  logEv("end", { score: S.score, fields: S.fieldsCleared, stars: stars() });
+  sfx("end");
+  if (QUIET) return;
+  const st = stars();
+  document.getElementById("endOm").src = "assets/omnom/" + (st >= 2 ? "joy" : "chew") + ".png";
+  document.getElementById("endStars").innerHTML = "<b>" + "★".repeat(st) + "</b>" + "★".repeat(3 - st);
+  document.getElementById("endTitle").textContent = S.score + " очков";
+  document.getElementById("endDetail").textContent = "Полей: " + S.fieldsCleared + " · дошёл до поля " + S.field + " · поймал " + S.catches;
+  document.getElementById("endRec").textContent = S.record ? "рекорд!" : "";
+  document.getElementById("end").style.display = "flex";
+  updateHud();
+}
+function tick() {
+  S.t += DT; S.phaseT += DT; S.ft += DT; S.cartPh += TUNE.cartSpeed * DT;
+  if (S.moving) placeMoving(S.pegs, S.ft);
+  for (const p of S.pegs) {
+    p.sqT += DT; if (p.flash > 0) p.flash -= DT; if (p.cd > 0) p.cd -= DT;
+    if (p.drop > 0) { p.drop -= DT; if (p.drop <= 0) { p.drop = 0; p.sqT = 0; sfx("plip", Math.floor((p.x - F.x0) / 20)); } }
+  }
+  if (!QUIET) {
+    for (const f of S.fx) f.t += DT; S.fx = S.fx.filter((f) => f.t < 0.4);
+    for (const p of S.popups) p.t += DT; S.popups = S.popups.filter((p) => p.t < 0.8);
+    if (S.tapPt) { S.tapPt.t += DT; if (S.tapPt.t > 0.6) S.tapPt = null; }
+    if (S.banner) { S.banner.t += DT; if (S.banner.t > 1.3) S.banner = null; }
+  }
+  if (S.chewT > 0) S.chewT -= DT; if (S.sadT > 0) S.sadT -= DT; if (S.joyT > 0) S.joyT -= DT;
+  for (const f of S.flyers) { f.t += DT; if (f.t >= 0.5) { S.chewT = 0.45; sfx("am"); } }
+  S.flyers = S.flyers.filter((f) => f.t < 0.5);
+  const c = S.candy;
+  if (S.phase === "tube") {
+    S.flightT += DT; c.tt += DT;
+    const T = TUNE.tubeT, t = Math.min(c.tt, T), s = c.v0 * t + (c.vexit - c.v0) * t * t / (2 * T), p = tubePos(c.y0, Math.min(s, c.Ltube));
+    c.x = p.x; c.y = p.y; c.rot = s < c.y0 - ELB.cy ? Math.PI / 2 : Math.PI / 2 - (s - (c.y0 - ELB.cy)) / ELB.r;
+    if (c.tt >= T - 1e-9) { // выход из колена: горизонтально влево, vy = 0
+      c.x = EXIT.x; c.y = EXIT.y; c.vx = -c.vexit; c.vy = 0; c.out = false; S.phase = "fly";
+      logEv("exit", { vx: +c.vx.toFixed(0) });
+    }
+  } else if (S.phase === "fly") {
+    S.flightT += DT;
+    if (!S.tired && S.flightT >= TUNE.tiredT) { S.tired = true; logEv("tired", {}); }
+    const popped = flyTick(c, S.pegs, S.tired ? TUNE.eTired : TUNE.e, onHit);
+    c.rot += c.vx * DT / 17;
+    if (popped) { sfx("bpop"); if (!QUIET) S.fx.push({ k: "bpop", x: c.x, y: c.y, t: 0 }); logEv("bubblePop", { x: +c.x.toFixed(0), y: +c.y.toFixed(0) }); }
+    if (Math.hypot(c.vx, c.vy) < TUNE.stuckV && !c.bubble) S.stuckT += DT; else S.stuckT = 0;
+    if (c.bubble || !S.anchor || Math.hypot(c.x - S.anchor.x, c.y - S.anchor.y) > TUNE.stuckR) S.anchor = { x: c.x, y: c.y, t: 0 }; else S.anchor.t += DT;
+    if (S.stuckT > TUNE.stuckT || S.anchor.t > TUNE.stuckT) { // застряла — желейки под ней лопаются сразу
+      S.stuckT = 0; S.anchor = null; const R = TUNE.candyHitR + TUNE.pegThick / 2 + 4;
+      for (const p of S.pegs) if (p.alive && ptSeg(c.x, c.y, p.ax, p.ay, p.bx, p.by).d < R) { if (!p.lit) onHit(p, 0, p.x, p.y); popPeg(p, S.chain); }
+      logEv("unstuck", {});
+    }
+    const mx = cartX();
+    if (!c.bubble && c.vy > 0 && Math.abs(c.x - mx) < TUNE.catchW && c.y > MOUTH_Y - 16 && c.y < MOUTH_Y + 22) endShot(true);
+    else if (c.y > H + 24 || S.flightT > TUNE.shotMax) endShot(false);
+  } else if (S.phase === "pop") {
+    S.popT += DT;
+    while (S.popIdx < S.litOrder.length && S.popT >= S.popIdx * S.popGap) { popPeg(S.litOrder[S.popIdx], S.popIdx); S.popIdx++; }
+    if (S.popIdx >= S.litOrder.length && !S.flyers.length && S.popT >= S.popIdx * S.popGap + 0.25) afterShot();
+  } else if (S.phase === "clear") {
+    const q = S.clearQ, gap = Math.min(0.05, 0.6 / Math.max(1, q.length));
+    while (S.popIdx < q.length && S.phaseT >= S.popIdx * gap) { popPeg(q[S.popIdx], S.popIdx); S.popIdx++; }
+    if (S.popIdx >= q.length && S.phaseT >= q.length * gap + 0.4) { S.clearQ = null; freshCandy(); setField(S.field + 1); }
+  } else if (S.phase === "rain") {
+    if (S.pegs.every((p) => p.drop <= 0) && S.phaseT > 0.05) toAim();
+  }
+  if (bot) botTick();
+}
+function updateHud() {
+  if (QUIET) return;
+  document.getElementById("field").textContent = "Поле " + S.field;
+  document.getElementById("shots").textContent = "Конфеты " + S.shotsLeft;
+  document.getElementById("gold").textContent = "Золото " + (S.goldTotal - S.goldLeft) + "/" + S.goldTotal;
+  document.getElementById("score").textContent = "Очки " + S.score;
+}
+
+// ---- Боты ----
+// Оттяжка: skill 0 — равномерно 10–100; skill s — лучший из round(1 + 9s) вводов по simRun (золотые × 6 + сбитые), шум ±3 u.
+// Пузырь: с вероятностью skill — «спасение»: когда конфета внизу поля (y > 366) и падает, перебор: без пузыря или к одной из 6 ближних
+// несбитых золотых (точка на 30 u выше неё, шум ±(4 + 10(1 − s)) u) — что даст больше. Иначе (ребёнок): в 70 % выстрелов тап в случайный
+// момент 0,4–2,6 с в случайную точку поля выше конфеты.
+function botPlan() {
+  const r = mulberry(hash3(S.seed, S.shot * 31 + S.field, 11)), skill = bot ? bot.skill : 1;
+  const n = Math.max(1, Math.round(1 + skill * (TUNE.aimTries - 1)));
+  const rnd = () => TUNE.pullMin + r() * (TUNE.pullMax - TUNE.pullMin);
+  const wait = bot && bot.fast ? 0.15 : 0.3 + r() * 1.2;
+  const smart = r() < skill, kidTap = !smart && r() < 0.7 ? { t: 0.4 + r() * 2.2, x: F.x0 + r() * (F.x1 - F.x0), fy: r() } : null;
+  const noise = (4 + 10 * (1 - skill)) * (r() * 2 - 1), noise2 = (4 + 10 * (1 - skill)) * (r() * 2 - 1);
+  const plan = { pull: 0, wait, best: null, smart, kidTap, noise, noise2, decided: false };
+  if (n === 1) { plan.pull = rnd(); return plan; }
+  const alive = S.pegs.filter((p) => p.alive && p.drop <= 0), T0 = S.ft + wait + 0.3; let best = null;
+  for (let i = 0; i < n; i++) { const pull = rnd(), s = simShot(alive, pull, T0, false), v = s.gold * 6 + s.n + r() * 0.5; if (!best || v > best.v) best = { v, pull, sim: { n: s.n, gold: s.gold } }; }
+  plan.pull = Math.max(TUNE.pullMin, Math.min(TUNE.pullMax, best.pull + (r() * 2 - 1) * TUNE.aimNoise)); plan.best = best;
+  return plan;
+}
+function botBubble() {
+  const P = S.botPlan, c = S.candy; if (!P || S.bubbleUsed) return;
+  if (P.kidTap) { if (S.flightT >= P.kidTap.t) { const k = P.kidTap; P.kidTap = null; tap(k.x, F.y0 + Math.max(0, c.y - F.y0) * k.fy); } return; }
+  if (!P.smart || P.decided || !(c.vy > 0 && (c.y > F.y1 - 60 || S.flightT > 2.6))) return;
+  P.decided = true;
+  const alive = S.pegs.filter((p) => p.alive), lit = new Set(S.litOrder);
+  const golds = alive.filter((p) => p.gold && !p.lit).sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y)).slice(0, 6);
+  const base = simRun(c, alive, S.flightT, S.ft, { lit }); let best = { v: base.gold * 6 + base.n, tap: null };
+  for (const g of golds) {
+    const tx = g.x + P.noise, ty = g.y - 30 + P.noise2, s = simRun(c, alive, S.flightT, S.ft, { lit, tap: { t: S.flightT, x: tx, y: ty } }), v = s.gold * 6 + s.n;
+    if (v > best.v) best = { v, tap: { x: tx, y: ty } };
+  }
+  if (best.tap) tap(best.tap.x, best.tap.y);
+}
+function botTick() {
+  if (S.scene === "end") { S.botT += DT; if (!bot.noNext && S.botT > 2.0) newGame(); return; }
+  if (S.phase === "aim") {
+    S.botT += DT;
+    if (!S.botPlan) S.botPlan = botPlan();
+    if (S.botT > S.botPlan.wait) { S.botWait += S.botPlan.wait; startPull(); setPull(S.botPlan.pull * 0.4); S.botT = 0; }
+  } else if (S.phase === "drag" && S.botPlan) {
+    S.botT += DT; const k = Math.min(1, S.botT / 0.3); setPull(S.botPlan.pull * (0.4 + 0.6 * k));
+    if (k >= 1) release();
+  } else if (S.phase === "fly") botBubble();
+}
+// Замер: N seed × боты (skill 0 / 0,5 / 1), целый раунд до конца конфет, без звука и DOM. Состояние игры восстанавливается.
+// Длительность раунда = время симуляции − ожидание бота + 1,8 с прицела человека на выстрел.
+function bench(p) {
+  p = p || {}; const seeds = p.seeds || 100, base = p.base || 1, skills = p.skills || [0, 0.5, 1];
+  const saved = { S, bot }; QUIET = true;
+  const out = {};
+  const mean = (a) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+  const qt = (a, k) => { if (!a.length) return 0; const b = a.slice().sort((x, y) => x - y); return b[Math.min(b.length - 1, Math.floor(k * b.length))]; };
+  const r2 = (x) => Math.round(x * 1000) / 1000;
+  try {
+    for (const skill of skills) {
+      const scores = [], fields = [], durs = [], shotsN = [], f1 = [], all = [];
+      for (let i = 0; i < seeds; i++) {
+        STATS = []; bot = { skill, noNext: true, fast: true }; newGame(base + i);
+        for (let k = 0; S.scene === "play" && k < 60 * 900; k++) tick();
+        scores.push(S.score); fields.push(S.fieldsCleared); shotsN.push(S.shot); f1.push(S.field1Shots);
+        durs.push(S.t - S.botWait + 1.8 * S.shot); all.push(...STATS);
+      }
+      const late = all.filter((s) => s.fieldShot >= 4);
+      out["s" + skill] = {
+        scoreP25: qt(scores, 0.25), scoreMed: qt(scores, 0.5), scoreP75: qt(scores, 0.75), fieldsMean: r2(mean(fields)),
+        durMed: r2(qt(durs, 0.5)), durP90: r2(qt(durs, 0.9)), shots: r2(mean(shotsN)),
+        field1In8: r2(f1.filter((x) => x != null && x <= 8).length / seeds), field1In10: r2(f1.filter((x) => x != null && x <= 10).length / seeds),
+        goldPerShot: r2(mean(all.map((s) => s.gold))), chain: r2(mean(all.map((s) => s.chain))), chainLate: r2(mean(late.map((s) => s.chain))),
+        chainGe10: r2(all.filter((s) => s.chain >= 10).length / all.length),
+        flight: r2(mean(all.map((s) => s.flight))), over4: r2(all.filter((s) => s.flight > 4).length / all.length), over5: r2(all.filter((s) => s.flight > 5).length / all.length),
+        catchRate: r2(all.filter((s) => s.caught).length / all.length), bubble: r2(all.filter((s) => s.bubble).length / all.length),
+        flightBubble: r2(mean(all.filter((s) => s.bubble).map((s) => s.flight))), flightNoBubble: r2(mean(all.filter((s) => !s.bubble).map((s) => s.flight))),
+        chainByShot: [1, 2, 3, 4, 5, 6, 7, 8].map((k) => r2(mean(all.filter((s) => Math.min(s.fieldShot, 8) === k).map((s) => s.chain)))),
+      };
+      if (p.raw) out["s" + skill].scores = scores;
+    }
+  } finally { STATS = null; QUIET = false; S = saved.S; bot = saved.bot; updateHud(); }
+  return out;
+}
+
+// ---- Рисование ----
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d"), stage = document.getElementById("stage");
+let scale = 1, dpr = 1, lastW = 0, lastH = 0, bg = null;
+function fit() {
+  const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return;
+  const nd = Math.min(2, window.devicePixelRatio || 1);
+  if (w === lastW && h === lastH && nd === dpr) return;
+  lastW = w; lastH = h; dpr = nd;
+  scale = Math.min((w - 22) / W, (h - 22) / H);
+  cv.style.width = W * scale + "px"; cv.style.height = H * scale + "px";
+  cv.style.left = (w - W * scale) / 2 + "px"; cv.style.top = (h - H * scale) / 2 + "px";
+  cv.width = Math.round(W * scale * dpr); cv.height = Math.round(H * scale * dpr);
+  bg = null;
+}
+new ResizeObserver(fit).observe(stage);
+window.addEventListener("resize", fit); window.addEventListener("orientationchange", fit);
+function circle(x, y, r, fill, line, lw) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (line) { ctx.strokeStyle = line; ctx.lineWidth = lw || 2; ctx.stroke(); } }
+function ellipse(x, y, rx, ry, fill) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill(); }
+function pipePath(g) { // труба одной линией: вверх по x 304, колено r 18, носик влево — без швов
+  g.beginPath(); g.moveTo(TUBE.cx, TUBE.bot); g.lineTo(TUBE.cx, ELB.cy); g.arc(ELB.cx, ELB.cy, ELB.r, 0, -Math.PI / 2, true); g.lineTo(EXIT.x - 2, EXIT.y);
+}
+function drawBg() {
+  if (!bg) {
+    bg = document.createElement("canvas"); bg.width = cv.width; bg.height = cv.height;
+    const g = bg.getContext("2d"); g.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+    const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, C.paperHi); gr.addColorStop(0.55, C.paper); gr.addColorStop(1, C.paperLo);
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.fillStyle = "rgba(255,255,255,.13)"; for (let x = 12; x < W; x += 40) g.fillRect(x, 0, 16, H);
+    // верхний край поля — пунктир, по нему ездит метка «куда упадёт»
+    g.strokeStyle = "rgba(74,37,18,.18)"; g.lineWidth = 1.5; g.setLineDash([4, 5]); g.beginPath(); g.moveTo(F.x0 - 14, F.y0 - 8); g.lineTo(WALL_X - 4, F.y0 - 8); g.stroke(); g.setLineDash([]);
+    // стенка x 286 от y 110 до низа — левый борт трубы
+    g.fillStyle = C.cardMid; g.strokeStyle = C.ink; g.lineWidth = 2;
+    g.beginPath(); g.roundRect(WALL_X - 1, WALL_Y, 6, H - WALL_Y + 4, 2); g.fill(); g.stroke();
+    // труба: контур, картон, тёмный канал, блик
+    g.lineJoin = "round"; g.lineCap = "butt";
+    pipePath(g); g.strokeStyle = C.ink; g.lineWidth = 32; g.stroke();
+    pipePath(g); g.strokeStyle = C.card; g.lineWidth = 27.5; g.stroke();
+    pipePath(g); g.strokeStyle = "#7A4420"; g.lineWidth = 20; g.stroke();
+    g.strokeStyle = "rgba(255,255,255,.14)"; g.lineWidth = 3; g.beginPath(); g.moveTo(TUBE.cx - 5, TUBE.bot - 4); g.lineTo(TUBE.cx - 5, ELB.cy + 2); g.stroke();
+    g.beginPath(); g.arc(ELB.cx, ELB.cy, ELB.r + 5, -0.05, -Math.PI / 2 + 0.1, true); g.strokeStyle = "rgba(255,255,255,.22)"; g.lineWidth = 2.5; g.stroke();
+    // носик: картонная губа
+    g.fillStyle = C.card; g.strokeStyle = C.ink; g.lineWidth = 2; g.beginPath(); g.roundRect(EXIT.x - 6, EXIT.y - 17, 7, 34, 3); g.fill(); g.stroke();
+    // скотч на колене и у дна
+    g.save(); g.translate(ELB.cx + 13, ELB.cy - 13); g.rotate(-Math.PI / 4); g.fillStyle = "rgba(255,246,214,.75)"; g.fillRect(-4, -19, 8, 38); g.restore();
+    g.fillStyle = "rgba(255,246,214,.75)"; g.fillRect(TUBE.x0 - 3, 430, 34, 7);
+    // рельс тележки
+    g.strokeStyle = "rgba(74,37,18,.55)"; g.lineWidth = 3; g.beginPath(); g.moveTo(8, RAIL_Y); g.lineTo(WALL_X - 4, RAIL_Y); g.stroke();
+    g.fillStyle = "rgba(74,37,18,.3)"; for (let x = 14; x < WALL_X - 6; x += 18) g.fillRect(x, RAIL_Y, 6, 3);
+    // полоса для пальца: картонная планка с бороздками — «тяни здесь»
+    g.fillStyle = "rgba(201,138,75,.55)"; g.strokeStyle = "rgba(74,37,18,.35)"; g.lineWidth = 1.5;
+    g.beginPath(); g.roundRect(12, 514, WALL_X - 26, 40, 10); g.fill(); g.stroke();
+    g.strokeStyle = "rgba(74,37,18,.22)"; g.lineWidth = 2;
+    for (const x of [60, 152, 244]) for (let k = 0; k < 3; k++) { const y = 522 + k * 9; g.beginPath(); g.moveTo(x - 9, y); g.lineTo(x, y + 6); g.lineTo(x + 9, y); g.stroke(); }
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bg, 0, 0); ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+}
+function drawSpring(pull) {
+  const top = SPRING_TOP + (pull || 0) * 0.2, n = 6, h = (SPRING_BOT - top) / n;
+  ctx.strokeStyle = "#E9E2D6"; ctx.lineWidth = 3; ctx.lineJoin = "round"; ctx.beginPath(); ctx.moveTo(TUBE.cx, SPRING_BOT);
+  for (let i = 0; i < n; i++) ctx.lineTo(TUBE.cx + (i % 2 ? -7 : 7), SPRING_BOT - (i + 0.5) * h);
+  ctx.lineTo(TUBE.cx, top); ctx.stroke();
+  ctx.fillStyle = C.cream; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.roundRect(TUBE.cx - 9, top - 3, 18, 5, 2); ctx.fill(); ctx.stroke();
+}
+function pegY(p) { if (p.drop <= 0) return p.y; const u = Math.max(0, 1 - p.drop / p.dropDur); return p.y - p.dropH * (1 - u * u); }
+function drawPeg(p) {
+  if (p.drop > p.dropDur) return;
+  let f = 0; const t = p.sqT;
+  if (t < 0.06) f = t / 0.06; else if (t < 0.18) { const u = (t - 0.06) / 0.12; f = (1 - u) * Math.cos(u * Math.PI * 1.5); }
+  const th = TUNE.pegThick * (1 - 0.4 * f), hl = TUNE.pegHalf * (1 + 0.08 * f + (p.lit ? 0.05 : 0));
+  ctx.save(); ctx.translate(p.x, pegY(p)); ctx.rotate(p.a); ctx.lineCap = "round";
+  if (p.lit) { ctx.strokeStyle = p.gold ? "rgba(255,200,40,.55)" : "rgba(255,255,255,.6)"; ctx.lineWidth = th + 12; ctx.beginPath(); ctx.moveTo(-hl, 0); ctx.lineTo(hl, 0); ctx.stroke(); }
+  ctx.strokeStyle = C.ink; ctx.lineWidth = th + 3.2; ctx.beginPath(); ctx.moveTo(-hl, 0); ctx.lineTo(hl, 0); ctx.stroke();
+  ctx.strokeStyle = p.flash > 0 ? "#fff" : p.lit ? (p.gold ? C.goldLit : C.mintLit) : (p.gold ? C.gold : C.mint);
+  ctx.lineWidth = th; ctx.stroke();
+  ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(-hl * 0.7, -th * 0.22); ctx.lineTo(hl * 0.5, -th * 0.22); ctx.stroke();
+  if (p.gold && !p.lit) { ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.beginPath(); ctx.arc(hl * 0.55, th * 0.12, 1.6, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+}
+function drawCandy(x, y, rot, bubble, bt, pale) {
+  const r = TUNE.candyR;
+  ctx.save(); ctx.translate(x, y);
+  if (bubble) {
+    const w = 1 + Math.sin(bt * 14) * 0.06, R = r + 13; ctx.save(); ctx.scale(w, 2 - w);
+    circle(0, 0, R + 1.5, null, "rgba(30,90,130,.45)", 1.4); circle(0, 0, R, "rgba(170,225,255,.5)", "rgba(255,255,255,.98)", 3.2);
+    ellipse(-R * 0.4, -R * 0.45, 7, 4, "rgba(255,255,255,.9)"); circle(R * 0.45, R * 0.35, 2.2, "rgba(255,255,255,.8)"); ctx.restore(); }
+  if (pale) ctx.globalAlpha = 0.5; // «усталость»: конфета бледнеет
+  ctx.rotate(rot);
+  ctx.lineJoin = "round"; ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.fillStyle = C.wrap;
+  for (const d of [-1, 1]) { ctx.beginPath(); ctx.moveTo(d * (r - 3), 0); ctx.lineTo(d * (r + 7), -7); ctx.quadraticCurveTo(d * (r + 5), 0, d * (r + 7), 7); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+  circle(0, 0, r, C.candy);
+  ctx.save(); ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.clip();
+  ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.lineWidth = 3.4;
+  for (const k of [-8, 0, 8]) { ctx.beginPath(); ctx.arc(k - 11, 11, 16, -0.9, -0.1); ctx.stroke(); }
+  ctx.restore();
+  circle(0, 0, r, null, C.ink, 2.2); ellipse(-5, -6, 4, 2.4, "rgba(255,255,255,.75)");
+  ctx.restore();
+}
+let omFrame = "neutral"; const omGaze = {};
+function drawCart() {
+  const x = cartX(), c = S.candy, s = TUNE.omScale;
+  const d = c.vis && S.phase === "fly" ? Math.hypot(c.x - x, c.y - MOUTH_Y) : 999;
+  if (S.chewT > 0) omFrame = Math.floor(S.t * 9) % 2 ? "chew2" : "chew";
+  else if (S.sadT > 0) omFrame = "sad";
+  else if (S.phase === "clear" || (S.joyT > 0 && S.phase !== "fly")) omFrame = "joy";
+  else if (S.phase === "fly" && c.vy > 0 && d < 110) omFrame = d < 60 ? "wide" : "ajar";
+  else if (S.flyers.length) omFrame = "ajar";
+  else omFrame = "neutral";
+  ellipse(x + 2, RAIL_Y + 1, 36, 5, "rgba(74,37,18,.25)");
+  const tx = S.flyers.length ? S.flyers[0].x0 : c.x, ty = S.flyers.length ? S.flyers[0].y0 : c.y;
+  ctx.save(); ctx.translate(x, FEET_Y); ctx.scale(s, s); ctx.translate(-x, -FEET_Y);
+  OMS.draw(ctx, { frame: omFrame, mx: x, my: FEET_Y - 20, fy: FEET_Y, flip: tx > x,
+    tx: x + (tx - x) / s, ty: FEET_Y + (ty - FEET_Y) / s }, omGaze);
+  ctx.restore();
+  const top = FEET_Y - 9;
+  ctx.beginPath(); ctx.roundRect(x - 32, top, 64, 21, 5); ctx.fillStyle = C.card; ctx.fill();
+  ctx.fillStyle = C.cardSh; ctx.fillRect(x - 29, top + 15, 58, 3); ctx.fillStyle = "rgba(255,255,255,.25)"; ctx.fillRect(x - 28, top + 3, 56, 2);
+  ctx.beginPath(); ctx.roundRect(x - 32, top, 64, 21, 5); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.2; ctx.stroke();
+  for (const wx of [x - 20, x + 20]) { circle(wx, top + 22, 6, C.cream, C.ink, 2); const a = x / 6; ctx.beginPath(); ctx.moveTo(wx + Math.cos(a) * 5, top + 22 + Math.sin(a) * 5); ctx.lineTo(wx - Math.cos(a) * 5, top + 22 - Math.sin(a) * 5); ctx.stroke(); }
+}
+// Прицел: путь от выхода трубы до первой желейки (aimPreview 1 — плюс 0,12 с после неё) и x пересечения верхнего края поля
+function aimPath(pull) {
+  const pts = [], alive = S.pegs.filter((p) => p.alive && p.drop <= 0);
+  const r = simRun(launch(pull), alive, TUNE.tubeT, S.ft + TUNE.tubeT, { pts, stopHits: 1 + (TUNE.aimPreview ? 1 : 0) });
+  const main = [], tail = []; let mark = null, prev = { x: EXIT.x, y: EXIT.y }, after = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    if (mark == null && p.h === 0 && prev.y < F.y0 && p.y >= F.y0) mark = p.x;
+    if (p.h === 0) { if (i % 2 === 1) main.push(p); }
+    else if (TUNE.aimPreview && after < 8) { after++; if (i % 2 === 1) tail.push(p); }
+    prev = p;
+  }
+  if (mark == null && r.hit1) mark = r.hit1.x;
+  return { pts: main, pts2: tail, hit: r.hit1, mark };
+}
+function render() {
+  fit(); drawBg();
+  const c = S.candy;
+  // рельсы едущих рядов
+  const rows = new Set();
+  for (const p of S.pegs) if (p.mv && p.alive && p.drop <= 0 && !rows.has(Math.round(p.y))) {
+    rows.add(Math.round(p.y)); ctx.strokeStyle = "rgba(74,37,18,.16)"; ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.setLineDash([2, 6]);
+    ctx.beginPath(); ctx.moveTo(F.x0 + 2, p.y); ctx.lineTo(F.x1 - 2, p.y); ctx.stroke(); ctx.setLineDash([]);
+  }
+  for (const p of S.pegs) if (p.alive) drawPeg(p);
+  for (const f of S.fx) {
+    if (f.k === "ring") { const k = Math.min(1, f.t / 0.2); if (k < 1) circle(f.x, f.y, 4 + 12 * k, null, `rgba(255,255,255,${1 - k})`, 2.5); }
+    else if (f.k === "burst") {
+      const k = Math.min(1, f.t / 0.35), a = 1 - k, col = f.gold ? "255,200,40" : "95,211,199";
+      circle(f.x, f.y, 6 + 22 * k, null, `rgba(${col},${a})`, 4 * a + 1);
+      for (let i = 0; i < 7; i++) { const an = i * 0.9 + 0.3, rr = 6 + 26 * k; circle(f.x + Math.cos(an) * rr, f.y + Math.sin(an) * rr, 3.2 * a + 0.5, `rgba(${col},${a})`); }
+    } else if (f.k === "bpop") { const k = Math.min(1, f.t / 0.25); if (k < 1) for (let i = 0; i < 8; i++) { const an = i * Math.PI / 4, rr = 20 + 14 * k; circle(f.x + Math.cos(an) * rr, f.y + Math.sin(an) * rr, 2.5 * (1 - k) + 0.5, `rgba(255,255,255,${1 - k})`); } }
+  }
+  for (const f of S.flyers) {
+    const k = Math.min(1, f.t / 0.5), mx = cartX(), x = f.x0 + (mx - f.x0) * k, y = f.y0 + (MOUTH_Y - f.y0) * k - Math.sin(k * Math.PI) * 50;
+    ctx.save(); ctx.translate(x, y); ctx.scale(0.6, 0.6); ctx.translate(-x, -y); drawCandy(x, y, k * 8, false, 0); ctx.restore();
+  }
+  drawCart();
+  drawSpring(S.phase === "drag" ? S.pull : 0);
+  if (S.phase === "drag" && S.pull >= TUNE.pullMin) {
+    const ap = aimPath(S.pull), n = ap.pts.length;
+    ap.pts.forEach((p, i) => { const a = 0.95 - 0.4 * i / Math.max(1, n - 1); circle(p.x, p.y, 4.2 - 1.4 * i / Math.max(1, n - 1), `rgba(251,235,208,${a})`, `rgba(74,37,18,${a * 0.9})`, 1.5); });
+    ap.pts2.forEach((p, i) => circle(p.x, p.y, 2.6 - i * 0.3, "rgba(251,235,208,.55)", "rgba(74,37,18,.35)", 1.2));
+    if (ap.hit) circle(ap.hit.x, ap.hit.y, 7, null, "rgba(255,255,255,.95)", 2.5);
+    if (ap.mark != null) { // метка «куда упадёт»: треугольник вниз над верхним краем поля
+      const mx = ap.mark, my = F.y0 - 8;
+      ctx.beginPath(); ctx.moveTo(mx - 8, my - 12); ctx.lineTo(mx + 8, my - 12); ctx.lineTo(mx, my); ctx.closePath();
+      ctx.fillStyle = "#E8458A"; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.stroke();
+    }
+  } else if (S.phase === "aim" && S.shot === 0 && S.scene === "play") { // подсказка «тяни вниз» в первые секунды
+    const k = (S.t * 1.4) % 1, y = 506 + k * 22, ax = 152;
+    ctx.globalAlpha = 1 - k * 0.6; ctx.fillStyle = C.cream; ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.lineJoin = "round";
+    ctx.beginPath(); ctx.moveTo(ax - 9, y); ctx.lineTo(ax + 9, y); ctx.lineTo(ax + 9, y + 10); ctx.lineTo(ax + 16, y + 10); ctx.lineTo(ax, y + 24); ctx.lineTo(ax - 16, y + 10); ctx.lineTo(ax - 9, y + 10); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.globalAlpha = 1; ctx.font = "900 15px Nunito, system-ui"; ctx.textAlign = "center"; ctx.lineWidth = 4; ctx.strokeStyle = C.cream; ctx.strokeText("тяни вниз", 72, 540); ctx.fillStyle = C.ink; ctx.fillText("тяни вниз", 72, 540);
+  }
+  if (c.vis) {
+    if (S.phase === "fly" && !S.bubbleUsed && S.shot <= 2 && S.field === 1 && c.y > 260) { // первые выстрелы: «тапни!» у конфеты
+      circle(c.x, c.y, TUNE.candyR + 9 + Math.sin(S.t * 12) * 2, null, "rgba(255,255,255,.7)", 1.8);
+      ctx.font = "900 13px Nunito, system-ui"; ctx.textAlign = "center"; ctx.lineWidth = 3.5; ctx.strokeStyle = C.cream; ctx.strokeText("тапни!", c.x, c.y - 26); ctx.fillStyle = C.ink; ctx.fillText("тапни!", c.x, c.y - 26);
+    }
+    if (S.phase === "tube") for (let i = 1; i <= 3; i++) circle(c.x + (c.y > ELB.cy ? 0 : i * 6), c.y + (c.y > ELB.cy ? i * 14 : 0), TUNE.candyR * (1 - i * 0.2), `rgba(232,65,47,${0.35 - i * 0.09})`);
+    if (c.bubble) { ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 2; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(c.btx, c.bty); ctx.stroke(); ctx.setLineDash([]); }
+    drawCandy(c.x, c.y, c.rot, c.bubble, c.bubbleT, S.tired);
+  }
+  if (S.tapPt) { const k = Math.min(1, S.tapPt.t / 0.6); circle(S.tapPt.x, S.tapPt.y, 16 - 8 * k, null, `rgba(255,255,255,${1 - k})`, 3); circle(S.tapPt.x, S.tapPt.y, 3, `rgba(255,255,255,${1 - k})`); }
+  // цепочка (левый верх), пузырь-готов, «последняя»
+  ctx.textBaseline = "middle";
+  if ((S.phase === "fly" || S.phase === "pop") && S.chain > 0) {
+    const sz = Math.min(28, 16 + S.chain * 0.6);
+    ctx.fillStyle = S.chain >= 10 ? "#A82060" : C.ink; ctx.font = `900 ${sz}px Nunito, system-ui`; ctx.textAlign = "left";
+    ctx.lineWidth = 4; ctx.strokeStyle = C.cream; ctx.strokeText(S.chain + " подряд", 12, 24); ctx.fillText(S.chain + " подряд", 12, 24);
+  }
+  if (S.shotsLeft === 0 && (S.phase === "tube" || S.phase === "fly")) {
+    ctx.font = "900 14px Nunito, system-ui"; ctx.textAlign = "center"; ctx.lineWidth = 4; ctx.strokeStyle = C.cream; ctx.strokeText("последняя!", 152, 100); ctx.fillStyle = "#A82060"; ctx.fillText("последняя!", 152, 100);
+  }
+  { const bx = 236, by = 22, on = !S.bubbleUsed || S.phase === "aim" || S.phase === "drag";
+    ctx.globalAlpha = on ? 1 : 0.3; circle(bx, by, 11, "rgba(200,240,255,.5)", "rgba(255,255,255,.95)", 2); ellipse(bx - 4, by - 4, 3.5, 2, "#fff"); circle(bx, by, 11.8, null, "rgba(74,37,18,.45)", 1); ctx.globalAlpha = 1; }
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic"; ctx.lineWidth = 4; ctx.strokeStyle = C.cream;
+  for (const p of S.popups) { ctx.globalAlpha = Math.min(1, 2.5 - 3 * p.t); const y = p.y - p.t * 34; ctx.font = `900 ${p.size}px Nunito, system-ui`; ctx.strokeText(p.text, p.x, y); ctx.fillStyle = p.color; ctx.fillText(p.text, p.x, y); }
+  ctx.globalAlpha = 1;
+  if (S.banner) {
+    const b = S.banner, k = Math.min(1, b.t / 0.15), a = Math.min(1, (1.3 - b.t) / 0.3);
+    ctx.globalAlpha = Math.max(0, a); ctx.font = `900 ${Math.round(34 * (0.7 + 0.3 * k))}px Nunito, system-ui`; ctx.lineWidth = 6; ctx.strokeStyle = C.cream;
+    ctx.strokeText(b.text, 152, 290); ctx.fillStyle = "#A82060"; ctx.fillText(b.text, 152, 290);
+    if (b.sub) { ctx.font = "900 18px Nunito, system-ui"; ctx.lineWidth = 4; ctx.strokeText(b.sub, 152, 318); ctx.fillStyle = C.ink; ctx.fillText(b.sub, 152, 318); }
+    ctx.globalAlpha = 1;
+  }
+}
+
+// ---- Ввод: Pointer Events. Оттяжка начинается под полем (y ≥ 396) и тянется вниз; в полёте тап — пузырь плывёт к пальцу ----
+let ptr = null;
+function toU(e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale }; }
+stage.addEventListener("pointerdown", (e) => {
+  if (ptr !== null || e.target.closest("#end")) return;
+  initAudio();
+  if (bot) { bot = null; if (S.phase === "drag") cancelPull(); }
+  const u = toU(e);
+  if (S.phase === "fly") { tap(u.x, u.y); e.preventDefault(); return; }
+  if (u.y < PULL_ZONE) return; // выше — не жест: рука закрыла бы поле
+  if (!startPull()) return;
+  ptr = { id: e.pointerId, y: e.clientY };
+  try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  e.preventDefault();
+});
+stage.addEventListener("pointermove", (e) => { if (ptr && e.pointerId === ptr.id) setPull((e.clientY - ptr.y) / scale * TUNE.pullGain); });
+function up(e) { if (!ptr || e.pointerId !== ptr.id) return; ptr = null; if (e.type === "pointercancel") cancelPull(); else release(); }
+stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+document.addEventListener("visibilitychange", () => { if (document.hidden && ptr) { ptr = null; cancelPull(); } });
+window.addEventListener("blur", () => { if (ptr) { ptr = null; cancelPull(); } });
+function onButton(id, fn) { const b = document.getElementById(id); b.addEventListener("pointerdown", (e) => e.stopPropagation()); b.addEventListener("click", (e) => { e.stopPropagation(); initAudio(); fn(); }); }
+onButton("restart", () => newGame(S.seed));
+onButton("again", () => newGame());
+onButton("newseed", () => newGame());
+onButton("tuneBtn", () => document.getElementById("tune").classList.toggle("on"));
+(function buildTune() {
+  const box = document.getElementById("tune");
+  for (const [k, label, mn, mx, st] of KNOBS) {
+    const l = document.createElement("label"); l.textContent = label;
+    const i = document.createElement("input"); i.type = "range"; i.min = mn; i.max = mx; i.step = st; i.value = TUNE[k];
+    const v = document.createElement("span"); v.textContent = TUNE[k];
+    i.addEventListener("input", () => { TUNE[k] = +i.value; v.textContent = i.value; });
+    box.append(l, i, v);
+  }
+})();
+
+// ---- Цикл: фиксированный тик 1/60 ----
+let manual = false, acc = 0, last = performance.now();
+const frames = [];
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  frames.push(now); if (frames.length > 120) frames.shift();
+  if (!manual) { acc += dt; let n = 0; while (acc >= DT && n < 3) { tick(); acc -= DT; n++; } if (n === 3) acc = 0; }
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ---- Тестовый API ----
+function shortState() { return { phase: S.phase, scene: S.scene, field: S.field, shotsLeft: S.shotsLeft, goldLeft: S.goldLeft, goldTotal: S.goldTotal, score: S.score, fieldsCleared: S.fieldsCleared, chain: S.chain, flightT: +S.flightT.toFixed(3), bubbleUsed: S.bubbleUsed, tired: S.tired, pull: S.pull, stars: S.scene === "end" ? stars() : null }; }
+window.__game = {
+  ready: false,
+  state: shortState,
+  getState() {
+    const r = cv.getBoundingClientRect(), c = S.candy;
+    return Object.assign(shortState(), {
+      seed: S.seed, template: S.template, moving: S.moving, tick: Math.round(S.t * 60), ft: +S.ft.toFixed(3), lastAct: S.lastAct, omFrame,
+      maxChain: S.maxChain, shot: S.shot, fieldShot: S.fieldShot, catches: S.catches, firstGold: S.firstGold, firstPegs: S.firstPegs, record: S.record,
+      pegsAlive: S.pegs.filter((p) => p.alive).length, mintTarget: S.mintTarget, lit: S.pegs.filter((p) => p.alive && p.lit).length,
+      pegs: S.pegs.filter((p) => p.alive).map((p) => ({ x: +p.x.toFixed(1), y: +p.y.toFixed(1), a: +p.a.toFixed(3), gold: p.gold, lit: p.lit, moving: !!p.mv, drop: +p.drop.toFixed(2) })),
+      bubble: { used: S.bubbleUsed, active: !!c.bubble, t: +c.bubbleT.toFixed(2), tx: c.bubble ? c.btx : null, ty: c.bubble ? c.bty : null },
+      candy: { x: c.x, y: c.y, vx: c.vx, vy: c.vy, vis: c.vis }, lastPull: S.lastPull,
+      aim: S.phase === "drag" && S.pull >= TUNE.pullMin ? (() => { const a = aimPath(S.pull); return { mark: a.mark, hit: a.hit, first: a.pts[0] || null }; })() : null,
+      cart: { x: cartX(), mouthY: MOUTH_Y, catchW: TUNE.catchW }, lastShot: S.lastShot, banner: S.banner ? S.banner.text : null,
+      flyers: S.flyers.length, popups: S.popups.length, log: S.log.slice(-40), bot: bot ? bot.skill : null,
+      view: { left: r.left, top: r.top, scale, W, H, exit: EXIT, field: F, pullZone: PULL_ZONE }, tune: TUNE,
+    });
+  },
+  act(a, p) {
+    if (a === "seed" || a === "newGame") newGame(typeof p === "object" && p ? p.seed : p);
+    else if (a === "restart") newGame(S.seed);
+    else if (a === "pull") { if (S.phase === "aim") startPull(); setPull(typeof p === "object" ? p.y : p); }
+    else if (a === "release") return release();
+    else if (a === "shoot") { if (!startPull()) return false; setPull(typeof p === "object" ? p.y : p); return release(); }
+    else if (a === "tap") return p && typeof p === "object" ? tap(p.x, p.y) : tap();
+    else if (a === "clock") manual = !!(p && p.manual);
+    else if (a === "step") { for (let i = 0; i < (p || 1); i++) tick(); }
+    else if (a === "skipRain") { for (const pg of S.pegs) pg.drop = 0; if (S.phase === "rain") toAim(); }
+    else if (a === "autoplay") { bot = p === false || (p && p.on === false) ? null : { skill: p && p.skill != null ? +p.skill : 1 }; if (S) { S.botT = 0; S.botPlan = null; } }
+    else if (a === "plan") return botPlan();
+    else if (a === "bench") return bench(p);
+    else if (a === "setTune") { Object.assign(TUNE, p); }
+    else if (a === "setShots") { S.shotsLeft = +p; updateHud(); }
+    else if (a === "clearGold") { for (const pg of S.pegs) if (pg.gold && pg.alive) { pg.alive = false; S.goldLeft--; } updateHud(); } // dev: следующий выстрел очистит поле
+    else if (a === "render") render();
+  },
+  metrics() {
+    const d = []; for (let i = 1; i < frames.length; i++) d.push(frames[i] - frames[i - 1]);
+    const avg = d.length ? d.reduce((s, x) => s + x, 0) / d.length : 16.7; d.sort((x, y) => x - y);
+    return { fps: Math.round(1000 / avg), frameMsP95: d.length ? d[Math.floor(d.length * 0.95)] : 0, drawCalls: -1 };
+  },
+};
+// ?seed=7&bot=1 — бот играет сам; любые ключи TUNE тоже из адреса (?e=0.7&refill=0.5)
+newGame(q.has("seed") ? +q.get("seed") : undefined);
+if (q.has("bot")) bot = { skill: +q.get("bot") || 0 };
+fit(); render();
+OMS.loaded.then(() => { window.__game.ready = true; });
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
