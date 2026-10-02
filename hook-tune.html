@@ -56,7 +56,7 @@ const CLEAN = {
   aimMode: "roof", rayAngle: 55, aimCone: 30, liftDy: 60, roofInset: 8, aimHyst: 6, ropeMin: 80, ropeMax: 600,
   reel: 0, reelMin: 120, elastic: 0, pumpOn: false, pumpSpeed: 300, pumpDL: 120, pumpZone: 25, vDrag: 1,
   swingOn: false, swingMin: 350, backDragOn: false, backDrag: 0.985,
-  ownOn: false, ownPoint: "corner", ownPad: 40, ctrAhead: 0,
+  ownOn: false, ownPoint: "corner", ownPad: 40, ctrAhead: 0, ownAll: false, ownMinL: 0, ownSlack: "none", ownPayMax: 300, ownReel: 0, ownReelMin: 0, ownVmax: 0, ropeBrake: 0,
   // отпускание
   boostOn: false, sweetBoost: 1.08, sweetMin: 25, sweetMax: 60, liftOn: false, sweetLift: 160,
   // дома (применяются при «Новый мир» / «Рестарт»)
@@ -105,11 +105,15 @@ const TARZAN = Object.assign({}, CLEAN, { pumpOn: true, pumpSpeed: 350, pumpDL: 
 const GLIDER = Object.assign({}, CLEAN, { vDrag: 0.95, reel: 300, capVx: 1100, startMode: "roof" });
 const HOPPER = Object.assign({}, CLEAN, { gravity: 2200, reel: 450, reelMin: 70, rayAngle: 65, ropeMin: 60, ropeMax: 340, liftDy: 40, capVy: 1800,
   gapMin: 80, gapMax0: 150, gapGrow: 0.002, gapCap: 220, hMin0: 380, hMax: 620, jumpVx: 350, jumpVy: -750, zoom: 0.45, startMode: "roof" });
-// «Дальнобой» и пять его вариаций (D-70, D-75): прицел «центр крыши» — верёвка всегда к центру крыши ближайшего дома впереди
-// (свой дом, пока его центр впереди хотя бы на 30 u; иначе следующий дом; не достаёт и он — промах); отличаются миром и физикой
+// «Дальнобой» и пять его вариаций (D-70, D-75, D-78): прицел «центр крыши» — в ширине дома всегда центр крыши этого дома;
+// в промежутке — центр следующего дома (выше хотя бы на 100 u, не достаёт — ещё следующий; нет — промах); отличаются миром и физикой
 // liftDy 100: крыша выше Ома Нома хотя бы на 100 u — он не проходит под самой точкой ближе reelMin и верёвка не дёргает при натяжении
 const CENTER = { aimMode: "center", ownOn: true, ownPoint: "center", ctrAhead: 30, liftDy: 100 };
-const FAR = Object.assign({}, CLEAN, CENTER, { reel: 330, rayAngle: 48, ropeMax: 800, capVx: 1300, gapMin: 260, gapMax0: 380, gapGrow: 0.003, gapCap: 520,
+// D-78: в ширине дома — всегда центр его крыши (ctrAhead/liftDy выше — только для цели в промежутке). Зацеп за центром (b) или над крышей (c):
+// верёвка сначала провисает (травится/выбирается без силы) и встаёт без рывка, когда расстояние до точки перестало меняться; потом подтяжка
+// 900 u/с до 40 u — «раскрутка» вокруг центра крыши (энергия только от подтяжки), отпустил на подъёме — улетел. Короче 80 u верёвка не бывает.
+const OWN78 = { ownAll: true, ownSlack: "free", ownMinL: 80, ownPayMax: 60, ownReel: 900, ownReelMin: 40 };
+const FAR = Object.assign({}, CLEAN, CENTER, OWN78, { reel: 330, rayAngle: 48, ropeMax: 800, capVx: 1300, gapMin: 260, gapMax0: 380, gapGrow: 0.003, gapCap: 520,
   hMin0: 560, hMinG: 0.4, hMax: 880, wMin: 90, wMax0: 160, wFloor: 120, zoom: 0.3, camTopMargin: 200, startMode: "roof" });
 const SKY = Object.assign({}, FAR, { reel: 300, ropeMax: 1150, skyP: 0.4, skyWMin: 350, skyWMax: 700, skyHMin: 800, skyHMax: 1050,
   wMin: 70, wMax0: 130, wFloor: 100, hMin0: 700, hMinG: 0.3, hMax: 950, gapMin: 240, gapMax0: 360, gapCap: 420, zoom: 0.28, camTopMargin: 220 });
@@ -136,7 +140,7 @@ const PR_NOTE = {
   tarzan: "Длинные лианы, высокие дома, сильный бросок. Энергия — раскачка и буст ×1,35, если отпустить на подъёме 15…70°.",
   glider: "Падение тормозится сильнее, чем полёт вперёд: парит и медленно снижается. Энергия — подтяжка 300 u/с.",
   hopper: "Гравитация 2200, короткие верёвки, частые перескоки с крыши на крышу. Энергия — подтяжка 450 u/с и прыжок 750 с крыши/земли.",
-  far: "Редкие узкие дома, широкие пропасти, длинные перелёты, камера дальше. Верёвка — всегда в центр крыши. Энергия — подтяжка 330 u/с.",
+  far: "Редкие узкие дома, широкие пропасти, длинные перелёты, камера дальше. Верёвка — в центр крыши дома, над которым летишь (за центром и над крышей — раскрутка вокруг центра), в промежутке — следующего. Энергия — подтяжка 330 u/с (раскрутка — 900).",
   sky: "Широкие небоскрёбы (350…700) вперемешку с узкими башнями; верёвка — в центр крыши, до 1150. Подтяжка 300 u/с.",
   canyon: "Пропасти 420…700, высокие узкие башни, верёвка до 1050 — в центр крыши, g 1000, камера дальше всех. Подтяжка 300 u/с.",
   peaks: "Соседние дома отличаются по высоте на 220…450 (350…1000); верёвка — в центр крыши, до 950. Подтяжка 380 u/с.",
@@ -150,7 +154,7 @@ const PR_NOTE = {
 const TUNE = Object.assign({}, SPIDER);
 
 // Панель: [ключ, подпись, min, max, шаг] | [ключ, подпись, "bool"] | [ключ, подпись, "sel", [[знач, подпись]…]]; ADD — добавляет энергию
-const ADD = new Set(["pumpOn", "swingOn", "backDragOn", "boostOn", "liftOn", "reel", "kickOn", "groundMode", "jumpVx"]);
+const ADD = new Set(["pumpOn", "swingOn", "backDragOn", "boostOn", "liftOn", "reel", "ownReel", "kickOn", "groundMode", "jumpVx"]);
 const SPEC = [
   ["Мир", "", [
     ["gravity", "Гравитация, u/с²", 200, 3000, 10],
@@ -187,6 +191,14 @@ const SPEC = [
     ["ownPoint", "…точка на крыше", "sel", [["ray", "по лучу, дальше — передний угол"], ["corner", "передний угол"], ["perp", "поперёк скорости (без рывка)"], ["center", "центр крыши (без сдвигов)"]]],
     ["ownPad", "…зона начинается до левой стены за, u", 0, 200, 5],
     ["ctrAhead", "Центр крыши впереди хотя бы на, u (ближе — уже «над головой», цель — следующий дом)", 0, 200, 5],
+    ["ownAll", "D-78: в ширине дома — всегда центр крыши этого дома (и за центром, и над крышей)", "bool"],
+    ["ownMinL", "…верёвка к своему дому не короче, u (ближе — сначала провисает)", 0, 400, 5],
+    ["ownSlack", "…за центром / над крышей верёвка", "sel", [["none", "сразу натянута (как к любому дому)"], ["take", "выбирает слабину, пока он приближается"], ["free", "сначала провис: травится и выбирается без силы, встаёт без рывка"]]],
+    ["ownPayMax", "…травится не больше чем на, u (дальше — встаёт так)", 0, 1000, 10],
+    ["ownReel", "…подтяжка, если зацепился за центром или над крышей, u/с (0 — общая)", 0, 2000, 10],
+    ["ownReelMin", "…до длины, u (0 — общая)", 0, 400, 5],
+    ["ownVmax", "…раскрутка: скорость не больше, u/с (по модулю; 0 — только общие пределы)", 0, 3000, 10],
+    ["ropeBrake", "Тормоз: верёвка не дёргает, а травится, гася скорость от точки не быстрее, u/с² (0 — рывок)", 0, 20000, 100],
   ]],
   ["Отпускание", "Окно «вжух» — угол скорости вправо-вверх в момент отпускания.", [
     ["boostOn", "Буст «вжух» (v1, v2)", "bool"],
@@ -257,7 +269,7 @@ const SPEC_KEYS = []; for (const g of SPEC) for (const f of g[2]) SPEC_KEYS.push
 const W = 320, H = 480, DT = 1 / 60, NSUB = 8, FLOOR = 462;
 const SIZE = { omFeet: 30, omTop: 36, mouthDy: 10, candyR: 20 };
 const START = { x: 80, y: 300, boxX0: 40, boxX1: 120, boxTop: 330 };
-const STORE = "lab.hook-tune.v5", BEST_KEY = "lab.best.hook-tune";
+const STORE = "lab.hook-tune.v6", BEST_KEY = "lab.best.hook-tune";
 const rad = (d) => d * Math.PI / 180;
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -367,7 +379,22 @@ function centerAimIn(list, x, y) {
   }
   return null;
 }
+// D-78: Ом Ном в ширине дома (от x0 − ownPad до x1) — цель всегда центр крыши этого дома: и когда центр уже позади, и когда он
+// выше крыши; ctrAhead, liftDy, ropeMin/ropeMax для своего дома не действуют (длина короче ownMinL — верёвка провисает до ownMinL).
+// Вне домов (в промежутке) — центр следующего дома по правилу D-75. Исключение — крыша, с которой стартовал прыжком (skipHouse):
+// к ней не цепляется, пока не улетит за её правую стену, иначе прыжок со старта тут же тянет назад.
+function ownCenter(b, x, y) {
+  const cx = (b.x0 + b.x1) / 2, dy = y - b.top, L = Math.hypot(cx - x, dy);
+  return { x: cx, y: b.top, dev: Math.abs(Math.atan2(dy, cx - x) * 180 / Math.PI - TUNE.rayAngle), L, house: b.id, own: true, ctr: true,
+    kind: dy < 0 ? "c" : x > cx ? "b" : "a" };
+}
+function aim78(list, x, y, skip) {
+  const b = list[firstIdx(list, x)];
+  if (b && b.x0 - TUNE.ownPad <= x && b.id !== skip) return ownCenter(b, x, y);
+  return centerAimIn(list, x, y);
+}
 function aimAt(x, y, prevId) {
+  if (TUNE.ownAll) return aim78(S.WD.bld, x, y, S.skipHouse);
   if (TUNE.ownOn) { const o = ownAim(x, y, S.om.vx, S.om.vy); if (o) return o; }
   if (TUNE.aimMode === "center") return centerAimIn(S.WD.bld, x, y);
   if (TUNE.aimMode === "ray") { const a = rad(TUNE.rayAngle); return castRay(x, y, Math.cos(a), -Math.sin(a), TUNE.ropeMax); }
@@ -392,6 +419,11 @@ function newWorld(seed) {
 }
 function reachOK(A, B) {
   const list = [A, B];
+  if (TUNE.reachCheck && TUNE.ownAll) { // D-78: в доме цель есть всегда; проверяем промежуток — с любого x на двух высотах есть центр B
+    for (let x = Math.floor((A.x1 - 5) / 5) * 5; x <= B.x0 + 5; x += 5)
+      for (const hs of [200, 380]) if (!aim78(list, x, FLOOR - hs, -1)) return false;
+    return true;
+  }
   if (TUNE.reachCheck && TUNE.aimMode === "center") { // с любого x от A.x0 до B.x0 на двух высотах есть цель — центр A или B
     for (let x = Math.floor(A.x0 / 5) * 5; x <= B.x0 + 5; x += 5)
       for (const hs of [200, 380]) if (!centerAimIn(list, x, FLOOR - hs)) return false;
@@ -459,12 +491,12 @@ function newRound(seed) {
     seed: seed >>> 0, WD: newWorld(seed >>> 0), steps: 0, time: 0, held: false, paused: S ? S.paused : false,
     om: { x: START.x, y: START.y, vx: 0, vy: 0, grounded: true, rot: 0 }, x0: START.x, pendCatch: false,
     rope: null, tgt: null, cand: [], ci: 0, maxX: START.x, noPressUntil: 0, shotT: 0,
-    catches: 0, ownCatches: 0, misses: 0, sweet: 0, bounces: 0, candies: 0, tension: 0,
+    catches: 0, ownCatches: 0, kinds: { a: 0, b: 0, c: 0, n: 0 }, skipHouse: -1, misses: 0, sweet: 0, bounces: 0, candies: 0, tension: 0,
     log: [], trail: [], lastCatch: null, lastRelease: null, flash: [],
     cam: { x: 0, y: 0, vx: 0, vy: 0, vxs: 0, vys: 0, zoom: TUNE.zoom, spS: 0 },
   };
   if (TUNE.startMode === "roof") { // стоит на крыше первого дома у правого края; первое нажатие — прыжок
-    const b = S.WD.bld[0]; S.om.x = Math.max(b.x0 + 20, b.x1 - 40); S.om.y = b.top - SIZE.omFeet; S.x0 = S.maxX = S.om.x;
+    const b = S.WD.bld[0]; S.om.x = Math.max(b.x0 + 20, b.x1 - 40); S.om.y = b.top - SIZE.omFeet; S.x0 = S.maxX = S.om.x; S.skipHouse = b.id;
   }
   S.prev = null;
   ensureWorld(); camStep(true); updateTarget(); snapPrev();
@@ -499,10 +531,15 @@ function fromPolar(r) {
   o.vx = r.L * r.w * c + r.rd * s; o.vy = -r.L * r.w * s + r.rd * c;
 }
 // провисшая верёвка дотянулась: радиальная скорость наружу гасится (верёвка не тянется) — энергия только теряется
-function tautCheck(r, why) {
+// ropeBrake > 0: верёвка не дёргает, а травится с тормозом — радиальная скорость наружу гасится не больше чем на ropeBrake·h за подшаг,
+// длина растёт до текущего расстояния; встаёт натянутой, когда он перестал удаляться быстрее подтяжки (тоже только потеря энергии)
+function tautCheck(r, why, h) {
   const o = S.om, dx = o.x - r.ax, dy = o.y - r.ay, d = Math.hypot(dx, dy);
   if (d < r.L) return false;
   const nx = dx / d, ny = dy / d, vr = o.vx * nx + o.vy * ny;
+  if (TUNE.ropeBrake > 0 && vr > TUNE.ropeBrake * (h || 0)) { // тормоз: удаляется — травит верёвку, не дёргает
+    const dv = TUNE.ropeBrake * (h || 0); o.vx -= dv * nx; o.vy -= dv * ny; r.L = d; r.braking = true; return false;
+  }
   o.x = r.ax + nx * r.L; o.y = r.ay + ny * r.L;
   if (vr < r.rd) return false; // летит к точке быстрее подтяжки — верёвка провисает
   const v0 = Math.hypot(o.vx, o.vy);
@@ -512,10 +549,21 @@ function tautCheck(r, why) {
   if (why === "slack" && Math.abs(v1 - v0) > 1) logEv({ type: "taut", vBefore: +v0.toFixed(1), vAfter: +v1.toFixed(1) });
   return true;
 }
+// D-78 «сначала провис, потом натяжение» (ownSlack «free»): верёвка к своему дому сначала свободна — травится, пока Ом Ном удаляется от точки,
+// и выбирается, пока приближается (без силы: ни работы, ни потерь; подтяжка ждёт). Встаёт, когда расстояние перестало меняться —
+// в самой дальней или самой ближней точке его полёта: скорость тогда поперёк верёвки, натяжение без рывка. Ближе ownMinL не выбирается;
+// вытравилось больше чем на ownPayMax — встаёт так (с рывком или тормозом ropeBrake).
+function freeRope(r) {
+  const o = S.om, dx = o.x - r.ax, dy = o.y - r.ay, d = Math.hypot(dx, dy), sg = o.vx * dx + o.vy * dy > 0 ? 1 : -1;
+  if (r.vrS && sg !== r.vrS) { r.free = false; r.L = Math.max(TUNE.ownMinL, d); r.lockedAt = d; }
+  else if (d > r.L0 + TUNE.ownPayMax) { r.free = false; r.L = r.L0 + TUNE.ownPayMax; r.lockedAt = -1; tautCheck(r, "slack", DT / NSUB); }
+  else r.L = Math.max(TUNE.ownMinL, d);
+  r.vrS = sg;
+}
 // скорость изменения длины верёвки (−: укорачивается). Подтяжка — пока держишь; раскачка — как на качелях: внизу маха (большое натяжение)
 // верёвка короче, на подъёме длина возвращается (натяжение меньше) — разница работ идёт в энергию маха, честно
 function ropeRd(r) {
-  if (!S.held) return 0;
+  if (!S.held || r.free) return 0;
   const o = S.om;
   if (TUNE.pumpOn) {
     const phi = Math.atan2(o.x - r.ax, o.y - r.ay), lo = Math.max(TUNE.reelMin, r.L0 - TUNE.pumpDL);
@@ -523,8 +571,12 @@ function ropeRd(r) {
     if (o.vy < 0 && r.L < r.L0 - 1e-6) return TUNE.pumpSpeed;
     return 0;
   }
-  return (TUNE.reel > 0 && r.L > TUNE.reelMin + 1e-6) ? -TUNE.reel : 0;
+  const rl = reelOf(r);
+  return (rl > 0 && r.L > reelMinOf(r) + 1e-6) ? -rl : 0;
 }
+// D-78: верёвка к своему дому за центром или над крышей (b, c) — своя подтяжка ownReel до ownReelMin (0 — общие reel / reelMin)
+const reelOf = (r) => (r.kb && TUNE.ownReel > 0 ? TUNE.ownReel : TUNE.reel);
+const reelMinOf = (r) => (r.kb && TUNE.ownReelMin > 0 ? TUNE.ownReelMin : TUNE.reelMin);
 function substep(h, k) {
   const o = S.om, r = S.rope, g = TUNE.gravity;
   if (r) r.rd = ropeRd(r);
@@ -534,7 +586,7 @@ function substep(h, k) {
       r.w += -(g / L0) * Math.sin(r.phi) * h * 0.5; r.phi += r.w * h; r.w += -(g / L0) * Math.sin(r.phi) * h * 0.5;
     } else { // подтяжка: φ'' = −(g/L)·sin φ − 2·L'·φ'/L (момент импульса сохраняется, работа подтяжки — в энергию)
       r.w += (-(g / L0) * Math.sin(r.phi) - 2 * r.rd * r.w / L0) * h;
-      r.L = Math.max(TUNE.reelMin, L0 + r.rd * h); r.phi += r.w * h;
+      r.L = Math.max(reelMinOf(r), L0 + r.rd * h); r.phi += r.w * h;
     }
     r.w *= k.rope; if (k.back !== 1 && r.w * Math.cos(r.phi) < 0) r.w *= k.back;
     fromPolar(r);
@@ -543,7 +595,7 @@ function substep(h, k) {
     if (ten < 0) r.taut = false; // верёвка не толкает: провисает
   } else {
     if (r && TUNE.elastic > 0) { // упругая: пружина только на растяжение, симплектический Эйлер
-      if (r.rd !== 0) r.L = Math.max(TUNE.reelMin, r.L + r.rd * h);
+      if (r.rd !== 0) r.L = Math.max(reelMinOf(r), r.L + r.rd * h);
       const dx = o.x - r.ax, dy = o.y - r.ay, d = Math.hypot(dx, dy);
       let ax = 0, ay = g;
       if (d > r.L) { const f = TUNE.elastic * (d - r.L); ax -= f * dx / d; ay -= f * dy / d; S.tension += f; }
@@ -552,9 +604,12 @@ function substep(h, k) {
       o.x += o.vx * h; o.y += o.vy * h;
     } else { // баллистика: точно для постоянной g
       o.x += o.vx * h; o.y += o.vy * h + 0.5 * g * h * h; o.vy += g * h;
-      const kk = r ? k.rope * (k.back !== 1 && o.vx < 0 ? k.back : 1) : k.air; o.vx *= kk; o.vy *= kk;
-      if (!r && o.vy > 0) o.vy *= k.vd; // «планер»: падение тормозится сильнее, чем движение вперёд (энергия только теряется)
-      if (r) { if (r.rd !== 0) r.L = Math.max(TUNE.reelMin, Math.min(r.L, Math.hypot(o.x - r.ax, o.y - r.ay)) + r.rd * h); tautCheck(r, "slack"); }
+      const fly = !r || r.free; // свободная верёвка (ownSlack «free») не держит — как полёт
+      const kk = !fly ? k.rope * (k.back !== 1 && o.vx < 0 ? k.back : 1) : k.air; o.vx *= kk; o.vy *= kk;
+      if (fly && o.vy > 0) o.vy *= k.vd; // «планер»: падение тормозится сильнее, чем движение вперёд (энергия только теряется)
+      if (r && r.free) freeRope(r);
+      else if (r) { if (r.take) r.L = Math.max(TUNE.ownMinL, Math.min(r.L, Math.hypot(o.x - r.ax, o.y - r.ay)));
+        if (r.rd !== 0) r.L = Math.max(reelMinOf(r), Math.min(r.L, Math.hypot(o.x - r.ax, o.y - r.ay)) + r.rd * h); tautCheck(r, "slack", h); }
     }
   }
   if (TUNE.ceilOn && o.y - SIZE.omTop < 0) { o.y = SIZE.omTop; if (o.vy < 0) o.vy *= -0.3; if (r && r.taut) r.taut = false; }
@@ -594,21 +649,23 @@ function catchAt(t) {
   const o = S.om; S.pendCatch = false;
   if (!t) { S.misses++; S.noPressUntil = S.steps + 7; S.shotT = 0.22; logEv({ type: "miss" }); return; }
   const v0 = speed(), E0 = energy();
-  const L = Math.hypot(t.x - o.x, t.y - o.y);
+  let L = Math.hypot(t.x - o.x, t.y - o.y);
+  if (t.kind) L = Math.max(L, TUNE.ownMinL, 1); // D-78: ближе ownMinL — верёвка длиной ownMinL, сначала провисает
   let extra = 0;
   if (TUNE.swingOn) { // рывок паутины v2: касательная скорость вперёд не меньше swingMin
     const tx = -(t.y - o.y) / L, ty = (t.x - o.x) / L, vt = o.vx * tx + o.vy * ty;
     if (vt < TUNE.swingMin) { o.vx += (TUNE.swingMin - vt) * tx; o.vy += (TUNE.swingMin - vt) * ty; extra = 1; }
   }
   const vK = speed();
-  const r = S.rope = { ax: t.x, ay: t.y, L, L0: L, house: t.house, own: !!t.own, taut: false, phi: 0, w: 0, rd: 0, E0: 0, Emax: 0, Emin: 0, swings: 0, wSign: 0, reelUsed: false, extra };
-  if (TUNE.elastic <= 0) tautCheck(r, "catch");
+  const r = S.rope = { ax: t.x, ay: t.y, L, L0: L, house: t.house, own: !!t.own, free: false, take: false, vrS: 0, kb: t.kind === "b" || t.kind === "c", taut: false, phi: 0, w: 0, rd: 0, E0: 0, Emax: 0, Emin: 0, swings: 0, wSign: 0, reelUsed: false, extra };
+  if (r.kb) { r.free = TUNE.ownSlack === "free"; r.take = TUNE.ownSlack === "take"; }
+  if (TUNE.elastic <= 0 && !r.free) tautCheck(r, "catch");
   r.E0 = r.Emax = r.Emin = energy();
-  S.catches++; if (t.own) S.ownCatches++; S.tgt = null;
+  S.catches++; if (t.own) S.ownCatches++; S.kinds[t.kind || "n"]++; S.tgt = null; S.skipHouse = -1;
   const v1 = speed();
-  S.lastCatch = { vBefore: v0, vKick: vK, vAfter: v1, EBefore: E0, EAfter: r.E0, L, taut: r.taut };
+  S.lastCatch = { vBefore: v0, vKick: vK, vAfter: v1, EBefore: E0, EAfter: r.E0, L, taut: r.taut, kind: t.kind || "n" };
   logEv({ type: "catch", vBefore: +v0.toFixed(1), vKick: +vK.toFixed(1), vAfter: +v1.toFixed(1), jump: +((v1 / Math.max(1, v0) - 1) * 100).toFixed(2),
-    EBefore: +E0.toFixed(0), EAfter: +r.E0.toFixed(0), L: +L.toFixed(1), taut: r.taut, swingKick: !!extra, own: !!t.own });
+    EBefore: +E0.toFixed(0), EAfter: +r.E0.toFixed(0), L: +L.toFixed(1), taut: r.taut, swingKick: !!extra, own: !!t.own, kind: t.kind || "n" });
   flash(t.x, t.y, "#2f9e5b");
 }
 function release() {
@@ -631,6 +688,7 @@ function release() {
 }
 function applyCaps() {
   const o = S.om; let hit = false;
+  if (TUNE.ownVmax > 0 && S.rope && S.rope.kb) { const sp = speed(); if (sp > TUNE.ownVmax) { o.vx *= TUNE.ownVmax / sp; o.vy *= TUNE.ownVmax / sp; hit = true; } } // раскрутка: предел по модулю, без дрожи по осям
   if (TUNE.capOn) {
     if (Math.abs(o.vx) > TUNE.capVx) { o.vx = Math.sign(o.vx) * TUNE.capVx; hit = true; }
     if (Math.abs(o.vy) > TUNE.capVy) { o.vy = Math.sign(o.vy) * TUNE.capVy; hit = true; }
@@ -661,6 +719,7 @@ function step() {
     const sg = Math.sign(o.vx); if (sg && r.wSign && sg !== r.wSign) r.swings += 0.5; if (sg) r.wSign = sg;
   }
   if (S.maxX < o.x) S.maxX = o.x;
+  if (S.skipHouse >= 0) { const sb = S.WD.bld.find((b) => b.id === S.skipHouse); if (!sb || o.x >= sb.x1) S.skipHouse = -1; }
   const dm = distM(); if (dm > best) { best = dm; if (S.steps % 30 === 0) saveBest(); }
   if (TUNE.candiesOn) eatCandies();
   // поворот вдоль верёвки (плавно, без скачка при зацепе и отпускании)
@@ -795,7 +854,7 @@ function draw() {
   for (const f of S.flash) { ctx.strokeStyle = f.col; ctx.globalAlpha = f.life / 0.4; ctx.lineWidth = 2 * u; ctx.beginPath(); ctx.arc(f.x, f.y, (8 + (0.4 - f.life) * 40) * u, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
   // верёвка — линия (провисла — с прогибом)
   if (r) {
-    const d = Math.hypot(v.x - r.ax, v.y - r.ay), sag = d < r.L - 1 && TUNE.elastic <= 0 ? Math.sqrt(r.L * r.L - d * d) * 0.5 : 0;
+    const d = Math.hypot(v.x - r.ax, v.y - r.ay), sag = r.free ? d * 0.15 : d < r.L - 1 && TUNE.elastic <= 0 ? Math.sqrt(r.L * r.L - d * d) * 0.5 : 0; // свободная (D-78) — с провисом
     ctx.strokeStyle = COL.rope; ctx.lineWidth = 2.2 * u; ctx.lineCap = "round";
     ctx.beginPath(); ctx.moveTo(r.ax, r.ay); ctx.quadraticCurveTo((r.ax + v.x) / 2, (r.ay + v.y) / 2 + sag, v.x, v.y); ctx.stroke();
     ctx.fillStyle = COL.rope; ctx.beginPath(); ctx.arc(r.ax, r.ay, 3 * u, 0, 7); ctx.fill();
@@ -927,7 +986,7 @@ function buildPanel() {
   }
 }
 const DEP = { capVx: "capOn", capVy: "capOn", swingMin: "swingOn", backDrag: "backDragOn", sweetBoost: "boostOn", sweetLift: "liftOn",
-  zoomFast: "zoomSpeedOn", zoomV0: "zoomSpeedOn", zoomV1: "zoomSpeedOn", zoomLerp: "zoomSpeedOn", candyKick: "kickOn", reelMin: "reel", ownPoint: "ownOn", ownPad: "ownOn", skyWMin: "skyP", skyWMax: "skyP", skyHMin: "skyP", skyHMax: "skyP", pumpSpeed: "pumpOn", pumpDL: "pumpOn", pumpZone: "pumpOn" };
+  zoomFast: "zoomSpeedOn", zoomV0: "zoomSpeedOn", zoomV1: "zoomSpeedOn", zoomLerp: "zoomSpeedOn", candyKick: "kickOn", reelMin: "reel", ownPoint: "ownOn", ownPad: "ownOn", ownMinL: "ownAll", ownSlack: "ownAll", ownPayMax: "ownAll", ownReel: "ownAll", ownReelMin: "ownAll", ownVmax: "ownAll", skyWMin: "skyP", skyWMax: "skyP", skyHMin: "skyP", skyHMax: "skyP", pumpSpeed: "pumpOn", pumpDL: "pumpOn", pumpZone: "pumpOn" };
 function syncUi() {
   const p = PRESETS[PRESET];
   for (const k of SPEC_KEYS) {
