@@ -20,8 +20,8 @@
         <button data-sp="0.25">×0,25</button><button data-sp="0.5">×0,5</button><button data-sp="1">×1</button>
       </div>
       <div class="row2">
-        <div class="pr3"><button data-pr="dense">Густо</button><span>≈ 54 конфеты на 100 м</span></div>
-        <div class="pr3"><button data-pr="sparse">Редко</button><span>≈ 34 конфеты на 100 м</span></div>
+        <div class="pr3"><button data-pr="dense">Густо</button><span>≈ 63 конфеты на 100 м</span></div>
+        <div class="pr3"><button data-pr="sparse">Редко</button><span>≈ 39 конфет на 100 м</span></div>
       </div>
       <div class="row lowrow" id="lowRow"><span class="preset-note">Конфеты внизу:</span><button data-dn="path">по пути</button><button data-dn="circle">дугой</button><button data-dn="off">нет</button></div>
       <div class="preset-note" id="prNote"></div>
@@ -93,7 +93,7 @@ const CLEAN = {
   // D-91 доп. 2: dnMode «path» — конфеты по настоящему пути опорного игрока («Точный», без случайности — зависит только от seed):
   // на верёвке от доли pStart до pEnd маха через низ, шаг pStep, не больше pMax; после отпускания — ещё pFly тем же шагом (полёт к следующему зацепу)
   sL0: 300, sPhi: -42, sV0: 1300, sRel: 35, sMax: 180,
-  pOverHouse: false, dnMode: "circle", pStep: 80, pMax: 6, pStart: 0.1, pEnd: 1, pFly: 10, pWhich: "all", pLead: 5000,
+  pOverHouse: false, dnMode: "circle", pStep: 80, pLowShare: 0, pHiShare: 1, pLowMin: 200, lowDelay: 20, lowRel: 45, lowHold: 180, pMax: 6, pStart: 0.1, pEnd: 1, pFly: 10, pWhich: "all", pLead: 5000,
 };
 // «Подтяжка» (по умолчанию) — «Чистый» + честный источник энергии: пока держишь, верёвка укорачивается (работа подтяжки идёт в энергию); старт с крыши первого дома
 const PULL = Object.assign({}, CLEAN, { reel: 200, startMode: "roof" });
@@ -162,11 +162,14 @@ const D87 = Object.assign({}, FAR, { wMin: 70, wMax0: 210, wShrink: 0, wFloor: 2
   // D-91: нижняя дуга под крышей (радиус 200 вокруг центра крыши, сектор вокруг нижней точки, шаг 80 — фантики не слипаются),
   // ряд над крышей с шагом 80, на 0:00 итог сразу (мир замирает); верхние дуги проредены, чтобы всего было ≤ ~55 конфет на 100 м
   dnOn: true, dnN: 3, dnR: 200, dnMid: 0, dnSp: 80, rowSp: 80, finaleSec: 0,
-  dnMode: "path", pFly: 6, pOverHouse: true }); // доп. 3: цепочка и на фоне дома (Ом Ном качается перед домами) — 4–6 на верёвке // доп. 2: цепочка по пути опорного игрока (мах + 6 по полёту); верхние дуги в пролётах — как в D-91
-// звёзды (доп. 3, path с конфетами и на фоне дома): 0,9 × медиана «Обычного» и 0,8 × медиана «Сборщика» (seed 1–30):
-// Густо 114 / 254,5 → 103 / 205, Редко 72,5 / 178,5 → 65 / 145; для circle и off — см. LOW_OV
-const DENSE = Object.assign({}, D87, { chPer: 170, chMin: 2, chMax: 3, rowMinW: 150, rowN: 3, dnWhich: "all", pWhich: "all", star2: 103, star3: 205 });
-const SPARSE = Object.assign({}, D87, { chPer: 150, chMin: 1, chMax: 2, rowMinW: 170, rowN: 2, dnWhich: "alt", pWhich: "alt", star2: 65, star3: 145 });
+  dnMode: "path", pFly: 6, pOverHouse: true,
+  // D-94: вторая, «низкая» дорога (игрок цепляется на 20 тиков позже и отпускает при 25° — медиана высоты пути 520 u над землёй против 682 у «Точного»);
+  // цепочки на 70 % махов каждого пути — плотность ≤ ~65 на 100 м при трёх ярусах (над крышами, у крыш, низ)
+  pLowShare: 0.7, pHiShare: 0.7, pLowMin: 200, lowDelay: 20, lowRel: 25 }); // доп. 3: цепочка и на фоне дома (Ом Ном качается перед домами) — 4–6 на верёвке // доп. 2: цепочка по пути опорного игрока (мах + 6 по полёту); верхние дуги в пролётах — как в D-91
+// звёзды (D-94, path: высокая + низкая дороги): 0,9 × медиана «Обычного» и 0,8 × медиана «Сборщика» (seed 1–30):
+// Густо 129 / 282,5 → 116 / 225, Редко 81,5 / 191,5 → 73 / 155; для circle и off — см. LOW_OV
+const DENSE = Object.assign({}, D87, { chPer: 170, chMin: 2, chMax: 3, rowMinW: 150, rowN: 3, dnWhich: "all", pWhich: "all", star2: 116, star3: 225 });
+const SPARSE = Object.assign({}, D87, { chPer: 150, chMin: 1, chMax: 2, rowMinW: 170, rowN: 2, dnWhich: "alt", pWhich: "alt", star2: 73, star3: 155 });
 // «Конфеты внизу» — переключатель рядом с «Густо» / «Редко»: path — числа наборов; circle — числа D-91 (доп. 1); off — нижних конфет нет
 const LOW_OV = {
   dense: { path: {}, circle: { dnMode: "circle", dnWhich: "all", star2: 103, star3: 195 }, off: { dnMode: "off", star2: 54, star3: 110 } }, // off: Обычный 60,5, Сборщик 135
@@ -180,8 +183,8 @@ const PR_NAME = { dense: "Густо", sparse: "Редко", fire: "Огоньк
   swing: "Раскачка", tarzan: "Тарзан", glider: "Планер", hopper: "Кузнечик", far: "Дальнобой",
   sky: "Небоскрёбы", canyon: "Каньон", peaks: "Горы", roofs: "Крыши", moon: "Луна", pull: "Подтяжка", clean: "Чистый", v1: "v1", v2: "v2" };
 const PR_NOTE = {
-  dense: "Финал D-87 + D-91: «Дальнобой» + конфеты. Цепочка по настоящему пути маха (так летит «Точный»: мах под крышей, отпускание, полёт к следующему зацепу), в пролётах — дуга из 2…3 вверху, над крышами шире 150 — ряд из 3. Раунд 60 с с первого нажатия, на 0:00 — сразу итог; счёт — съеденные конфеты. ★★ от 103, ★★★ от 205 («по пути»).",
-  sparse: "Финал D-87 + D-91: конфеты пореже. Цепочка по пути маха — на каждом втором махе, в пролётах — 1…2 вверху, над крышами шире 170 — ряд из 2. Раунд 60 с, счёт — съеденные конфеты. ★★ от 65, ★★★ от 145 («по пути»).",
+  dense: "Финал D-87 + D-91: «Дальнобой» + конфеты. Цепочки по настоящему пути маха — две дороги: высокая (так летит «Точный») и низкая (кто цепляется позже и летит ниже); мах под крышей, отпускание, полёт к следующему зацепу, в пролётах — дуга из 2…3 вверху, над крышами шире 150 — ряд из 3. Раунд 60 с с первого нажатия, на 0:00 — сразу итог; счёт — съеденные конфеты. ★★ от 116, ★★★ от 225 («по пути»).",
+  sparse: "Финал D-87 + D-91: конфеты пореже. Цепочка по пути маха — на каждом втором махе, в пролётах — 1…2 вверху, над крышами шире 170 — ряд из 2. Раунд 60 с, счёт — съеденные конфеты. ★★ от 73, ★★★ от 155 («по пути»).",
   spider: "Короткие верёвки, быстрый пологий полёт над крышами. Энергия — сильная подтяжка 350 u/с, пока держишь.",
   pend: "Длинные верёвки, большие дуги между высокими домами, камера дальше. Энергия — подтяжка 150 u/с.",
   rocket: "Высокие полёты над крышами. Энергия — подтяжка 120 u/с и буст ×1,3, если отпустить на подъёме 20…65°.",
@@ -247,6 +250,11 @@ const SPEC = [
     ["pFly", "…после отпускания, по полёту, не больше", 0, 10, 1],
     ["pWhich", "…на каких махах", "sel", [["all", "на каждом"], ["alt", "через один"]]],
     ["pLead", "…путь считать вперёд Ома Нома на, u", 2800, 8000, 100],
+    ["pHiShare", "Высокий путь («Точный»): доля махов с цепочкой", 0, 1, 0.05],
+    ["pLowShare", "Низкий путь (D-94): доля махов «низкого» игрока с цепочкой (0 — нет)", 0, 1, 0.05],
+    ["pLowMin", "…конфеты низкой цепочки не ниже, u над землёй", 120, 500, 5],
+    ["lowDelay", "…«низкий» игрок цепляется позже «Точного» на, тиков", 0, 60, 1],
+    ["lowRel", "…и отпускает при угле скорости вверх больше, °", 5, 80, 1],
     ["roundSec", "Раунд, с (0 — без раунда)", 0, 180, 5],
     ["finaleSec", "Долёт после конца времени, с (0 — итог сразу, мир замирает)", 0, 3, 0.1],
     ["star2", "★★ от, конфет", 0, 400, 1],
@@ -379,14 +387,14 @@ const SPEC = [
 ];
 const WORLD_KEYS = new Set(["hMin0", "hMinG", "hMax", "wMin", "wMax0", "wShrink", "wFloor", "gapMin", "gapMax0", "gapGrow", "gapCap", "reachCheck", "firstX0", "firstW", "firstH", "startMode",
   "dhMin", "dhMax", "skyP", "skyWMin", "skyWMax", "skyHMin", "skyHMax",
-  "simW", "simG", "genFix", "candyOn", "chPer", "chMin", "chMax", "chSp", "chD1", "chD2", "chSag", "rowMinW", "rowN", "rowH", "rowSp", "dnOn", "dnN", "dnR", "dnMid", "dnSp", "dnWhich", "dnGap", "dnMode", "pOverHouse", "sL0", "sPhi", "sV0", "sRel", "pStep", "pMax", "pStart", "pEnd", "pFly", "pWhich", "pLead"]);
+  "simW", "simG", "genFix", "candyOn", "chPer", "chMin", "chMax", "chSp", "chD1", "chD2", "chSag", "rowMinW", "rowN", "rowH", "rowSp", "dnOn", "dnN", "dnR", "dnMid", "dnSp", "dnWhich", "dnGap", "dnMode", "pOverHouse", "sL0", "sPhi", "sV0", "sRel", "pStep", "pMax", "pStart", "pEnd", "pFly", "pWhich", "pLead", "pHiShare", "pLowShare", "pLowMin", "lowDelay", "lowRel"]);
 const SPEC_KEYS = []; for (const g of SPEC) for (const f of g[2]) SPEC_KEYS.push(f[0]);
 
 // ---- Константы мира ---------------------------------------------------------------------------------------------
 const W = 320, H = 480, DT = 1 / 60, NSUB = 8, FLOOR = 462;
 const SIZE = { omFeet: 30, omTop: 36, mouthDy: 10, candyR: 20 };
 const START = { x: 80, y: 300, boxX0: 40, boxX1: 120, boxTop: 330 };
-const STORE = "lab.hook-tune.v11", BEST_KEY = "lab.best.hook-tune";
+const STORE = "lab.hook-tune.v12", BEST_KEY = "lab.best.hook-tune";
 const bestKey87 = () => "lab.best.hook-d87-" + PRESET + (LOW_OV[PRESET] && LOWER !== "path" ? "-" + LOWER : ""); // рекорд — свой у каждого набора и «конфет внизу»
 const rad = (d) => d * Math.PI / 180;
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -647,14 +655,16 @@ function addCand(WD, x, y, grp) {
 // отрезок пути: на верёвке конфеты от доли pStart до pEnd с шагом pStep (≤ pMax), после отпускания — ещё ≤ pFly тем же шагом.
 // Конфета на фоне дома (ближе candyDrawR + 8 к его телу) сдвигается вперёд по пути до pStep/2, не вышло — пропускается.
 const pathOn = () => TUNE.candyOn && TUNE.dnOn && TUNE.dnMode === "path";
-const kindOf = (c) => c.grp == null ? "v2" : c.grp >= 1e6 ? (c.grp % 2 ? "fly" : "path") : ["arc", "row", "low", "arc"][c.grp % 4];
-function mkGhost() {
-  const G = cloneState(S); G.WD = S.WD; G.ci = 1e9; G.cand = []; G.ghost = null;
-  G.round = { state: "ghost", steps: 0, fin: 0, over: 0 }; G.bot = BOTS.acc(); G.gp = { pts: [], rel: -1, seg: 0 };
+const kindOf = (c) => c.grp == null ? "v2" : c.grp >= 4e6 ? (c.grp % 2 ? "lfly" : "lpath") : c.grp >= 1e6 ? (c.grp % 2 ? "fly" : "path") : ["arc", "row", "low", "arc"][c.grp % 4];
+// D-94: второй опорный путь — «низкий» игрок (бот low: цепляется на lowDelay тиков позже, отпускает при угле > lowRel); мах (отрезок)
+// получает цепочку по низкому пути с вероятностью pLowShare (хеш от seed и номера маха), по высокому — с 1 − pLowShare
+function mkGhost(bot, tag) {
+  const G = cloneState(S); G.WD = S.WD; G.ci = 1e9; G.cand = []; G.ghost = null; G.ghostLo = null;
+  G.round = { state: "ghost", steps: 0, fin: 0, over: 0 }; G.bot = BOTS[bot](); G.gp = { pts: [], rel: -1, seg: 0, tag };
   return G;
 }
-function ghostAdvance() {
-  const G = S.ghost; if (!G || QUIET) return;
+function ghostAdvance(G) {
+  if (!G || QUIET) return;
   const real = S, need = real.om.x + TUNE.pLead, cap = real.steps === 0 ? 3000 : 60;
   if (G.om.x >= need) return;
   S = G; QUIET = true;
@@ -670,13 +680,14 @@ function ghostTick() {
   else if (P.pts.length) { if (P.rel < 0) P.rel = P.pts.length / 2; P.pts.push(o.x, o.y); if (o.x - P.pts[0] > 2400 || o.grounded) flushPath(P); }
 }
 function flushPath(P) {
-  const pts = P.pts, n = pts.length / 2, nr = P.rel < 0 ? n : P.rel, k = P.seg++;
+  const pts = P.pts, n = pts.length / 2, nr = P.rel < 0 ? n : P.rel, k = P.seg++, lo = P.tag === "lo";
   P.pts = []; P.rel = -1;
   if (n < 2 || (TUNE.pWhich === "alt" && k % 2)) return;
-  placeChain(S.WD, pts, nr, 1e6 + 2 * k);
+  if (!(hash87(S.WD.seed, k, lo ? 22 : 21) < (lo ? TUNE.pLowShare : TUNE.pHiShare))) return; // доля махов с цепочкой: низкий путь — pLowShare, высокий — pHiShare
+  placeChain(S.WD, pts, nr, (lo ? 4e6 : 1e6) + 2 * k, lo ? TUNE.pLowMin : 0);
 }
 // цепочка вдоль ломаной pts (x, y, …): точки [0; nr) — на верёвке, дальше — полёт
-function placeChain(WD, pts, nr, grp) {
+function placeChain(WD, pts, nr, grp, minH) {
   const n = pts.length / 2; if (n < 2) return;
   const cum = [0]; for (let i = 1; i < n; i++) cum.push(cum[i - 1] + Math.hypot(pts[2 * i] - pts[2 * i - 2], pts[2 * i + 1] - pts[2 * i - 1]));
   const at = (sv) => { let i = 1; while (i < n - 1 && cum[i] < sv) i++; const t = cum[i] > cum[i - 1] ? clamp((sv - cum[i - 1]) / (cum[i] - cum[i - 1]), 0, 1) : 0;
@@ -685,7 +696,7 @@ function placeChain(WD, pts, nr, grp) {
   const put = (sv, list, g, sMax) => { // сдвиг вперёд по пути, если на фоне дома
     for (let d = 0; d <= TUNE.pStep / 2 && sv + d <= sMax; d += 10) { const [x, y] = at(sv + d);
       const oh = inHouseBody(WD, x, y);
-      if (y > FLOOR - 120 || x < WD.bld[0].x1 + 40 || (oh && !TUNE.pOverHouse)) continue; // не на крыше старта; на фоне дома — только с pOverHouse
+      if (y > FLOOR - Math.max(120, minH || 0) || x < WD.bld[0].x1 + 40 || (oh && !TUNE.pOverHouse)) continue; // не на крыше старта; на фоне дома — только с pOverHouse
       const c = addCandSorted(WD, x, y, g); if (c) { if (oh) c.oh = true; list.push(c); } return sv + d; }
     return sv;
   };
@@ -763,13 +774,13 @@ function newRound(seed) {
   S.prev = null;
   ensureWorld(); camStep(true); updateTarget(); snapPrev();
   BOT = AUTO && BOTS[AUTO] ? BOTS[AUTO](S.seed) : null;
-  S.ghost = pathOn() ? mkGhost() : null; S.eatK = {};
+  S.ghost = pathOn() ? mkGhost("acc", "hi") : null; S.ghostLo = pathOn() && TUNE.pLowShare > 0 ? mkGhost("low", "lo") : null; S.eatK = {};
   if (S.ghost) { S.WD.streamX = -1e9; S.ci = 0; S.cand = []; ensureWorld(); } // путь вперёд на pLead, потом подача конфет в кадр заново
 }
 function ensureWorld() {
   const o = S.om;
   genMore(S.WD, o.x + 2600 + (swingOn() ? 2000 : 0)); // «идеальный мах»: дома считаются дальше, конфеты дома — когда за ним есть 1800 u улицы
-  if (S.ghost && !QUIET) ghostAdvance(); // D-91 доп. 2: путь опорного игрока — впереди на pLead
+  if (S.ghost && !QUIET) { ghostAdvance(S.ghost); ghostAdvance(S.ghostLo); } // D-91 доп. 2 / D-94: пути опорных игроков — впереди на pLead
   const L = S.WD.cand;
   if (!QUIET) S.WD.streamX = Math.max(S.WD.streamX || -1e9, o.x + 2000);
   while (S.ci < L.length && L[S.ci].x < o.x + 2000) { const c = L[S.ci++]; if (c.x > o.x - 800) S.cand.push(c.grp == null ? { x: c.x, y: c.y } : c); }
@@ -1214,6 +1225,15 @@ const BOTS = {
   tap: (seed) => { const R = lcg(999 + seed * 13); let next = 0, up = -1; // «Дятел»: тап 3…9 тиков каждые 18…36
     return () => { if (S.held && S.steps >= up) release();
       if (!S.held && S.steps >= next) { hold(); up = S.steps + Math.round(3 + R() * 6); next = S.steps + Math.round(18 + R() * 18); } }; },
+  low: () => { let relAt = -99, ropeAt = 0, armed = -1; // D-94 «низкий» опорный игрок: без случайности; цепляется на lowDelay тиков позже (падает глубже), отпускает при угле > lowRel
+    return () => { const o = S.om;
+      if (!S.held) { const ok = accPress(relAt, 15);
+        if (o.grounded) { hold(); ropeAt = S.steps; return; }
+        if (ok && armed < 0) armed = S.steps + TUNE.lowDelay;
+        if (!S.tgt && armed >= 0) armed = -1;
+        if (armed >= 0 && S.steps >= armed && S.tgt) { armed = -1; hold(); ropeAt = S.steps; } return; }
+      if (!S.rope) { release(); relAt = S.steps; return; }
+      if ((o.vx > 0 && velAng() > TUNE.lowRel) || S.steps - ropeAt > TUNE.lowHold) { release(); relAt = S.steps; } }; },
   collect: () => { let relAt = -99, ropeAt = 0; // «Сборщик»: жмёт как «Точный»; на верёвке раз в 3 тика при vx > 0 выбирает тик отпускания прокруткой
     return () => { const o = S.om;
       if (!S.held) { if (o.grounded || accPress(relAt, 21)) { hold(); ropeAt = S.steps; } return; }
@@ -1675,7 +1695,7 @@ const DEP = { capVx: "capOn", capVy: "capOn", swingMin: "swingOn", backDrag: "ba
   chPer: "candyOn", chMin: "candyOn", chMax: "candyOn", chSp: "candyOn", chD1: "candyOn", chD2: "candyOn", chSag: "candyOn", rowMinW: "candyOn", rowN: "candyOn", rowH: "candyOn", rowSp: "candyOn",
   candyDrawR: "candyOn", roundSec: "candyOn", star2: "candyOn", star3: "candyOn", finaleSec: "candyOn",
   dnN: "dnOn", dnR: "dnOn", dnMid: "dnOn", dnSp: "dnOn", dnWhich: "dnOn", dnGap: "dnOn", dnMode: "dnOn", pOverHouse: "dnOn", sL0: "dnOn", sPhi: "dnOn", sV0: "dnOn", sRel: "dnOn",
-  pStep: "dnOn", pMax: "dnOn", pStart: "dnOn", pEnd: "dnOn", pFly: "dnOn", pWhich: "dnOn", pLead: "dnOn" };
+  pStep: "dnOn", pMax: "dnOn", pStart: "dnOn", pEnd: "dnOn", pFly: "dnOn", pWhich: "dnOn", pLead: "dnOn", pHiShare: "dnOn", pLowShare: "dnOn", pLowMin: "pLowShare", lowDelay: "pLowShare", lowRel: "pLowShare" };
 const RULE_KEYS = { winMin: "fw", winMax: "fw", fireMax: "fF", reelBase: "fF", reelPerFire: "fF", winBoost: "fF", missMul: "fw", webMax: "w", thinReel: "w", fullAng: "F", fullMissMul: "F" };
 function syncUi() {
   const p = curPreset();
@@ -1776,6 +1796,7 @@ window.__game = {
       bestCandies: S.bestC, newBest: S.newBest, autoplay: AUTO,
       candKinds: (() => { const p = {}; const L = S.WD.cand; for (let i = 0; i < S.cpi && i < L.length; i++) { const k = kindOf(L[i]); p[k] = (p[k] || 0) + 1; } return { eaten: Object.assign({}, S.eatK), passed: p }; })(),
       ghost: S.ghost ? { x: S.ghost.om.x, segs: S.ghost.gp.seg, catches: S.ghost.catches } : null,
+      ghostLo: S.ghostLo ? { x: S.ghostLo.om.x, segs: S.ghostLo.gp.seg, catches: S.ghostLo.catches, falls: S.ghostLo.falls } : null,
       cand: S.cand.filter((q) => q.x > c.x - 30 && q.x < c.x + W / c.zoom + 30 && q.y > c.y - 30 && q.y < c.y + H / c.zoom + 30).map((q) => ({ x: q.x, y: q.y, grp: q.grp })),
       fx87: { pulse: S.pulse, plus: S.fxC.filter((f) => f.type === "eat").length, grp: S.fxC.filter((f) => f.type === "grp").length, starPop: S.starPop.slice() },
       view: (() => { const q = cv.getBoundingClientRect(); return { left: q.left, top: q.top, width: q.width, height: q.height, scale: q.width / W }; })(),
