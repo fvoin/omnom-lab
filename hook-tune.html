@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="data:,">
 <title>Крючки — настройка</title>
-<style>:root{--bg:#1d2333;--fg:#f3f5fa;--muted:#a9b1c6;--card:#2a3148;--card2:#323b57;--line:#3d4766;--acc:#ffd166;--add:#ff9f6b}*{box-sizing:border-box}html,body{background:var(--bg);height:100%;color:var(--fg);margin:0;font:13px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{flex-direction:column;height:100dvh;display:flex}header{flex:none;align-items:center;gap:10px;padding:6px 12px;display:flex}header a{color:var(--muted);font-size:13px;text-decoration:none}header h1{margin:0;font-size:15px;font-weight:700}#app{flex:1;min-height:0;display:flex}#stage{touch-action:none;-webkit-user-select:none;user-select:none;flex:1;min-width:0;min-height:0;position:relative}canvas{touch-action:none;border-radius:8px;display:block;position:absolute}#panel{background:var(--card);border-left:1px solid var(--line);flex-direction:column;flex:none;width:370px;min-height:0;display:flex}.phead{border-bottom:1px solid var(--line);flex-direction:column;flex:none;gap:6px;padding:8px 10px 6px;display:flex}.row{flex-wrap:wrap;align-items:center;gap:5px;display:flex}.pbody{-webkit-overflow-scrolling:touch;flex:1;padding:4px 10px 16px;overflow:auto}button{font:inherit;color:var(--fg);background:var(--card2);border:1px solid var(--line);cursor:pointer;border-radius:8px;padding:5px 9px;font-weight:600}button.on{background:var(--acc);color:#222;border-color:var(--acc)}button.warn{box-shadow:0 0 0 2px var(--add)}#drawerBtn{display:none}.preset-note{color:var(--muted);font-size:12px}details{border-bottom:1px solid var(--line);padding:4px 0}summary{cursor:pointer;color:var(--acc);padding:5px 0;font-size:13px;font-weight:700}.gnote{color:var(--muted);margin:0 0 4px;font-size:11px}.f{grid-template-columns:1fr 74px;align-items:center;gap:2px 6px;padding:3px 0;display:grid}.f label{color:var(--fg);grid-column:1/3;font-size:12px}.f input[type=range]{width:100%;margin:0}.f input[type=number]{width:74px;font:inherit;color:var(--fg);border:1px solid var(--line);background:#141a29;border-radius:6px;padding:3px 4px}.f.dis{opacity:.45}.t{align-items:center;gap:6px;padding:4px 0;font-size:12px;display:flex}.t select{font:inherit;color:var(--fg);border:1px solid var(--line);background:#141a29;border-radius:6px;padding:3px 4px}.add{color:var(--add);border:1px solid var(--add);border-radius:4px;margin-left:4px;padding:0 3px;font-size:10px;font-weight:700}.ch{color:var(--acc)}#copyBox{width:100%;height:140px;color:var(--fg);border:1px solid var(--acc);background:#141a29;border-radius:6px;font:11px/1.25 ui-monospace,Menlo,monospace;display:none}#toast{background:var(--acc);color:#222;z-index:3;pointer-events:none;border-radius:8px;padding:4px 10px;font-weight:700;display:none;position:absolute;top:10px;left:50%;transform:translate(-50%)}@media (width<=760px){header{padding:4px 10px}#app{flex-direction:column}#panel{border-left:0;border-top:1px solid var(--line);width:auto;max-height:48%}#panel.closed{max-height:none}#panel.closed .pbody,#panel.closed .more{display:none}#drawerBtn{display:inline-block}.phead button{padding:4px 7px;font-size:12px}.row{gap:4px}}</style>
+<style>:root{--bg:#1d2333;--fg:#f3f5fa;--muted:#a9b1c6;--card:#2a3148;--card2:#323b57;--line:#3d4766;--acc:#ffd166;--add:#ff9f6b}*{box-sizing:border-box}html,body{background:var(--bg);height:100%;color:var(--fg);margin:0;font:13px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{flex-direction:column;height:100dvh;display:flex}header{flex:none;align-items:center;gap:10px;padding:6px 12px;display:flex}header a{color:var(--muted);font-size:13px;text-decoration:none}header h1{margin:0;font-size:15px;font-weight:700}#app{flex:1;min-height:0;display:flex}#stage{touch-action:none;-webkit-user-select:none;user-select:none;flex:1;min-width:0;min-height:0;position:relative}canvas{touch-action:none;border-radius:8px;display:block;position:absolute}#panel{background:var(--card);border-left:1px solid var(--line);flex-direction:column;flex:none;width:370px;min-height:0;display:flex}.phead{border-bottom:1px solid var(--line);flex-direction:column;flex:none;gap:6px;padding:8px 10px 6px;display:flex}.row{flex-wrap:wrap;align-items:center;gap:5px;display:flex}.pbody{-webkit-overflow-scrolling:touch;flex:1;padding:4px 10px 16px;overflow:auto}button{font:inherit;color:var(--fg);background:var(--card2);border:1px solid var(--line);cursor:pointer;border-radius:8px;padding:5px 9px;font-weight:600}button.on{background:var(--acc);color:#222;border-color:var(--acc)}button.warn{box-shadow:0 0 0 2px var(--add)}#drawerBtn{display:none}.preset-note{color:var(--muted);font-size:12px}.row3{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;display:grid}.pr3{flex-direction:column;gap:2px;min-width:0;display:flex}.pr3 button{width:100%}.pr3 span{color:var(--muted);text-align:center;white-space:nowrap;text-overflow:ellipsis;font-size:10.5px;line-height:1.15;overflow:hidden}details{border-bottom:1px solid var(--line);padding:4px 0}summary{cursor:pointer;color:var(--acc);padding:5px 0;font-size:13px;font-weight:700}.gnote{color:var(--muted);margin:0 0 4px;font-size:11px}.f{grid-template-columns:1fr 74px;align-items:center;gap:2px 6px;padding:3px 0;display:grid}.f label{color:var(--fg);grid-column:1/3;font-size:12px}.f input[type=range]{width:100%;margin:0}.f input[type=number]{width:74px;font:inherit;color:var(--fg);border:1px solid var(--line);background:#141a29;border-radius:6px;padding:3px 4px}.f.dis{opacity:.45}.t{align-items:center;gap:6px;padding:4px 0;font-size:12px;display:flex}.t select{font:inherit;color:var(--fg);border:1px solid var(--line);background:#141a29;border-radius:6px;padding:3px 4px}.add{color:var(--add);border:1px solid var(--add);border-radius:4px;margin-left:4px;padding:0 3px;font-size:10px;font-weight:700}.ch{color:var(--acc)}#copyBox{width:100%;height:140px;color:var(--fg);border:1px solid var(--acc);background:#141a29;border-radius:6px;font:11px/1.25 ui-monospace,Menlo,monospace;display:none}#toast{background:var(--acc);color:#222;z-index:3;pointer-events:none;border-radius:8px;padding:4px 10px;font-weight:700;display:none;position:absolute;top:10px;left:50%;transform:translate(-50%)}@media (width<=760px){header{padding:4px 10px}#app{flex-direction:column}#panel{border-left:0;border-top:1px solid var(--line);width:auto;max-height:48%}#panel.closed{max-height:none}#panel.closed .pbody,#panel.closed .more{display:none}#drawerBtn{display:inline-block}.phead button{padding:4px 7px;font-size:12px}.row{gap:4px}}</style>
 </head>
 <body>
 <header><a href="index.html">← Лаборатория</a><h1>Крючки — настройка</h1></header>
@@ -18,6 +18,11 @@
         <button id="bRestart" title="клавиша R">Рестарт</button>
         <button id="bPause" title="клавиша P">Пауза</button>
         <button data-sp="0.25">×0,25</button><button data-sp="0.5">×0,5</button><button data-sp="1">×1</button>
+      </div>
+      <div class="row3">
+        <div class="pr3"><button data-pr="fire">Огоньки</button><span>отпусти в золоте</span></div>
+        <div class="pr3"><button data-pr="web">Клубки</button><span>зацеп тратит клубок</span></div>
+        <div class="pr3"><button data-pr="full">Полный мах</button><span>держи до отметки</span></div>
       </div>
       <div class="row">
         <button data-pr="spider">Паук</button><button data-pr="pend">Маятник</button><button data-pr="rocket">Ракета</button><button data-pr="light">Лёгкий</button><button data-pr="rubber">Резинка</button>
@@ -69,6 +74,10 @@ const CLEAN = {
   // конфеты, земля, старт
   candiesOn: false, kickOn: false, candyKick: 30, eatDist: 40,
   groundMode: "bounce", restitution: 0.5, groundFric: 0.8, bounceUp: 800, bounceVx: 200, jumpVx: 300, jumpVy: -200, startMode: "box",
+  // D-83: правило мастерства (силу подтяжки надо заработать) и страховка
+  rule83: "none", winMin: 25, winMax: 50, fireMax: 3, reelBase: 40, reelPerFire: 100, winBoost: 1.05, missMul: 0.6,
+  webMax: 3, thinReel: 0, fullAng: 35, fullMissMul: 0.5,
+  safeOn: false, safeDeg: 22, safeClear: 180, safeReel: 330,
 };
 // «Подтяжка» (по умолчанию) — «Чистый» + честный источник энергии: пока держишь, верёвка укорачивается (работа подтяжки идёт в энергию); старт с крыши первого дома
 const PULL = Object.assign({}, CLEAN, { reel: 200, startMode: "roof" });
@@ -105,15 +114,15 @@ const TARZAN = Object.assign({}, CLEAN, { pumpOn: true, pumpSpeed: 350, pumpDL: 
 const GLIDER = Object.assign({}, CLEAN, { vDrag: 0.95, reel: 300, capVx: 1100, startMode: "roof" });
 const HOPPER = Object.assign({}, CLEAN, { gravity: 2200, reel: 450, reelMin: 70, rayAngle: 65, ropeMin: 60, ropeMax: 340, liftDy: 40, capVy: 1800,
   gapMin: 80, gapMax0: 150, gapGrow: 0.002, gapCap: 220, hMin0: 380, hMax: 620, jumpVx: 350, jumpVy: -750, zoom: 0.45, startMode: "roof" });
-// «Дальнобой» и пять его вариаций (D-70, D-75, D-78): прицел «центр крыши» — в ширине дома всегда центр крыши этого дома;
-// в промежутке — центр следующего дома (выше хотя бы на 100 u, не достаёт — ещё следующий; нет — промах); отличаются миром и физикой
+// «Дальнобой» и пять его вариаций (D-70, D-75; D-78 отменено в D-83): прицел «центр крыши» — центр крыши ближайшего дома, чей центр впереди
+// хотя бы на 30 u и крыша выше хотя бы на 100 u; за центром и над крышей — следующий дом; не достаёт — ещё следующий; нет — промах
 // liftDy 100: крыша выше Ома Нома хотя бы на 100 u — он не проходит под самой точкой ближе reelMin и верёвка не дёргает при натяжении
 const CENTER = { aimMode: "center", ownOn: true, ownPoint: "center", ctrAhead: 30, liftDy: 100 };
-// D-78: в ширине дома — всегда центр его крыши (ctrAhead/liftDy выше — только для цели в промежутке). Зацеп за центром (b) или над крышей (c):
+// D-78 (отменено D-83, переключатель ownAll оставлен выключенным): в ширине дома — всегда центр его крыши (ctrAhead/liftDy выше — только для цели в промежутке). Зацеп за центром (b) или над крышей (c):
 // верёвка сначала провисает (травится/выбирается без силы) и встаёт без рывка, когда расстояние до точки перестало меняться; потом подтяжка
 // 900 u/с до 40 u — «раскрутка» вокруг центра крыши (энергия только от подтяжки), отпустил на подъёме — улетел. Короче 80 u верёвка не бывает.
 const OWN78 = { ownAll: true, ownSlack: "free", ownMinL: 80, ownPayMax: 60, ownReel: 900, ownReelMin: 40 };
-const FAR = Object.assign({}, CLEAN, CENTER, OWN78, { reel: 330, rayAngle: 48, ropeMax: 800, capVx: 1300, gapMin: 260, gapMax0: 380, gapGrow: 0.003, gapCap: 520,
+const FAR = Object.assign({}, CLEAN, CENTER, { reel: 330, rayAngle: 48, ropeMax: 800, capVx: 1300, gapMin: 260, gapMax0: 380, gapGrow: 0.003, gapCap: 520,
   hMin0: 560, hMinG: 0.4, hMax: 880, wMin: 90, wMax0: 160, wFloor: 120, zoom: 0.3, camTopMargin: 200, startMode: "roof" });
 const SKY = Object.assign({}, FAR, { reel: 300, ropeMax: 1150, skyP: 0.4, skyWMin: 350, skyWMax: 700, skyHMin: 800, skyHMax: 1050,
   wMin: 70, wMax0: 130, wFloor: 100, hMin0: 700, hMinG: 0.3, hMax: 950, gapMin: 240, gapMax0: 360, gapCap: 420, zoom: 0.28, camTopMargin: 220 });
@@ -125,9 +134,14 @@ const ROOFS = Object.assign({}, FAR, { gravity: 1600, reel: 350, rayAngle: 52, r
   wMin: 220, wMax0: 420, wFloor: 260, gapMin: 160, gapMax0: 240, gapCap: 300, zoom: 0.36, camTopMargin: 160 });
 const MOON = Object.assign({}, FAR, { gravity: 650, airDrag: 0.9998, reel: 180, rayAngle: 45, ropeMax: 850, capVx: 1100,
   gapMin: 380, gapMax0: 500, gapCap: 650, hMin0: 600, hMinG: 0.3, hMax: 950, dhMax: 200, wMin: 60, wMax0: 110, wFloor: 80, zoom: 0.26, camTopMargin: 240 });
-const PRESETS = { spider: SPIDER, pend: PEND, rocket: ROCKET, light: LIGHT, rubber: RUBBER, swing: SWING, tarzan: TARZAN, glider: GLIDER, hopper: HOPPER, far: FAR,
+// D-83: три правила против бездумного тапа — вариации «Дальнобоя» (та же улица и физика), со страховкой
+// подогнано по боту (programmer-66): огоньки — «мимо» ×0,5 (модель 0,6: небрежный 50 % на seed 11–30); полный мах — страховка до 28° (модель 22°: падения небрежного до 5)
+const FIRE = Object.assign({}, FAR, { rule83: "fire", reelBase: 40, reelPerFire: 100, missMul: 0.5, safeOn: true });
+const WEB = Object.assign({}, FAR, { rule83: "web", safeOn: true });
+const FULL = Object.assign({}, FAR, { rule83: "full", reelBase: 20, reelPerFire: 100, safeOn: true, safeDeg: 28 });
+const PRESETS = { fire: FIRE, web: WEB, full: FULL, spider: SPIDER, pend: PEND, rocket: ROCKET, light: LIGHT, rubber: RUBBER, swing: SWING, tarzan: TARZAN, glider: GLIDER, hopper: HOPPER, far: FAR,
   sky: SKY, canyon: CANYON, peaks: PEAKS, roofs: ROOFS, moon: MOON, pull: PULL, clean: CLEAN, v1: V1, v2: V2 };
-const PR_NAME = { spider: "Паук", pend: "Маятник", rocket: "Ракета", light: "Лёгкий", rubber: "Резинка",
+const PR_NAME = { fire: "Огоньки", web: "Клубки", full: "Полный мах", spider: "Паук", pend: "Маятник", rocket: "Ракета", light: "Лёгкий", rubber: "Резинка",
   swing: "Раскачка", tarzan: "Тарзан", glider: "Планер", hopper: "Кузнечик", far: "Дальнобой",
   sky: "Небоскрёбы", canyon: "Каньон", peaks: "Горы", roofs: "Крыши", moon: "Луна", pull: "Подтяжка", clean: "Чистый", v1: "v1", v2: "v2" };
 const PR_NOTE = {
@@ -140,7 +154,10 @@ const PR_NOTE = {
   tarzan: "Длинные лианы, высокие дома, сильный бросок. Энергия — раскачка и буст ×1,35, если отпустить на подъёме 15…70°.",
   glider: "Падение тормозится сильнее, чем полёт вперёд: парит и медленно снижается. Энергия — подтяжка 300 u/с.",
   hopper: "Гравитация 2200, короткие верёвки, частые перескоки с крыши на крышу. Энергия — подтяжка 450 u/с и прыжок 750 с крыши/земли.",
-  far: "Редкие узкие дома, широкие пропасти, длинные перелёты, камера дальше. Верёвка — в центр крыши дома, над которым летишь (за центром и над крышей — раскрутка вокруг центра), в промежутке — следующего. Энергия — подтяжка 330 u/с (раскрутка — 900).",
+  far: "Редкие узкие дома, широкие пропасти, длинные перелёты, камера дальше. Верёвка — в центр крыши ближайшего дома впереди (за центром и над крышей — следующего). Энергия — подтяжка 330 u/с.",
+  fire: "«Дальнобой» + огоньки: отпустил в золотой зоне маха (25…50°) — огонёк (до 3), подтяжка 40 + 100 × огоньки u/с и скорость ×1,05; мимо — огоньки гаснут, скорость ×0,5. Страховка вкл.",
+  web: "«Дальнобой» + клубки: зацеп тратит клубок (из 3), золотое отпускание (25…50°) возвращает; без клубков — тонкая нитка без подтяжки; мимо — скорость ×0,6. Страховка вкл.",
+  full: "«Дальнобой» + полный мах: держи до белой отметки (угол ≥ 35°) — серия +1 (до 3), подтяжка 20 + 100 × серия, скорость ×1,05; раньше — «пшик»: скорость × L/L0 × 0,5, серия 0. Страховка вкл. (до 28°).",
   sky: "Широкие небоскрёбы (350…700) вперемешку с узкими башнями; верёвка — в центр крыши, до 1150. Подтяжка 300 u/с.",
   canyon: "Пропасти 420…700, высокие узкие башни, верёвка до 1050 — в центр крыши, g 1000, камера дальше всех. Подтяжка 300 u/с.",
   peaks: "Соседние дома отличаются по высоте на 220…450 (350…1000); верёвка — в центр крыши, до 950. Подтяжка 380 u/с.",
@@ -151,10 +168,10 @@ const PR_NOTE = {
   v1: "Эталон: hook-rnf-v1 (луч до стены, низкие частые дома, буст ×1,12, батут).",
   v2: "Эталон: hook-rnf v2 со всеми скрытыми добавками (рывок паутины, подъём «вжух», батут).",
 };
-const TUNE = Object.assign({}, SPIDER);
+const TUNE = Object.assign({}, FIRE);
 
 // Панель: [ключ, подпись, min, max, шаг] | [ключ, подпись, "bool"] | [ключ, подпись, "sel", [[знач, подпись]…]]; ADD — добавляет энергию
-const ADD = new Set(["pumpOn", "swingOn", "backDragOn", "boostOn", "liftOn", "reel", "ownReel", "kickOn", "groundMode", "jumpVx"]);
+const ADD = new Set(["pumpOn", "swingOn", "backDragOn", "boostOn", "liftOn", "reel", "ownReel", "kickOn", "groundMode", "jumpVx", "reelBase", "reelPerFire", "winBoost", "thinReel", "safeReel"]);
 const SPEC = [
   ["Мир", "", [
     ["gravity", "Гравитация, u/с²", 200, 3000, 10],
@@ -199,6 +216,26 @@ const SPEC = [
     ["ownReelMin", "…до длины, u (0 — общая)", 0, 400, 5],
     ["ownVmax", "…раскрутка: скорость не больше, u/с (по модулю; 0 — только общие пределы)", 0, 3000, 10],
     ["ropeBrake", "Тормоз: верёвка не дёргает, а травится, гася скорость от точки не быстрее, u/с² (0 — рывок)", 0, 20000, 100],
+  ]],
+  ["Мастерство (D-83)", "Сила подтяжки зарабатывается точными отпусканиями. Угол — направление скорости вправо-вверх в момент отпускания.", [
+    ["rule83", "Правило мастерства", "sel", [["none", "нет"], ["fire", "огоньки"], ["web", "клубки"], ["full", "полный мах"]]],
+    ["winMin", "Золотое окно от, ° (огоньки, клубки)", 0, 90, 1],
+    ["winMax", "Золотое окно до, °", 0, 90, 1],
+    ["fireMax", "Серия (огоньки, полный мах) не больше", 1, 6, 1],
+    ["reelBase", "Подтяжка без серии, u/с (огоньки, полный мах)", 0, 800, 5],
+    ["reelPerFire", "…+ за каждый огонёк серии, u/с", 0, 400, 5],
+    ["winBoost", "Золотое / полное отпускание: скорость ×", 1, 1.5, 0.01],
+    ["missMul", "Мимо (и самоотцеп страховки): скорость × (огоньки, клубки)", 0.2, 1, 0.01],
+    ["webMax", "Клубков (зацеп тратит, золотое отпускание возвращает)", 1, 6, 1],
+    ["thinReel", "Нитка без клубков: подтяжка, u/с", 0, 800, 5],
+    ["fullAng", "Полный мах: отпускать при угле не меньше, °", 0, 90, 1],
+    ["fullMissMul", "«Пшик» (раньше отметки): скорость × L/L0 ×", 0.1, 1, 0.01],
+  ]],
+  ["Страховка (D-83)", "Отпустил на спуске или плоско — верёвка держит без подтяжки и отцепляется сама; повторное нажатие в это время ничего не делает.", [
+    ["safeOn", "Страховка", "bool"],
+    ["safeDeg", "…отцеп сам при угле не меньше, °", 0, 60, 1],
+    ["safeClear", "…низ дуги ближе к земле, чем, u — верёвка сама подтягивается", 0, 400, 5],
+    ["safeReel", "…со скоростью, u/с (0 — нет)", 0, 1000, 5],
   ]],
   ["Отпускание", "Окно «вжух» — угол скорости вправо-вверх в момент отпускания.", [
     ["boostOn", "Буст «вжух» (v1, v2)", "bool"],
@@ -269,7 +306,7 @@ const SPEC_KEYS = []; for (const g of SPEC) for (const f of g[2]) SPEC_KEYS.push
 const W = 320, H = 480, DT = 1 / 60, NSUB = 8, FLOOR = 462;
 const SIZE = { omFeet: 30, omTop: 36, mouthDy: 10, candyR: 20 };
 const START = { x: 80, y: 300, boxX0: 40, boxX1: 120, boxTop: 330 };
-const STORE = "lab.hook-tune.v6", BEST_KEY = "lab.best.hook-tune";
+const STORE = "lab.hook-tune.v7", BEST_KEY = "lab.best.hook-tune";
 const rad = (d) => d * Math.PI / 180;
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -492,7 +529,8 @@ function newRound(seed) {
     om: { x: START.x, y: START.y, vx: 0, vy: 0, grounded: true, rot: 0 }, x0: START.x, pendCatch: false,
     rope: null, tgt: null, cand: [], ci: 0, maxX: START.x, noPressUntil: 0, shotT: 0,
     catches: 0, ownCatches: 0, kinds: { a: 0, b: 0, c: 0, n: 0 }, skipHouse: -1, misses: 0, sweet: 0, bounces: 0, candies: 0, tension: 0,
-    log: [], trail: [], lastCatch: null, lastRelease: null, flash: [],
+    log: [], trail: [], lastCatch: null, lastRelease: null, flash: [], falls: 0, lastGround: -999,
+    m: { fire: 0, web: TUNE.webMax, gold: 0, miss: 0, safeN: 0, lastRel: null, spin: 0, ringFade: null }, fx: [],
     cam: { x: 0, y: 0, vx: 0, vy: 0, vxs: 0, vys: 0, zoom: TUNE.zoom, spS: 0 },
   };
   if (TUNE.startMode === "roof") { // стоит на крыше первого дома у правого края; первое нажатие — прыжок
@@ -563,6 +601,12 @@ function freeRope(r) {
 // скорость изменения длины верёвки (−: укорачивается). Подтяжка — пока держишь; раскачка — как на качелях: внизу маха (большое натяжение)
 // верёвка короче, на подъёме длина возвращается (натяжение меньше) — разница работ идёт в энергию маха, честно
 function ropeRd(r) {
+  const v = ropeRd0(r);
+  // D-83 страховка: низ дуги ближе к земле, чем safeClear, — верёвка сама подтягивается safeReel до reelMin, даже без пальца
+  r.jam = TUNE.safeOn && TUNE.safeReel > 0 && !r.free && r.ay + r.L > FLOOR - SIZE.omFeet - TUNE.safeClear && r.L > TUNE.reelMin + 1e-6;
+  return r.jam ? Math.min(v, -TUNE.safeReel) : v;
+}
+function ropeRd0(r) {
   if (!S.held || r.free) return 0;
   const o = S.om;
   if (TUNE.pumpOn) {
@@ -575,7 +619,10 @@ function ropeRd(r) {
   return (rl > 0 && r.L > reelMinOf(r) + 1e-6) ? -rl : 0;
 }
 // D-78: верёвка к своему дому за центром или над крышей (b, c) — своя подтяжка ownReel до ownReelMin (0 — общие reel / reelMin)
-const reelOf = (r) => (r.kb && TUNE.ownReel > 0 ? TUNE.ownReel : TUNE.reel);
+// D-83: огоньки / полный мах — подтяжка reelBase + reelPerFire × серия; клубки — без клубка тонкая нитка с подтяжкой thinReel
+const reelOf = (r) => (r.kb && TUNE.ownReel > 0 ? TUNE.ownReel
+  : TUNE.rule83 === "fire" || TUNE.rule83 === "full" ? TUNE.reelBase + TUNE.reelPerFire * S.m.fire
+  : TUNE.rule83 === "web" && r.thin ? TUNE.thinReel : TUNE.reel);
 const reelMinOf = (r) => (r.kb && TUNE.ownReelMin > 0 ? TUNE.ownReelMin : TUNE.reelMin);
 function substep(h, k) {
   const o = S.om, r = S.rope, g = TUNE.gravity;
@@ -617,6 +664,8 @@ function substep(h, k) {
 }
 function ground() {
   const o = S.om, vIn = o.vy;
+  if (S.steps - S.lastGround > 30) S.falls++; S.lastGround = S.steps; // падение — касание, отделённое от прошлого больше чем на 0,5 с
+  S.m.fire = 0; S.m.web = Math.max(S.m.web, 1); // D-83: земля гасит серию; клубков — не меньше одного
   o.y = FLOOR - SIZE.omFeet;
   if (S.rope) { endRope("ground"); }
   if (TUNE.groundMode === "tramp") { o.vx = TUNE.bounceVx; o.vy = -TUNE.bounceUp; }
@@ -635,6 +684,7 @@ function endRope(why) {
 // ---- Действия игрока ---------------------------------------------------------------------------------------------
 function hold() {
   if (S.held) return;
+  if (S.rope && S.rope.auto) return; // D-83 страховка держит верёвку: повторное нажатие ничего не делает
   S.held = true;
   if (S.rope || S.steps < S.noPressUntil) return;
   const o = S.om;
@@ -659,6 +709,9 @@ function catchAt(t) {
   const vK = speed();
   const r = S.rope = { ax: t.x, ay: t.y, L, L0: L, house: t.house, own: !!t.own, free: false, take: false, vrS: 0, kb: t.kind === "b" || t.kind === "c", taut: false, phi: 0, w: 0, rd: 0, E0: 0, Emax: 0, Emin: 0, swings: 0, wSign: 0, reelUsed: false, extra };
   if (r.kb) { r.free = TUNE.ownSlack === "free"; r.take = TUNE.ownSlack === "take"; }
+  if (TUNE.rule83 === "web") { // D-83 клубки: зацеп тратит клубок; нет клубков — тонкая нитка (подтяжка thinReel)
+    if (S.m.web >= 1) { S.m.web--; fxAdd({ type: "ballOut", x: o.x, y: o.y - SIZE.omTop, ax: t.x, ay: t.y, life: 0.15 }); } else r.thin = true;
+  }
   if (TUNE.elastic <= 0 && !r.free) tautCheck(r, "catch");
   r.E0 = r.Emax = r.Emin = energy();
   S.catches++; if (t.own) S.ownCatches++; S.kinds[t.kind || "n"]++; S.tgt = null; S.skipHouse = -1;
@@ -668,12 +721,24 @@ function catchAt(t) {
     EBefore: +E0.toFixed(0), EAfter: +r.E0.toFixed(0), L: +L.toFixed(1), taut: r.taut, swingKick: !!extra, own: !!t.own, kind: t.kind || "n" });
   flash(t.x, t.y, "#2f9e5b");
 }
-function release() {
-  if (!S.held) return;
+// D-83 страховка: отпустил на спуске или плоско (vx ≤ 0 или угол < safeDeg)
+const safeNeed = () => S.om.vx <= 0 || Math.atan2(-S.om.vy, S.om.vx) * 180 / Math.PI < TUNE.safeDeg;
+function release(auto) {
+  if (!S.held && !auto) return;
   S.held = false; S.pendCatch = false;
   const r = S.rope; if (!r) return;
   const o = S.om, v0 = speed();
   const ang = Math.atan2(-o.vy, o.vx) * 180 / Math.PI;
+  if (!auto && TUNE.safeOn && safeNeed()) { // верёвка держит без подтяжки, отцепится сама при угле safeDeg (или через 4 с)
+    r.auto = true; r.t0 = S.steps; S.m.safeN++; logEv({ type: "safeHold", ang: +ang.toFixed(1) }); return;
+  }
+  const R = TUNE.rule83, inWin = !auto && o.vx > 0 && ang >= TUNE.winMin && ang <= TUNE.winMax;
+  let gold = false, mul = 1;
+  if (R === "full") { // полный мах: до отпускания; раньше отметки — «пшик», разгон подтяжкой этого маха снимается
+    gold = !auto && o.vx > 0 && ang >= TUNE.fullAng;
+    mul = gold ? TUNE.winBoost : Math.min(1, r.L / r.L0) * TUNE.fullMissMul;
+    o.vx *= mul; o.vy *= mul;
+  }
   const sweet = o.vx > 0 && ang >= TUNE.sweetMin && ang <= TUNE.sweetMax;
   let boosted = false, lifted = false;
   if (sweet && TUNE.boostOn) { o.vx *= TUNE.sweetBoost; o.vy *= TUNE.sweetBoost; boosted = true; }
@@ -681,11 +746,35 @@ function release() {
   if (sweet) S.sweet++;
   endRope("release");
   applyCaps();
+  if (R === "fire" || R === "web") { // огоньки: золотое — огонёк и ×winBoost, мимо — серия 0 и ×missMul; клубки: золотое — клубок назад, мимо — ×missMul
+    gold = inWin; mul = gold ? (R === "fire" ? TUNE.winBoost : 1) : TUNE.missMul;
+    o.vx *= mul; o.vy *= mul; applyCaps();
+  }
+  if (R !== "none") rule83Release(R, gold, auto, ang, mul, r);
   const v1 = speed();
   S.lastRelease = { vBefore: v0, vAfter: v1, ang, sweet, boosted, lifted };
-  logEv({ type: "release", vBefore: +v0.toFixed(1), vAfter: +v1.toFixed(1), ang: +ang.toFixed(1), sweet, boosted, lifted });
-  flash(o.x, o.y, sweet ? "#e0a100" : "#c0603a");
+  logEv(R === "none" ? { type: "release", vBefore: +v0.toFixed(1), vAfter: +v1.toFixed(1), ang: +ang.toFixed(1), sweet, boosted, lifted }
+    : { type: "release", vBefore: +v0.toFixed(1), vAfter: +v1.toFixed(1), ang: +ang.toFixed(1), gold, auto: !!auto, mul: +mul.toFixed(4), fire: S.m.fire, web: S.m.web });
+  flash(o.x, o.y, R !== "none" ? (gold ? "#f0b400" : "#8a8f99") : sweet ? "#e0a100" : "#c0603a");
 }
+// D-83: серия / клубки и картинки события (картинки — только вид, на физику не влияют)
+function rule83Release(R, gold, auto, ang, mul, r) {
+  const m = S.m, o = S.om, head = { x: o.x, y: o.y - SIZE.omTop };
+  m.lastRel = { ang, gold, auto: !!auto, mul };
+  if (gold) m.gold++; else m.miss++;
+  if (R === "fire" || R === "full") {
+    const had = m.fire;
+    m.fire = gold ? Math.min(TUNE.fireMax, m.fire + 1) : 0;
+    if (gold) fxAdd(R === "fire" ? { type: "flameIn", x: o.x, y: o.y, life: 0.25 } : { type: "trail", x: o.x, y: o.y, life: 0.4, pts: [] });
+    else { fxAdd({ type: "smoke", x: head.x, y: head.y, life: 0.3, n: had }); m.spin = 0.3; }
+  } else if (R === "web") {
+    if (gold) { m.web = Math.min(TUNE.webMax, m.web + 1); fxAdd({ type: "ballIn", x: o.x, y: o.y, life: 0.2 }); }
+    else { fxAdd({ type: "smoke", x: head.x, y: head.y, life: 0.3, n: 1 }); m.spin = 0.3; }
+  }
+  if (gold) fxAdd({ type: "ring", x: o.x, y: o.y, life: 0.35 });
+  if (R === "full") m.ringFade = { f: r.L0 > TUNE.reelMin ? clamp((r.L0 - r.L) / (r.L0 - TUNE.reelMin), 0, 1) : 0, life: 0.2, gold };
+}
+function fxAdd(f) { f.t0 = f.life; S.fx.push(f); }
 function applyCaps() {
   const o = S.om; let hit = false;
   if (TUNE.ownVmax > 0 && S.rope && S.rope.kb) { const sp = speed(); if (sp > TUNE.ownVmax) { o.vx *= TUNE.ownVmax / sp; o.vy *= TUNE.ownVmax / sp; hit = true; } } // раскрутка: предел по модулю, без дрожи по осям
@@ -703,12 +792,16 @@ function flash(x, y, col) { S.flash.push({ x, y, col, life: 0.4 }); }
 function snapPrev() { const o = S.om, c = S.cam; S.prev = { x: o.x, y: o.y, rot: o.rot, cx: c.x, cy: c.y, z: c.zoom }; }
 function step() {
   snapPrev();
+  const ra = S.rope; if (ra && ra.auto && (!safeNeed() || S.steps - ra.t0 > 240)) release(true); // страховка: самоотцеп — «мимо»
   S.steps++; S.time += DT;
   const o = S.om;
   S.tension = 0;
   if (!o.grounded) {
     const k = { air: Math.pow(TUNE.airDrag, 1 / NSUB), rope: Math.pow(TUNE.ropeDrag, 1 / NSUB), back: TUNE.backDragOn ? Math.pow(TUNE.backDrag, 1 / NSUB) : 1, vd: Math.pow(TUNE.vDrag, 1 / NSUB) };
-    for (let i = 0; i < NSUB && !o.grounded; i++) substep(DT / NSUB, k);
+    for (let i = 0; i < NSUB && !o.grounded; i++) {
+      substep(DT / NSUB, k);
+      if (S.rope && S.rope.auto && !safeNeed()) release(true); // страховка: самоотцеп точно при safeDeg (по подшагам, 1/480 с)
+    }
     applyCaps();
   }
   S.tension /= NSUB;
@@ -730,6 +823,9 @@ function step() {
     S.trail.push({ x: o.x, y: o.y, v: sp, dv, j: !!q && Math.abs(dv - q.dv) > TUNE.gravity * DT * 0.6 + 0.01 * sp }); if (S.trail.length > 181) S.trail.shift(); }
   if (S.shotT > 0) S.shotT -= DT;
   for (const f of S.flash) f.life -= DT; S.flash = S.flash.filter((f) => f.life > 0);
+  if (S.fx.length) { for (const f of S.fx) { f.life -= DT; if (f.pts) f.pts.push({ x: o.x, y: o.y }); } S.fx = S.fx.filter((f) => f.life > 0); }
+  if (S.m.spin > 0) S.m.spin = Math.max(0, S.m.spin - DT);
+  if (S.m.ringFade && (S.m.ringFade.life -= DT) <= 0) S.m.ringFade = null;
   camStep(false);
   ensureWorld();
   updateTarget();
@@ -853,13 +949,16 @@ function draw() {
   }
   for (const f of S.flash) { ctx.strokeStyle = f.col; ctx.globalAlpha = f.life / 0.4; ctx.lineWidth = 2 * u; ctx.beginPath(); ctx.arc(f.x, f.y, (8 + (0.4 - f.life) * 40) * u, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
   // верёвка — линия (провисла — с прогибом)
-  if (r) {
+  if (r && TUNE.rule83 !== "none") drawRope83(v, u, r);
+  else if (r) {
     const d = Math.hypot(v.x - r.ax, v.y - r.ay), sag = r.free ? d * 0.15 : d < r.L - 1 && TUNE.elastic <= 0 ? Math.sqrt(r.L * r.L - d * d) * 0.5 : 0; // свободная (D-78) — с провисом
     ctx.strokeStyle = COL.rope; ctx.lineWidth = 2.2 * u; ctx.lineCap = "round";
     ctx.beginPath(); ctx.moveTo(r.ax, r.ay); ctx.quadraticCurveTo((r.ax + v.x) / 2, (r.ay + v.y) / 2 + sag, v.x, v.y); ctx.stroke();
     ctx.fillStyle = COL.rope; ctx.beginPath(); ctx.arc(r.ax, r.ay, 3 * u, 0, 7); ctx.fill();
   }
-  drawOm(v.x, v.y, v.rot);
+  if (TUNE.rule83 !== "none") drawUnder83(v, u);
+  drawOm(v.x, v.y, v.rot + (S.m.spin > 0 ? Math.PI * 2 * (1 - S.m.spin / 0.3) : 0));
+  if (TUNE.rule83 !== "none") drawOver83(v, u);
   if (DEBUG) {
     const o = S.om;
     arrow(v.x, v.y, v.x + o.vx * 0.25, v.y + o.vy * 0.25, "#d0206a", 2 * u);
@@ -873,14 +972,132 @@ function draw() {
   if (DEBUG) drawDebug();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
+// ---- D-83: подсказки правила (примитивы; все размеры — в единицах окна u) ------------------------------------------------
+const GOLD = "#ffc21a";
+function inWinNow() { // точное условие золотого отпускания сейчас (свечение Ома Нома)
+  const r = S.rope, o = S.om; if (!r || r.auto || TUNE.rule83 === "none" || o.vx <= 0) return false;
+  const ang = Math.atan2(-o.vy, o.vx) * 180 / Math.PI;
+  return TUNE.rule83 === "full" ? ang >= TUNE.fullAng : ang >= TUNE.winMin && ang <= TUNE.winMax;
+}
+function ropeDelta(r) { // δ — подтяжка поворачивает скорость вверх: угол скорости = φ + δ (без пальца δ = 0)
+  return r.taut && r.rd < 0 ? Math.atan2(-r.rd, Math.max(1, Math.abs(r.L * r.w))) * 180 / Math.PI : 0;
+}
+function drawRope83(v, u, r) {
+  const R = TUNE.rule83, f = S.m.fire, d = Math.hypot(v.x - r.ax, v.y - r.ay), sag = d < r.L - 1 ? Math.sqrt(r.L * r.L - d * d) * 0.5 : 0;
+  let col = COL.rope, lw = 2.2, under = null, thin = false;
+  if (R === "fire") { col = f === 0 ? "#8a8f99" : ["#ff7a1a", "#ffa526", "#ffd23a"][Math.min(2, f - 1)]; lw = f === 0 ? 3 : 3 + Math.min(3, f); under = f ? "rgba(90,50,0,.45)" : null; }
+  else if (R === "web") { if (r.thin) { col = "#6f7684"; lw = 2; thin = true; } else { col = "#ffffff"; lw = 4; under = "rgba(40,45,70,.75)"; } }
+  else if (R === "full" && f > 0) { col = ["#c98a2a", "#e0a020", "#f0b400"][Math.min(2, f - 1)]; lw = 2.2 + f * 0.6; }
+  if (r.auto) col = "#9aa0ab";
+  const mx = (r.ax + v.x) / 2, my = (r.ay + v.y) / 2 + sag;
+  ctx.lineCap = "round";
+  const path = () => {
+    ctx.beginPath(); ctx.moveTo(r.ax, r.ay);
+    if (!thin) { ctx.quadraticCurveTo(mx, my, v.x, v.y); return; }
+    const n = 18, nx = -(v.y - r.ay) / Math.max(1, d), ny = (v.x - r.ax) / Math.max(1, d); // тонкая нитка дрожит ±3 u
+    for (let i = 1; i <= n; i++) { const t = i / n, q = 1 - t, x = q * q * r.ax + 2 * q * t * mx + t * t * v.x, y = q * q * r.ay + 2 * q * t * my + t * t * v.y;
+      const w = 3 * u * Math.sin(Math.PI * t) * Math.sin(S.time * 47 + i * 1.9); ctx.lineTo(x + nx * w, y + ny * w); }
+  };
+  if (under) { ctx.strokeStyle = under; ctx.lineWidth = (lw + 2) * u; path(); ctx.stroke(); }
+  if (thin) ctx.setLineDash([5 * u, 4 * u]);
+  ctx.strokeStyle = col; ctx.lineWidth = lw * u; path(); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = under || COL.rope; ctx.beginPath(); ctx.arc(r.ax, r.ay, 3.5 * u, 0, 7); ctx.fill();
+}
+function drawUnder83(v, u) {
+  const R = TUNE.rule83, r = S.rope, m = S.m;
+  if (r) { // окно на окружности маха: φ = угол − δ (φ — от вертикали вниз вперёд; на канве угол 90° − φ)
+    const rr = r.taut ? Math.hypot(v.x - r.ax, v.y - r.ay) : r.L, dl = ropeDelta(r);
+    if (R === "fire" || R === "web") {
+      ctx.strokeStyle = GOLD; ctx.globalAlpha = r.auto ? 0.25 : 0.6; ctx.lineWidth = 6 * u; ctx.lineCap = "butt";
+      ctx.beginPath(); ctx.arc(r.ax, r.ay, rr, rad(90 - (TUNE.winMax - dl)), rad(90 - (TUNE.winMin - dl))); ctx.stroke(); ctx.globalAlpha = 1;
+    } else if (R === "full") { // белая риска «верх» 12 u поперёк окружности
+      const ph = rad(TUNE.fullAng - dl), sx = Math.sin(ph), sy = Math.cos(ph);
+      ctx.strokeStyle = "rgba(40,45,70,.6)"; ctx.lineWidth = 5 * u; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(r.ax + sx * (rr - 7 * u), r.ay + sy * (rr - 7 * u)); ctx.lineTo(r.ax + sx * (rr + 7 * u), r.ay + sy * (rr + 7 * u)); ctx.stroke();
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 3 * u;
+      ctx.beginPath(); ctx.moveTo(r.ax + sx * (rr - 6 * u), r.ay + sy * (rr - 6 * u)); ctx.lineTo(r.ax + sx * (rr + 6 * u), r.ay + sy * (rr + 6 * u)); ctx.stroke();
+    }
+  }
+  if (inWinNow()) { // золотое свечение, пока угол в окне («готов» в полном махе)
+    const g = ctx.createRadialGradient(v.x, v.y, 4 * u, v.x, v.y, 30 * u);
+    g.addColorStop(0, "rgba(255,214,60,.95)"); g.addColorStop(0.55, "rgba(255,194,26,.55)"); g.addColorStop(1, "rgba(255,194,26,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(v.x, v.y, 30 * u, 0, 7); ctx.fill();
+  }
+  if (R === "full") { // кольцо силы Ø 90 u: заполнение = (L0 − L) / (L0 − reelMin)
+    let fill = -1, a = 1, gold = true;
+    if (r) fill = r.L0 > TUNE.reelMin ? clamp((r.L0 - r.L) / (r.L0 - TUNE.reelMin), 0, 1) : 0;
+    else if (m.ringFade) { fill = m.ringFade.f; a = m.ringFade.life / 0.2; gold = m.ringFade.gold; }
+    if (fill >= 0) {
+      ctx.globalAlpha = a; ctx.lineCap = "butt";
+      ctx.strokeStyle = "rgba(40,45,70,.3)"; ctx.lineWidth = 5 * u; ctx.beginPath(); ctx.arc(v.x, v.y, 45 * u, 0, 7); ctx.stroke();
+      if (fill > 0) { ctx.strokeStyle = gold ? (inWinNow() || !r ? GOLD : "#fff6d0") : "#9aa0ab"; ctx.lineWidth = 5 * u;
+        ctx.beginPath(); ctx.arc(v.x, v.y, 45 * u, -Math.PI / 2, -Math.PI / 2 + fill * Math.PI * 2); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+function flameShape(x, y, s) { // язычок: основание в (x, y), высота ~2,2 s
+  ctx.beginPath(); ctx.moveTo(x, y - 1.7 * s);
+  ctx.quadraticCurveTo(x + 0.95 * s, y - 0.45 * s, x + 0.55 * s, y + 0.3 * s); ctx.quadraticCurveTo(x, y + 0.7 * s, x - 0.55 * s, y + 0.3 * s);
+  ctx.quadraticCurveTo(x - 0.95 * s, y - 0.45 * s, x, y - 1.7 * s); ctx.closePath();
+}
+function drawFlame(x, y, s, lit) {
+  if (!lit) { ctx.strokeStyle = "rgba(40,45,70,.4)"; ctx.lineWidth = 1.2 * s / 7; flameShape(x, y, s); ctx.stroke(); return; }
+  ctx.fillStyle = "#ff7a1a"; flameShape(x, y, s); ctx.fill();
+  ctx.fillStyle = "#ffe066"; flameShape(x, y + 0.15 * s, s * 0.55); ctx.fill();
+}
+function drawBall(x, y, rr, full, u) {
+  if (!full) { ctx.setLineDash([2.5 * u, 2 * u]); ctx.strokeStyle = "rgba(40,45,70,.55)"; ctx.lineWidth = 1.3 * u; ctx.beginPath(); ctx.arc(x, y, rr, 0, 7); ctx.stroke(); ctx.setLineDash([]); return; }
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x, y, rr, 0, 7); ctx.fill();
+  ctx.strokeStyle = "#5a6275"; ctx.lineWidth = 1.4 * u; ctx.stroke();
+  ctx.lineWidth = 1 * u; ctx.beginPath(); ctx.arc(x - rr * 0.9, y, rr * 0.9, -0.9, 0.9); ctx.stroke();
+  ctx.beginPath(); ctx.arc(x + rr * 0.9, y, rr * 0.9, Math.PI - 0.9, Math.PI + 0.9); ctx.stroke();
+}
+function slot83(i, n, v, u) { // места огоньков / клубков над головой (дугой)
+  const R = TUNE.rule83, hy = v.y - SIZE.omTop;
+  if (R === "web") { const a = rad((i - (n - 1) / 2) * 34); return { x: v.x + Math.sin(a) * 30 * u, y: hy - 20 * u + (1 - Math.cos(a)) * 30 * u }; }
+  return { x: v.x + (i - (n - 1) / 2) * 11 * u, y: hy - 22 * u + Math.abs(i - (n - 1) / 2) * 3 * u };
+}
+function drawOver83(v, u) {
+  const R = TUNE.rule83, m = S.m, t = S.time;
+  if (R === "fire") {
+    const n = TUNE.fireMax; let fly = 0; for (const f of S.fx) if (f.type === "flameIn") fly++;
+    for (let i = 0; i < n; i++) { const p = slot83(i, n, v, u), lit = i < m.fire - fly; drawFlame(p.x, p.y, 7 * u * (lit ? 1 + 0.08 * Math.sin(t * 31 + i * 2) : 0.8), lit); }
+  } else if (R === "web") {
+    const n = TUNE.webMax; let fly = 0; for (const f of S.fx) if (f.type === "ballIn") fly++;
+    for (let i = 0; i < n; i++) { const p = slot83(i, n, v, u); drawBall(p.x, p.y, 9 * u, i < m.web - fly, u); }
+  } else if (R === "full") { // зарубки серии на кольце
+    const n = TUNE.fireMax;
+    for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + rad((i - (n - 1) / 2) * 14), lit = i < m.fire;
+      ctx.strokeStyle = lit ? GOLD : "rgba(40,45,70,.35)"; ctx.lineWidth = (lit ? 4 : 2.5) * u; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(v.x + Math.cos(a) * 49 * u, v.y + Math.sin(a) * 49 * u); ctx.lineTo(v.x + Math.cos(a) * 58 * u, v.y + Math.sin(a) * 58 * u); ctx.stroke(); }
+  }
+  for (const f of S.fx) { // события
+    const p = 1 - f.life / f.t0;
+    if (f.type === "ring") { ctx.strokeStyle = GOLD; ctx.globalAlpha = 1 - p; ctx.lineWidth = 4 * u; ctx.beginPath(); ctx.arc(f.x, f.y, (12 + 55 * p) * u, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+    else if (f.type === "smoke") { const big = R === "full", c = big ? { x: v.x, y: v.y } : { x: v.x, y: v.y - SIZE.omTop - 22 * u };
+      ctx.fillStyle = "#8a8f99"; ctx.globalAlpha = 0.75 * (1 - p);
+      for (let k = 0; k < 5; k++) { const a = k * 1.3 + 0.4, d = (big ? 20 : 8) * u * (0.4 + p); ctx.beginPath(); ctx.arc(c.x + Math.cos(a) * d, c.y + Math.sin(a) * d * 0.7, (big ? 9 : 5) * u * (0.6 + p), 0, 7); ctx.fill(); }
+      ctx.globalAlpha = 1; }
+    else if (f.type === "flameIn") { const q = slot83(Math.max(0, m.fire - 1), TUNE.fireMax, v, u), e = 1 - (1 - p) * (1 - p);
+      drawFlame(lerp(f.x, q.x, e), lerp(f.y, q.y, e) - Math.sin(Math.PI * p) * 20 * u, 7 * u * (1.4 - 0.4 * p), true); }
+    else if (f.type === "ballIn") { const q = slot83(Math.max(0, m.web - 1), TUNE.webMax, v, u);
+      drawBall(lerp(f.x, q.x, p), lerp(f.y, q.y, p) - Math.sin(Math.PI * p) * 25 * u, 9 * u, true, u); }
+    else if (f.type === "ballOut") drawBall(lerp(f.x, f.ax, p), lerp(f.y, f.ay, p), 9 * u * (1 - 0.4 * p), true, u);
+    else if (f.type === "trail" && f.pts.length > 1) { ctx.strokeStyle = GOLD; ctx.globalAlpha = f.life / f.t0; ctx.lineWidth = 6 * u; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(f.x, f.y); for (const q of f.pts) ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.globalAlpha = 1; }
+  }
+}
 function drawDebug() {
   const o = S.om, r = S.rope, g = TUNE.gravity, e = energy(), lc = S.lastCatch, lr = S.lastRelease;
   const lines = [
     "v " + fmt(speed()) + " u/с (vx " + fmt(o.vx) + ", vy " + fmt(o.vy) + ")",
     "E " + fmt(e / g) + " u высоты" + (r ? " · на верёвке " + (r.E0 ? (e >= r.E0 ? "+" : "") + fmt((e / r.E0 - 1) * 100, 2) + " %" : "") : ""),
-    r ? "T " + fmt(S.tension / g, 2) + " g · L " + fmt(r.L) + " u · " + (TUNE.elastic > 0 ? "упругая" : r.taut ? "натянута" : "провисла") : "в полёте" + (o.grounded ? " (стоит)" : ""),
+    r ? "T " + fmt(S.tension / g, 2) + " g · L " + fmt(r.L) + " u · " + (TUNE.elastic > 0 ? "упругая" : r.taut ? "натянута" : "провисла") + (r.auto ? " · страховка держит" : "") + (r.jam ? " · низко: тянет" : "") : "в полёте" + (o.grounded ? " (стоит)" : ""),
     "зацеп " + (lc ? fmt(lc.vBefore) + "→" + fmt(lc.vAfter) + " u/с (" + (lc.vAfter >= lc.vBefore ? "+" : "") + fmt((lc.vAfter / Math.max(1, lc.vBefore) - 1) * 100, 1) + " %)" : "—"),
     "отпуск " + (lr ? fmt(lr.vBefore) + "→" + fmt(lr.vAfter) + " u/с, " + fmt(lr.ang) + "°" + (lr.sweet ? " вжух" : "") : "—"),
+    ...(TUNE.rule83 !== "none" || TUNE.safeOn ? [{ fire: "огоньки " + S.m.fire, web: "клубки " + S.m.web + (r && r.thin ? " · нитка" : ""), full: "серия " + S.m.fire, none: "правила нет" }[TUNE.rule83]
+      + " · подтяжка " + fmt(r ? -r.rd : 0) + " · золотых " + S.m.gold + " · мимо " + S.m.miss + " · падений " + S.falls] : []),
     "зацепов " + S.catches + (TUNE.ownOn ? " (свой дом " + S.ownCatches + ")" : "") + " · промахов " + S.misses + " · земля " + S.bounces + " · seed " + S.seed,
   ];
   ctx.textAlign = "left"; ctx.font = "600 8px ui-monospace,Menlo,monospace";
@@ -912,7 +1129,7 @@ function restart(seed) { saveBest(); newRound(seed == null ? S.seed : seed); acc
 function newWorldBtn() { restart((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
 
 // ---- Настройки: панель, наборы, localStorage ------------------------------------------------------------------------
-let PRESET = "spider", worldDirty = false, drawerOpen = false;
+let PRESET = "fire", worldDirty = false, drawerOpen = false;
 const ctl = {};
 function save() {
   try { localStorage.setItem(STORE, JSON.stringify({ preset: PRESET, tune: TUNE, ui: { debug: DEBUG, speed: SPEED, drawer: drawerOpen } })); } catch (e) {}
@@ -986,7 +1203,9 @@ function buildPanel() {
   }
 }
 const DEP = { capVx: "capOn", capVy: "capOn", swingMin: "swingOn", backDrag: "backDragOn", sweetBoost: "boostOn", sweetLift: "liftOn",
-  zoomFast: "zoomSpeedOn", zoomV0: "zoomSpeedOn", zoomV1: "zoomSpeedOn", zoomLerp: "zoomSpeedOn", candyKick: "kickOn", reelMin: "reel", ownPoint: "ownOn", ownPad: "ownOn", ownMinL: "ownAll", ownSlack: "ownAll", ownPayMax: "ownAll", ownReel: "ownAll", ownReelMin: "ownAll", ownVmax: "ownAll", skyWMin: "skyP", skyWMax: "skyP", skyHMin: "skyP", skyHMax: "skyP", pumpSpeed: "pumpOn", pumpDL: "pumpOn", pumpZone: "pumpOn" };
+  zoomFast: "zoomSpeedOn", zoomV0: "zoomSpeedOn", zoomV1: "zoomSpeedOn", zoomLerp: "zoomSpeedOn", candyKick: "kickOn", reelMin: "reel", ownPoint: "ownOn", ownPad: "ownOn", ownMinL: "ownAll", ownSlack: "ownAll", ownPayMax: "ownAll", ownReel: "ownAll", ownReelMin: "ownAll", ownVmax: "ownAll", skyWMin: "skyP", skyWMax: "skyP", skyHMin: "skyP", skyHMax: "skyP", pumpSpeed: "pumpOn", pumpDL: "pumpOn", pumpZone: "pumpOn",
+  safeDeg: "safeOn", safeClear: "safeOn", safeReel: "safeOn" };
+const RULE_KEYS = { winMin: "fw", winMax: "fw", fireMax: "fF", reelBase: "fF", reelPerFire: "fF", winBoost: "fF", missMul: "fw", webMax: "w", thinReel: "w", fullAng: "F", fullMissMul: "F" };
 function syncUi() {
   const p = PRESETS[PRESET];
   for (const k of SPEC_KEYS) {
@@ -998,6 +1217,8 @@ function syncUi() {
   for (const k of ["bounceUp", "bounceVx"]) ctl[k].el.classList.toggle("dis", TUNE.groundMode !== "tramp");
   for (const k of ["aimCone", "roofInset", "aimHyst"]) ctl[k].el.classList.toggle("dis", TUNE.aimMode !== "roof");
   for (const k of ["liftDy", "reachCheck"]) ctl[k].el.classList.toggle("dis", TUNE.aimMode === "ray");
+  const rl = { none: "-", fire: "f", web: "w", full: "F" }[TUNE.rule83] || "-";
+  for (const k in RULE_KEYS) ctl[k].el.classList.toggle("dis", !RULE_KEYS[k].includes(rl));
   const nCh = Object.keys(diffFromPreset()).length;
   document.getElementById("prNote").textContent = PR_NAME[PRESET] + (nCh ? " (+ " + nCh + " изм.)" : "") + ": " + PR_NOTE[PRESET];
   document.querySelectorAll("[data-pr]").forEach((b) => b.classList.toggle("on", b.dataset.pr === PRESET));
@@ -1066,7 +1287,9 @@ window.__game = {
       rope: r ? { ax: r.ax, ay: r.ay, L: r.L, house: r.house, own: r.own, taut: r.taut, tension: S.tension, tensionG: S.tension / TUNE.gravity } : null,
       target: t ? { x: t.x, y: t.y, dev: t.dev, L: t.L, house: t.house, own: !!t.own } : null,
       cam: { x: c.x, y: c.y, zoom: c.zoom, vx: c.vx, vy: c.vy }, zoom: c.zoom,
-      dist: distM(), best, catches: S.catches, ownCatches: S.ownCatches, misses: S.misses, sweet: S.sweet, bounces: S.bounces, candies: S.candies,
+      dist: distM(), best, catches: S.catches, ownCatches: S.ownCatches, misses: S.misses, sweet: S.sweet, bounces: S.bounces, falls: S.falls, candies: S.candies,
+      rule83: { rule: TUNE.rule83, fire: S.m.fire, web: S.m.web, gold: S.m.gold, miss: S.m.miss, lastRel: S.m.lastRel, reel: r ? -r.rd : 0, thin: !!(r && r.thin),
+        inWin: inWinNow(), safe: { on: TUNE.safeOn, holding: !!(r && r.auto), jam: !!(r && r.jam), count: S.m.safeN } },
       lastCatch: S.lastCatch, lastRelease: S.lastRelease, log: S.log.slice(-40),
       houses: S.WD.bld.filter((b) => b.x1 > c.x - 100 && b.x0 < c.x + W / c.zoom + 100).map((b) => ({ id: b.id, x0: b.x0, x1: b.x1, top: b.top, h: b.h })),
       gen: { houses: S.WD.bld.length, rerolls: S.WD.rerolls, fails: S.WD.fails }, worldDirty,
