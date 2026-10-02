@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Лаборатория</title>
 <link rel="icon" href="data:,">
-<style>:root{--bg:#1d2333;--fg:#f3f5fa;--muted:#a9b1c6;--card:#2a3148;--card2:#323b57;--best:#ffd166}*{box-sizing:border-box}html,body{background:var(--bg);color:var(--fg);margin:0;font:16px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}main{max-width:520px;margin:0 auto;padding:20px 16px 32px}h1{margin:4px 0;font-size:26px}.lead{color:var(--muted);margin:0 0 18px;font-size:14px}a.game{color:inherit;background:var(--card);border-radius:16px;align-items:center;gap:12px;min-height:76px;margin:0 0 12px;padding:16px 18px;text-decoration:none;display:flex}a.game:active{background:var(--card2)}.txt{flex:1;min-width:0}.name{font-size:19px;font-weight:700}.rule{color:var(--muted);margin-top:3px;font-size:14px}.best{text-align:right;color:var(--best);font-variant-numeric:tabular-nums;flex:none;font-size:18px;font-weight:700}h2{text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:22px 0 2px;font-size:15px}.note{color:var(--muted);opacity:.8;margin:0 0 10px;font-size:13px}.best small{color:var(--muted);font-size:11px;font-weight:400;display:block}</style>
+<style>:root{--bg:#1d2333;--fg:#f3f5fa;--muted:#a9b1c6;--card:#2a3148;--card2:#323b57;--best:#ffd166}*{box-sizing:border-box}html,body{background:var(--bg);color:var(--fg);margin:0;font:16px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}main{max-width:520px;margin:0 auto;padding:20px 16px 32px}h1{margin:4px 0;font-size:26px}.lead{color:var(--muted);margin:0 0 18px;font-size:14px}a.game{color:inherit;background:var(--card);border-radius:16px;align-items:center;gap:12px;min-height:76px;margin:0 0 12px;padding:16px 18px;text-decoration:none;display:flex}a.game:active{background:var(--card2)}.txt{flex:1;min-width:0}.name{font-size:19px;font-weight:700}.rule{color:var(--muted);margin-top:3px;font-size:14px}.best{text-align:right;color:var(--best);font-variant-numeric:tabular-nums;flex:none;font-size:18px;font-weight:700}h2{text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:22px 0 2px;font-size:15px}.note{color:var(--muted);opacity:.8;margin:0 0 10px;font-size:13px}.row{align-items:stretch;gap:8px;margin:0 0 12px;display:flex}.row a.game{flex:1;min-width:0;margin:0}a.alt{background:var(--card);color:var(--best);white-space:nowrap;border-radius:16px;flex:none;justify-content:center;align-items:center;padding:0 14px;font-size:15px;font-weight:700;text-decoration:none;display:flex}a.alt:active{background:var(--card2)}.best small{color:var(--muted);font-size:11px;font-weight:400;display:block}</style>
 </head>
 <body>
 <main>
@@ -20,7 +20,7 @@ const SECTIONS = [
     ["hook",  "Ом Ном на крючках", "Держи — Ом Ном цепляется и качается, отпусти — летит выше"],
     ["sling", "Конфетная рогатка", "Оттяни конфету и отпусти — попади Ому Ному в рот"],
     ["slide", "Конфетная горка", "Рисуй пальцем верёвку-горку — конфеты катятся в рот"],
-    ["hockey", "Конфетный хоккей", "Веди биту-пуговицу пальцем и забей конфету в ворота Тосс — с ботом или вдвоём"],
+    ["hockey", "Конфетный хоккей", "Веди биту-пуговицу пальцем и забей конфету в ворота Тосс — с ботом или вдвоём", [["hockey-bot2", "бот v2"]]],
   ]],
   ["Эксперименты", "Остаются в лаборатории.", [
     ["hook-tune", "Крючки — настройка", "Финал D-87: «Дальнобой» + конфеты на улице — раунд 60 с, счёт — съеденные конфеты; «Густо» или «Редко», прежние наборы — в «Архиве»"],
@@ -42,7 +42,7 @@ const list = document.getElementById("list");
 for (const [title, note, games] of SECTIONS) {
   const h = document.createElement("h2"); h.textContent = title; list.appendChild(h);
   const n = document.createElement("p"); n.className = "note"; n.textContent = note; list.appendChild(n);
-  for (const [slug, name, rule] of games) {
+  for (const [slug, name, rule, alts] of games) {
     const a = document.createElement("a");
     a.className = "game"; a.href = slug + ".html";
     const b = best(slug);
@@ -50,7 +50,10 @@ for (const [title, note, games] of SECTIONS) {
       (b !== null && !isNaN(b) ? `<div class="best"><small>рекорд</small>${b}</div>` : "");
     a.querySelector(".name").textContent = name;
     a.querySelector(".rule").textContent = rule;
-    list.appendChild(a);
+    if (!alts) { list.appendChild(a); continue; }
+    const row = document.createElement("div"); row.className = "row"; row.appendChild(a); // рядом — другие версии той же игры
+    for (const [href, label] of alts) { const x = document.createElement("a"); x.className = "alt"; x.href = href + ".html"; x.textContent = label; row.appendChild(x); }
+    list.appendChild(row);
   }
 }
 </script>

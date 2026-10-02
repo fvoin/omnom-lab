@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="data:,">
-<title>Конфетный хоккей</title>
+<title>Конфетный хоккей · бот v2</title>
 <style>:root{--card:#c98a4b;--card2:#b8773d;--shade:#8f5427;--cut:#5a2e10;--cream:#fbebd0;--cream2:#e9cfa3;--ink:#4a2512;--act:#e8458a;--act2:#a82060;--actInk:#4f0c2c;--star:#ffd23f;--coral:#f7918b;--p1:#4da3f0;--p2:#ff9f2e;--go:#8ccb3e;--go2:#5e9a22;--u:.36}*{box-sizing:border-box}html,body{background:var(--card2);height:100%;color:var(--ink);margin:0;font:700 14px/1.3 Nunito,ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);flex-direction:column;display:flex}header{justify-content:space-between;align-items:center;gap:8px;padding:5px 10px 4px;display:flex}header button{white-space:nowrap;box-shadow:0 2px 0 var(--cream2);padding:3px 9px;font-size:12px}@media (width<=440px){header h1{display:none}}a.back{color:var(--cream);white-space:nowrap;font-size:13px;text-decoration:none}h1{color:var(--cream);text-shadow:0 1px 0 var(--cut);white-space:nowrap;text-overflow:ellipsis;margin:0;font-size:16px;font-weight:900;overflow:hidden}button{font:inherit;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--cream2);border-radius:999px;padding:4px 10px;font-weight:800}button.big{background:var(--act);color:#fff;border-color:var(--actInk);box-shadow:0 5px 0 var(--act2);text-shadow:0 1px 0 var(--actInk), 0 -1px 0 var(--actInk), 1px 0 0 var(--actInk), -1px 0 0 var(--actInk);padding:10px 26px;font-size:19px}.btns{gap:6px;display:flex}#stage{flex:1;min-height:0;position:relative;overflow:hidden}canvas{touch-action:none;-webkit-user-select:none;user-select:none;display:block;position:absolute;top:0;left:0}.ov{touch-action:none;justify-content:center;align-items:center;display:none;position:absolute;inset:0}.ov.on{display:flex}#menu{gap:calc(34px * var(--u) * 2.4);background:#4a251259;flex-direction:column}.mode{width:calc(760px * var(--u));height:calc(168px * var(--u));border-radius:calc(84px * var(--u));border:calc(7px * var(--u)) solid var(--ink);background:var(--cream);box-shadow:0 calc(12px * var(--u)) 0 var(--cream2);justify-content:center;align-items:center;gap:calc(26px * var(--u));padding:0;display:flex}.mode.last{background:var(--go);box-shadow:0 calc(12px * var(--u)) 0 var(--go2)}.mode img{height:calc(132px * var(--u));pointer-events:none;width:auto;display:block}.mode svg{pointer-events:none;display:block}.mode .cand{height:calc(78px * var(--u));width:calc(110px * var(--u))}.mode .palm{height:calc(124px * var(--u));width:calc(104px * var(--u))}.mode .vs{width:calc(14px * var(--u))}#pause{background:#4a251273}#pause .card,#end .card{background:var(--cream);border:3px solid var(--ink);text-align:center;min-width:220px;box-shadow:0 6px 0 var(--cream2), 0 10px 24px #4a251259;border-radius:24px;padding:16px 22px 18px;position:relative;overflow:hidden}#pause .card{align-items:center;gap:12px;display:flex}#pause button{width:64px;height:64px;padding:0;font-size:26px}#pause button.big{width:84px;height:84px;font-size:34px}#pause.flip .card{transform:rotate(180deg)}#end{background:#4a251259}#end .ribbon{height:14px;position:absolute;top:0;left:0;right:0}#end .faces{justify-content:center;align-items:flex-end;gap:6px;margin-top:6px;display:flex}#end .faces img{pointer-events:none;height:110px;display:block}#end .stars{letter-spacing:4px;margin:4px 0 2px;font-size:44px;line-height:1}#end .stars span{color:var(--cut);opacity:.35}#end .stars span.on{color:var(--star);opacity:1;-webkit-text-stroke:2px var(--ink)}#end .score{letter-spacing:2px;margin:0;font-size:46px;font-weight:900}#end .score b{-webkit-text-stroke:2px var(--ink)}#end p{margin:4px 0;font-weight:800}#end .rec{color:var(--act2)}#end .row2{justify-content:center;align-items:center;gap:10px;margin-top:12px;display:flex}</style>
 </head>
 <body>
 <header>
   <a class="back" href="index.html">← Лаборатория</a>
-  <h1>Конфетный хоккей</h1>
+  <h1>Конфетный хоккей · бот v2</h1>
   <span class="btns"><button id="watchBtn" title="Нижней битой играет бот (средний)">Бот внизу: выкл</button><button id="menuBtn">Режим</button></span>
 </header>
 <div id="stage">
@@ -141,15 +141,21 @@ const TUNE = {
   postR: 10,           // скругление углов проёма ворот
   squeeze: 0.5,        // шайба, зажатая битой у борта, выдавливается вдоль борта: доля скорости биты поперёк борта
   substeps: 8,         // подшагов физики на тик (≥ 4 по диздоку)
-  stallSpeed: 40, stallSec: 4, blowSpeed: 350, blowSkip: 60, // антизастой
+  stallSpeed: 40, stallSec: 4, blowSpeed: 350, blowSkip: 60, // антизастой: в катке — медленнее 40 px/с дольше 4 с
+  // антизастой v2 (§6, D-86): зона «у борта» — ближе endZone к торцу или вплотную к боковому (puckR + sideZone);
+  // у торца — при любой скорости, у бокового — медленнее stallWallSpeed; срабатывает через stallWallSec.
+  // «Выдох» ведёт шайбу к точке подачи своей половины: скорость = min(blowSpeed, blowBrake · расстояние), ближе blowStop — стоп;
+  // удар движущейся битой (быстрее blowKeep) выдох прерывает
+  endZone: 125, sideZone: 5, stallWallSpeed: 120, stallWallSec: 1.0, blowBrake: 4, blowStop: 4, blowKeep: 50,
   goals: 5,            // до скольких голов
   countdown: 0.8, goalPause: 1.0, candyFly: 0.6, chew: 1.2, endPanel: 2.2,
   // бот: задержка реакции, макс. скорость биты, σ ошибки по x, атакует медленнее чем, линия защиты от своих ворот
   bot: {
-    easy:   { delay: 0.30, speed: 1400, sigma: 90, attack: 600,  def: 200 },
+    easy:   { delay: 0.30, speed: 1200, sigma: 90, attack: 600,  def: 200 }, // v2: скорость 1400 → 1200 (§8.4)
     medium: { delay: 0.18, speed: 2300, sigma: 50, attack: 900,  def: 220 },
-    hard:   { delay: 0.10, speed: 3200, sigma: 35, attack: 1300, def: 240 }, // σ 35 вместо 20 из §8: при 20 сложный-против-сложного не доигрывает и за 15 мин
-    simple: { delay: 0.20, speed: 2000, sigma: 60 }, // «ребёнок»: бита прямо на шайбу (только калибровка)
+    hard:   { delay: 0.10, speed: 3200, sigma: 40, attack: 1300, def: 240 }, // v2: σ 35 → 40 (§8.4)
+    simple: { delay: 0.20, speed: 2000, sigma: 60 }, // «ребёнок» §8.3 (только калибровка): держит биту под шайбой
+    adult:  { delay: 0.15, speed: 4000, sigma: 30, attack: 1500, def: 230 }, // «умелый взрослый» §8.4: алгоритм v2 (только калибровка)
   },
   botRest: 0.6,        // скорость возврата на линию защиты, доля от макс.
   botOvershoot: 100,   // перелёт биты сквозь точку удара, px
@@ -159,6 +165,9 @@ const TUNE = {
   // ошибка предсказания растёт с дальностью и отскоками (иначе защита идеальна и голов почти нет):
   // σ_пред = σ · (botErrBase + путь шайбы до линии защиты / botErrTravel + botErrBounce · число отскоков); одна ошибка на траекторию
   botErrBase: 0.5, botErrTravel: 550, botErrBounce: 1, botTrajDv: 150,
+  // бот v2 (§8.4): удар доводится botCommit тиков (или до касания); после своего удара (−vn > hitHard → hitHardT)
+  // round(delay·60) + botRecover тиков не атакует (не бьёт «призрак»)
+  botCommit: 12, botRecover: 6, hitHard: 120,
 };
 const DT = 1 / 60;
 const RINK = { x0: 40, x1: 1040, y0: 200, y1: 1720, mid: 960, gL: 360, gR: 720, cx: 540, serveTop: 600, serveBot: 1320 }; // serveTop/Bot: куда ставится новая шайба (D-89; было 580 / 1340)
@@ -177,9 +186,9 @@ function newMatch(mode, seed, c1, c2) {
     state: "countdown", t: Math.round(TUNE.countdown / DT), ticks: 0, playTicks: 0, overT: 0,
     puck: { x: RINK.cx, y: RINK.mid, vx: 0, vy: 0, ang: 0 },
     m: [null, mal(1), mal(2)],
-    score: [0, 0, 0], winner: 0, stall: 0,
+    score: [0, 0, 0], winner: 0, stall: 0, blow: null, act: [null, "", ""],
     face: [null, { f: "neutral", until: 0 }, { f: "neutral", until: 0 }],
-    lastGoal: null, hist: [], fx: [], bot: [null, { ex: 0, ep: 0, next: 0 }, { ex: 0, ep: 0, next: 0 }],
+    lastGoal: null, hist: [], fx: [], bot: [null, { ex: 0, ep: 0, next: 0, sk: null }, { ex: 0, ep: 0, next: 0, sk: null }],
     hits: 0, maxSpeed: 0,
   };
   record(S);
@@ -228,7 +237,7 @@ function collideMallet(S, pl) {
   if (vn < 0) {
     p.vx -= (1 + TUNE.malletE) * vn * nx; p.vy -= (1 + TUNE.malletE) * vn * ny;
     S.hits++; m.hitT = S.ticks;
-    if (-vn > 120) fx(S, { k: "hit", pl, x: m.x + nx * TUNE.malletR, y: m.y + ny * TUNE.malletR, s: -vn });
+    if (-vn > TUNE.hitHard) { m.hitHardT = S.ticks; fx(S, { k: "hit", pl, x: m.x + nx * TUNE.malletR, y: m.y + ny * TUNE.malletR, s: -vn }); }
   }
 }
 function capSpeed(p) { const sp = Math.hypot(p.vx, p.vy); if (sp > TUNE.puckMax) { const k = TUNE.puckMax / sp; p.vx *= k; p.vy *= k; } }
@@ -264,7 +273,7 @@ function scoreGoal(S, pl) {
   const hold = Math.round(0.9 / DT);
   S.face[pl] = { f: "joy", until: S.ticks + hold }; S.face[3 - pl] = { f: "wide", until: S.ticks + hold };
   fx(S, { k: "goal", pl, x: p.x, y: S.lastGoal.y });
-  p.vx = p.vy = 0; S.stall = 0;
+  p.vx = p.vy = 0; S.stall = 0; S.blow = null; S.bot[1].sk = S.bot[2].sk = null;
   if (S.score[pl] >= TUNE.goals) { S.state = "over"; S.winner = pl; S.overT = 0; }
   else { S.state = "goal"; S.t = Math.round(TUNE.goalPause / DT) - 3; } // −3 тика: шайба уже в центре к 1,0 с после гола
 }
@@ -272,13 +281,16 @@ function serve(S) {
   const conceder = 3 - S.lastGoal.pl, p = S.puck;
   p.x = RINK.cx; p.y = conceder === 2 ? RINK.serveTop : RINK.serveBot; p.vx = p.vy = 0;
   homeMallets(S);
-  S.state = "countdown"; S.t = Math.round(TUNE.countdown / DT); S.stall = 0;
+  S.state = "countdown"; S.t = Math.round(TUNE.countdown / DT); S.stall = 0; S.blow = null; S.bot[1].sk = S.bot[2].sk = null;
 }
 // отражения от боковых бортов: x движется по прямой, «складываем» в [a, b]
 function fold(x, a, b) { const w = b - a, q = ((x - a) % (2 * w) + 2 * w) % (2 * w); return a + (q <= w ? q : 2 * w - q); }
 
-// Бот (§8). Думает в системе «своих ворот сверху» (у нижнего бота y зеркалится). Видит шайбу с задержкой (S.hist).
+// Бот v2 (§8, §8.4 D-86). Думает в системе «своих ворот сверху» (у нижнего бота y зеркалится). Видит шайбу с задержкой (S.hist).
+// exact — режим фикстуры: без ошибок, задержки, доводки удара и «призрака», но с правилами 4–6 §8.4. S в exact не меняется.
+// Бот simple — модель «ребёнка» §8.3 (отдельная функция ниже); adult — тот же v2 с числами «умелого взрослого».
 function botThink(S, pl, kind, exact) {
+  if (kind === "simple") return childThink(S, pl);
   const cfg = TUNE.bot[kind], B = S.bot[pl], m = S.m[pl], R = TUNE.malletR, r = TUNE.puckR, RR = R + r;
   const fl = pl === 1, Ly = (y) => (fl ? 1920 - y : y);
   const H = S.hist, o = exact ? H[H.length - 1] : H[Math.max(0, H.length - 1 - Math.round(cfg.delay / DT))];
@@ -297,47 +309,89 @@ function botThink(S, pl, kind, exact) {
   if (!exact) { B.lvx = vx; B.lvy = vy; }
   const ex = exact ? 0 : B.ex, ep = exact ? 0 : (B.ep || 0);
   let tx = mx, ty = my, k = 1, act = "stay";
-  if (kind === "simple") {
-    // «ребёнок»: ведёт биту прямо в шайбу; после касания отдёргивает руку назад (иначе вжимает шайбу в угол навсегда)
-    if (!exact && m.hitT != null && S.ticks - m.hitT < Math.round(TUNE.simpleBack / DT)) { tx = RINK.cx; ty = Y0 + 250; act = "back"; }
-    else if (py < MID) { tx = px + ex; ty = py; act = "chase"; }
-  } else {
-    const sp = Math.hypot(vx, vy), defY = Y0 + cfg.def;
-    if (py < MID && (sp < cfg.attack || vy > 0)) {
-      act = "attack";
-      const qx = fold(px + vx * TUNE.botLead, lo, hi), qy = Math.max(Y0 + r, py + vy * TUNE.botLead);
-      let ux = RINK.cx + ex - qx, uy = RINK.y1 + 40 - qy; const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
-      let behindY = qy - uy * (RR + 30);
-      const reach = Y0 + R + 4, maxUy = (qy - reach) / (RR + 30);
-      if (behindY < reach && maxUy < 0.2) { // шайба у своего борта — за неё не зайти: стоим перед ней и ждём (не толкаем в угол)
-        tx = qx; ty = qy + RR + 40; act = "guard";
-      } else {
-        if (behindY < reach) { // за шайбу прямо не зайти — бьём круче вбок, в борт (бортовой удар)
-          const sx = Math.abs(ux) > 0.05 ? Math.sign(ux) : (qx < RINK.cx ? 1 : -1);
-          uy = maxUy; ux = sx * Math.sqrt(1 - uy * uy); behindY = qy - uy * (RR + 30);
-        }
-        const rx = mx - qx, ry = my - qy, along = rx * ux + ry * uy, nX = -uy, nY = ux, lat = rx * nX + ry * nY;
-        if (along < -RR * 0.7 && Math.abs(lat) < 45) { // стоим за шайбой — удар с перелётом
-          tx = qx - ux * RR + ux * TUNE.botOvershoot; ty = qy - uy * RR + uy * TUNE.botOvershoot; act = "strike";
-        } else if (along > -RR * 0.3 && Math.abs(lat) < RR) { // перед шайбой — обходим сбоку
-          const s = lat >= 0 ? 1 : -1;
-          tx = qx + nX * s * (RR + 25) - ux * RR * 0.5; ty = qy + nY * s * (RR + 25) - uy * RR * 0.5; act = "around";
-        } else { tx = qx - ux * (RR + 30); ty = behindY; act = "behind"; }
-      }
-    } else if (py >= MID && vy >= 0) { tx = RINK.cx; ty = defY; k = TUNE.botRest; act = "rest"; }
-    else {
-      act = "defend";
-      if (vy < -1) {
-        const t = (py - defY) / -vy;
-        if (t >= 0) {
-          tx = fold(px + vx * t, lo, hi) + ep; ty = defY;
-        }
-        else { tx = Math.max(RINK.gL, Math.min(RINK.gR, px)); ty = Y0 + R; }
-      } else { tx = px + ep; ty = defY; }
+  const sp = Math.hypot(vx, vy), defY = Y0 + cfg.def, b = bounds(2);
+  // п. 3: после своего удара delay + botRecover тиков не атакует — бита ещё видит шайбу на месте удара («призрак»)
+  const recovering = !exact && m.hitHardT != null && S.ticks - m.hitHardT < Math.round(cfg.delay / DT) + TUNE.botRecover;
+  const attackNow = !recovering && py < MID && (sp < cfg.attack || vy > 0);
+  // п. 2: начатый удар доводится — botCommit тиков к запомненной цели, пока нет касания и шайба «для атаки»
+  if (!exact && B.sk) {
+    if (attackNow && m.hitT === B.sk.hit0 && S.ticks - B.sk.t0 < TUNE.botCommit) {
+      const [x, y] = clampTo(b, B.sk.x, B.sk.y);
+      return { x, y: fl ? 1920 - y : y, speed: cfg.speed, act: "strike" };
     }
+    B.sk = null;
   }
-  const b = bounds(2); [tx, ty] = clampTo(b, tx, ty);
+  if (attackNow) {
+    act = "attack";
+    // п. 1: упреждение на задержку — бот досчитывает свой устаревший кадр вперёд
+    const lead = TUNE.botLead + (exact ? 0 : cfg.delay);
+    const qx = fold(px + vx * lead, lo, hi), qy = Math.max(Y0 + r, Math.min(MID, py + vy * lead));
+    // п. 5: прямая на центр ворот закрыта битой соперника — в дальнюю от неё штангу
+    const om = S.m[3 - pl], ox = om.x, oy = Ly(om.y), gy = RINK.y1 + 40, postR = RINK.gR - r - 15, postL = RINK.gL + r + 15;
+    let gx = RINK.cx;
+    if (blockedBy(qx, qy, gx + ex, gy, ox, oy)) gx = ox < RINK.cx ? postR : ox > RINK.cx ? postL : (qx < RINK.cx ? postR : postL);
+    let ux = gx + ex - qx, uy = gy - qy; const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
+    let behindY = qy - uy * (RR + 30);
+    const reach = Y0 + R + 4, maxUy = (qy - reach) / (RR + 30);
+    if (behindY < reach && maxUy < 0.2) { // п. 6 сторож: шайба у своего борта, за неё не зайти — в центр своей линии защиты, ждём выдоха
+      tx = RINK.cx; ty = defY; act = "guard";
+    } else {
+      if (behindY < reach) { // за шайбу прямо не зайти — бьём круче вбок, в борт (бортовой удар)
+        const sx = Math.abs(ux) > 0.05 ? Math.sign(ux) : (qx < RINK.cx ? 1 : -1);
+        uy = maxUy; ux = sx * Math.sqrt(1 - uy * uy); behindY = qy - uy * (RR + 30);
+      }
+      const rx = mx - qx, ry = my - qy, along = rx * ux + ry * uy, nX = -uy, nY = ux, lat = rx * nX + ry * nY;
+      // п. 4: точка «за шайбой» за боковым бортом (шайба не вплотную) — идём в достижимую точку и бьём оттуда сквозь шайбу
+      const bx = qx - ux * (RR + 30), [cbx, cby] = clampTo(b, bx, behindY);
+      const clamped = Math.abs(cbx - bx) > 1 && qx > lo + TUNE.sideZone && qx < hi - TUNE.sideZone;
+      let strike = false, sux = ux, suy = uy;
+      if (along < -RR * 0.7 && Math.abs(lat) < 45) strike = true; // стоим за шайбой — удар с перелётом
+      else if (clamped && Math.hypot(mx - cbx, my - cby) < 30) {
+        const dx = qx - mx, dy = qy - my, dl = Math.hypot(dx, dy) || 1; sux = dx / dl; suy = dy / dl; strike = suy > 0.2;
+      }
+      if (strike) {
+        tx = qx - sux * RR + sux * TUNE.botOvershoot; ty = qy - suy * RR + suy * TUNE.botOvershoot; act = "strike";
+        if (!exact && !B.sk) B.sk = { t0: S.ticks, hit0: m.hitT, x: tx, y: ty };
+      } else if (along > -RR * 0.3 && Math.abs(lat) < RR) { // перед шайбой — обходим сбоку
+        const s = lat >= 0 ? 1 : -1;
+        tx = qx + nX * s * (RR + 25) - ux * RR * 0.5; ty = qy + nY * s * (RR + 25) - uy * RR * 0.5; act = "around";
+      } else { tx = clamped ? cbx : bx; ty = clamped ? cby : behindY; act = "behind"; }
+    }
+  } else if (py >= MID && vy >= 0) { tx = RINK.cx; ty = defY; k = TUNE.botRest; act = "rest"; }
+  else {
+    act = "defend";
+    if (vy < -1) {
+      const t = (py - defY) / -vy;
+      if (t >= 0) { tx = fold(px + vx * t, lo, hi) + ep; ty = defY; }
+      else { tx = Math.max(RINK.gL, Math.min(RINK.gR, px)); ty = Y0 + R; }
+    } else { tx = px + ep; ty = defY; }
+  }
+  [tx, ty] = clampTo(b, tx, ty);
   return { x: tx, y: fl ? 1920 - ty : ty, speed: cfg.speed * k, act };
+}
+// прямая из (qx, qy) в (ax, ay) проходит ближе RR + 10 к бите соперника (ox, oy) — в системе бота
+function blockedBy(qx, qy, ax, ay, ox, oy) {
+  const RR = TUNE.malletR + TUNE.puckR, dx = ax - qx, dy = ay - qy, L2 = dx * dx + dy * dy;
+  const t = Math.max(0, Math.min(1, ((ox - qx) * dx + (oy - qy) * dy) / L2));
+  return Math.hypot(qx + dx * t - ox, qy + dy * t - oy) < RR + 10;
+}
+// Бот simple — «ребёнок» 6+ (§8.3): держит биту под шайбой, бьёт снизу, не целится; после касания отдёргивает руку.
+// Задержка 0,20 с, бита 2000 px/с, σ 60 (только прицел ex). Как HockeyMatch Unity (Tune.Child*).
+function childThink(S, pl) {
+  const cfg = TUNE.bot.simple, B = S.bot[pl], m = S.m[pl], Y0 = RINK.y0, MID = RINK.mid, RR = TUNE.malletR + TUNE.puckR;
+  const fl = pl === 1, Ly = (y) => (fl ? 1920 - y : y);
+  const H = S.hist, o = H[Math.max(0, H.length - 1 - Math.round(cfg.delay / DT))];
+  if (S.ticks >= B.next) { B.ex = S.rng.gauss() * cfg.sigma; B.next = S.ticks + TUNE.botResample; }
+  const px = o.x, py = Ly(o.y), mx = m.x, my = Ly(m.y);
+  let tx = mx, ty = my, act = "stay";
+  if (m.hitT != null && S.ticks - m.hitT < Math.round(TUNE.simpleBack / DT)) { tx = RINK.cx; ty = Y0 + 250; act = "back"; }
+  else if (py < MID) {
+    if (my < py - RR * 0.5) { tx = px + B.ex; ty = py; act = "chase"; }               // бита ближе к воротам, чем шайба, — прямо в шайбу
+    else if (Math.abs(mx - px) < 160) { tx = px + (mx >= px ? 180 : -180); ty = my; act = "side"; } // шаг вбок
+    else { tx = mx; ty = py - 160; act = "under"; }                                     // встать под шайбу
+  }
+  [tx, ty] = clampTo(bounds(2), tx, ty);
+  return { x: tx, y: fl ? 1920 - ty : ty, speed: cfg.speed, act };
 }
 
 function step(S) {
@@ -353,9 +407,14 @@ function step(S) {
   }
   if (S.state === "goal") { S.t--; homeMallets(S); if (S.t <= 0) serve(S); record(S); return; }
   S.playTicks++;
+  if (S.blow) { // «выдох» (§6 v2): к точке подачи не быстрее blowSpeed, у точки тормозит (v = blowBrake · расстояние), ближе blowStop — стоп
+    const bx = S.blow.x - p.x, by = S.blow.y - p.y, bd = Math.hypot(bx, by);
+    if (bd < TUNE.blowStop) { p.vx = p.vy = 0; S.blow = null; }
+    else { const v = Math.min(TUNE.blowSpeed, bd * TUNE.blowBrake); p.vx = bx / bd * v; p.vy = by / bd * v; }
+  }
   for (const pl of [1, 2]) {
     const m = S.m[pl], c = S.ctrl[pl];
-    if (c !== "human") { const t = botThink(S, pl, c); m.tx = t.x; m.ty = t.y; m.max = t.speed; } else m.max = TUNE.malletMax;
+    if (c !== "human") { const t = botThink(S, pl, c); m.tx = t.x; m.ty = t.y; m.max = t.speed; S.act[pl] = t.act; } else { m.max = TUNE.malletMax; S.act[pl] = ""; }
     const [tx, ty] = clampTo(bounds(pl), m.tx, m.ty);
     let dx = tx - m.x, dy = ty - m.y; const L = Math.hypot(dx, dy), lim = m.max * DT;
     if (L > lim) { dx *= lim / L; dy *= lim / L; }
@@ -375,16 +434,22 @@ function step(S) {
     if (p.y < RINK.y0 && Math.abs(p.x - RINK.cx) <= 180) { scoreGoal(S, 1); record(S); return; }
     if (p.y > RINK.y1 && Math.abs(p.x - RINK.cx) <= 180) { scoreGoal(S, 2); record(S); return; }
   }
+  // ударила движущаяся бита — «выдох» кончился; стоящую биту шайба обтекает (следующий тик снова правит скорость к цели)
+  if (S.blow && (S.m[1].hitT === S.ticks && Math.hypot(S.m[1].vx, S.m[1].vy) > TUNE.blowKeep || S.m[2].hitT === S.ticks && Math.hypot(S.m[2].vx, S.m[2].vy) > TUNE.blowKeep)) S.blow = null;
   const sp = Math.hypot(p.vx, p.vy);
   if (sp > S.maxSpeed) S.maxSpeed = sp;
   p.ang += p.vx * DT / TUNE.puckR * 0.5;
-  // антизастой: медленнее 40 px/с дольше 4 с — Ом этой половины дует к центру половины
-  if (sp < TUNE.stallSpeed) {
-    if (++S.stall >= Math.round(TUNE.stallSec / DT)) {
+  // антизастой v2 (§6, D-86): у борта — через 1 с (у торца при любой скорости, у бокового медленнее 120), в катке — медленнее 40 через 4 с.
+  // Ом этой половины дует: шайба едет к точке подачи своей половины и тормозит там; пока идёт выдох, счётчик стоит
+  const atEnd = p.y < RINK.y0 + TUNE.endZone || p.y > RINK.y1 - TUNE.endZone;
+  const atWall = atEnd || p.x < RINK.x0 + TUNE.puckR + TUNE.sideZone || p.x > RINK.x1 - TUNE.puckR - TUNE.sideZone;
+  if (!S.blow && (atEnd || sp < (atWall ? TUNE.stallWallSpeed : TUNE.stallSpeed))) {
+    if (++S.stall >= Math.round((atWall ? TUNE.stallWallSec : TUNE.stallSec) / DT)) {
       S.stall = 0;
-      const half = p.y < RINK.mid ? 2 : 1, cy = half === 2 ? (RINK.y0 + RINK.mid) / 2 : (RINK.mid + RINK.y1) / 2;
+      const half = p.y < RINK.mid ? 2 : 1, cy = half === 2 ? RINK.serveTop : RINK.serveBot;
       const dx = RINK.cx - p.x, dy = cy - p.y, d = Math.hypot(dx, dy);
       if (d > TUNE.blowSkip) {
+        S.blow = { x: RINK.cx, y: cy };
         p.vx = dx / d * TUNE.blowSpeed; p.vy = dy / d * TUNE.blowSpeed;
         S.face[half] = { f: "blow", until: S.ticks + 18 };
         fx(S, { k: "blow", half, x: p.x, y: p.y, vx: p.vx, vy: p.vy });
@@ -403,9 +468,9 @@ function runBotMatch(a, b, seed, maxSec) {
 
 // ---- Приложение: режимы, итог, награды (§4, §9) -----------------------------------
 const LS = {
-  get(k) { try { return localStorage.getItem("lab.hockey." + k); } catch (e) { return null; } },
-  set(k, v) { try { localStorage.setItem("lab.hockey." + k, v); } catch (e) {} },
-  clear() { try { for (const k of Object.keys(localStorage)) if (k.startsWith("lab.hockey.")) localStorage.removeItem(k); } catch (e) {} },
+  get(k) { try { return localStorage.getItem("lab.hockey2." + k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem("lab.hockey2." + k, v); } catch (e) {} },
+  clear() { try { for (const k of Object.keys(localStorage)) if (k.startsWith("lab.hockey2.")) localStorage.removeItem(k); } catch (e) {} },
 };
 const MODES = ["easy", "medium", "hard", "duo"];
 let S = null, scene = "menu", paused = 0, nextSeed = 1, result = null, watch = false, hintOn = false;
@@ -434,9 +499,15 @@ function finishMatch() {
   result = { state, stars, award, newRecord, winner: w, score: S.score[1], score2: S.score[2], mode: S.mode, seconds: +(S.ticks * DT).toFixed(1) };
   try { const b = Number(LS.get("bestStars") || 0); if (stars > b) LS.set("bestStars", String(stars)); } catch (e) {}
 }
+// Плавный возврат бит после гола — только картинка: Sim ставит биты на исходные со следующего тика (§7 п. 2),
+// а рисуем их съезжающими туда за RETURN_TICKS (0,18 с, ease-out). На Sim и тестовые ключи m1x… не влияет.
+const RETURN_TICKS = 11;
+let vRet = null; // { S, tick, from: [_, {x,y}, {x,y}] }
 function tick() {
   if (!S || scene !== "game" || paused) return;
+  const g0 = S.lastGoal;
   step(S);
+  if (S.lastGoal !== g0 && S.state === "goal") vRet = { S, tick: S.ticks, from: [null, { x: S.m[1].x, y: S.m[1].y }, { x: S.m[2].x, y: S.m[2].y }] };
   if (S.state === "over" && !result) finishMatch();
   if (S.state === "over" && S.overT === Math.round(TUNE.endPanel / DT)) showEnd();
 }
@@ -641,8 +712,16 @@ function drawCandy(x, y, r, ang, alpha) {
   ctx.fillStyle = "rgba(255,255,255,.8)"; ctx.beginPath(); ctx.ellipse(x - r * 0.35, y - r * 0.42, r * 0.28, r * 0.15, -0.6, 0, 7); ctx.fill();
   ctx.restore();
 }
+function viewMallet(pl) {
+  const m = S.m[pl];
+  if (!vRet || vRet.S !== S) return { x: m.x, y: m.y };
+  const age = S.ticks - vRet.tick + (manual ? 0 : Math.min(1, acc / DT));
+  if (age >= RETURN_TICKS || age < 0) return { x: m.x, y: m.y };
+  const k = 1 - Math.pow(1 - age / RETURN_TICKS, 3), f = vRet.from[pl];
+  return { x: f.x + (m.x - f.x) * k, y: f.y + (m.y - f.y) * k };
+}
 function drawMallet(pl) {
-  const m = S.m[pl], R = TUNE.malletR, c = pl === 1 ? [C.p1, C.p1sh, C.p1hi] : [C.p2, C.p2sh, C.p2hi];
+  const m = viewMallet(pl), R = TUNE.malletR, c = pl === 1 ? [C.p1, C.p1sh, C.p1hi] : [C.p2, C.p2sh, C.p2hi];
   ctx.fillStyle = "rgba(74,37,18,.22)"; ctx.beginPath(); ctx.ellipse(m.x + 8, m.y + 12, R, R * 0.94, 0, 0, 7); ctx.fill();
   ctx.fillStyle = c[1]; ctx.beginPath(); ctx.arc(m.x, m.y, R, 0, 7); ctx.fill();
   ctx.fillStyle = c[0]; ctx.beginPath(); ctx.arc(m.x, m.y - 4, R - 8, 0, 7); ctx.fill();
@@ -857,6 +936,13 @@ window.__game = {
       "hockey.drawnOmFrame": omFrame, "hockey.drawnTossFrame": tossFrame, "hockey.tossHeightPx": +(62 * OM_K * charFrame(2).sy).toFixed(1), "hockey.omHeightPx": +(72 * OM_K).toFixed(1),
       "hockey.topRotated": S.mode === "duo", "hockey.hint": hintOn, "hockey.fingers": [...touches.values()].filter((t) => t.pl).length,
       "hockey.owner1": owner[1], "hockey.owner2": owner[2],
+      // бот v2: решение (botAct — верхний бот), ошибка на траекторию (botErr — ep верхнего), прицел, доводка, «выдох»
+      "hockey.botAct": S.act[2], "hockey.botAct1": S.act[1], "hockey.botErr": S.bot[2].ep, "hockey.botErr1": S.bot[1].ep,
+      "hockey.botEx": S.bot[2].ex, "hockey.botCommit": !!S.bot[2].sk,
+      "hockey.m1hitT": S.m[1].hitT == null ? null : S.m[1].hitT, "hockey.m2hitT": S.m[2].hitT == null ? null : S.m[2].hitT,
+      "hockey.m2hitHardT": S.m[2].hitHardT == null ? null : S.m[2].hitHardT,
+      "hockey.blow": !!S.blow, "hockey.blowX": S.blow ? S.blow.x : null, "hockey.blowY": S.blow ? S.blow.y : null,
+      "hockey.viewM1x": viewMallet(1).x, "hockey.viewM1y": viewMallet(1).y, "hockey.viewM2x": viewMallet(2).x, "hockey.viewM2y": viewMallet(2).y,
     });
     return st;
   },
@@ -873,9 +959,13 @@ window.__game = {
       else if (a === "hockey.start") r = startMatch(p.mode, p.seed);
       else if (a === "hockey.pause") { pause(p.player || 1); r = !!paused; }
       else if (a === "hockey.resume") { resume(); r = true; }
-      else if (a === "hockey.botVsBot") {
+      else if (a === "hockey.botVsBot") { // a — низ, b — верх; easy / medium / hard / simple / adult. watch: true — тот же матч на экране
         const ok = (k) => k in TUNE.bot;
-        if (!ok(p.a) || !ok(p.b)) r = false; else r = runBotMatch(p.a, p.b, p.seed != null ? p.seed : 1, p.maxSec);
+        if (!ok(p.a) || !ok(p.b)) r = false;
+        else if (p.watch) {
+          const md = LEVELS.includes(p.b) ? p.b : "hard", sd = p.seed != null ? p.seed : 1;
+          startMatch(md, sd); S = newMatch(md, sd, p.a, p.b); hintOn = false; r = true;
+        } else r = runBotMatch(p.a, p.b, p.seed != null ? p.seed : 1, p.maxSec);
       }
       else if (!S || scene !== "game") r = false;
       else if (a === "hockey.touch") r = touch(p.id != null ? p.id : 0, p.phase, +p.x, +p.y);
@@ -884,7 +974,7 @@ window.__game = {
         if (S.ctrl[pl] !== "human") r = false; else { setTarget(pl, +p.x, +p.y); r = true; }
       }
       else if (a === "hockey.setPuck") {
-        const q = S.puck; q.x = +p.x; q.y = +p.y; q.vx = +(p.vx || 0); q.vy = +(p.vy || 0); S.stall = 0;
+        const q = S.puck; q.x = +p.x; q.y = +p.y; q.vx = +(p.vx || 0); q.vy = +(p.vy || 0); S.stall = 0; S.blow = null;
         if (S.state === "countdown") { S.state = "play"; S.t = 0; }
         r = S.state === "play";
       }
