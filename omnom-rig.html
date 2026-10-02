@@ -30,6 +30,7 @@
 // ==== TUNE: главные числа — крутить здесь =====================================================
 // Поле 320×420 u; 1 u = 3,375 px при ширине 1080 → Ом Ном 72 u ≈ 243 px (как в играх). «Качели» — масштаб Rope'n'Fly v2: зум 0,5 (видно 640 u), Ом Ном ≈ 122 px.
 // Риг: assets/omnom-rig/omnom_rig.json (данные рига v2 художника: руки = передние лапы, хват grip_l), слои, клипы и пружины — assets/omnom-rig/omnom_clips.json (v3, D-56).
+// Риг 2.3 (D-73): поднятая рука (плечо в front) слита с телом — общий контур, край только над лицом, тень-складка; см. drawRig.
 const W = 320, H = 420;
 const PX = 6.4024, K = 1 / PX;          // px холста рига (= холст кадров v2 525×506) на 1 u
 const DT = 1 / 60;
@@ -190,11 +191,15 @@ let FEET, CENTER, MOUTH_O, MOUTH_PT, REST, TRAVEL, GRIP_HANG, GRIP_PT, GRIP_OFF 
 const ARM_IDS = ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"];
 // какие руки реакция может взять у состояния тела: [левая, правая]; на верёвке левая держит верёвку
 const STATE_ARMS = { stand: [1, 1], hang: [0, 1], fly: [1, 1] };
+const MERGE_FADE = 0.05;   // с: появление / уход складки и края слитой руки (3 кадра при 60 fps)
+let CHAIN_OF = {}, CHAIN_PI = [];   // часть → цепочка руки (0 — левая, 1 — правая), из skin.chains рига 2.3
 
 function rigBuild(J, CJ) {
   R.J = J; R.mot = CJ.motion;
   J.parts.forEach((p, i) => { R.bi[p.id] = i; });   // в json v2 ребёнок может стоять раньше родителя (paw_fl → fore_l): индексы, потом родители, мир — по порядку обхода
   J.parts.forEach((p) => R.parts.push({ id: p.id, pi: p.parent ? R.bi[p.parent] : -1, pivot: p.pivot }));
+  const SK = J.skin || { chains: {} }; CHAIN_OF = {}; for (const id of (SK.chains.l || [])) CHAIN_OF[id] = 0; for (const id of (SK.chains.r || [])) CHAIN_OF[id] = 1;
+  CHAIN_PI = Object.keys(CHAIN_OF).map((id) => J.parts.findIndex((p) => p.id === id)).filter((i) => i >= 0);
   R.NB = R.parts.length; LEGS = ["paw_bl", "paw_br"].map((n) => R.bi[n]); R.order = []; { const seen = new Set(), add = (i) => { if (seen.has(i)) return; const q = R.parts[i].pi; if (q >= 0) add(q); seen.add(i); R.order.push(i); }; for (let i = 0; i < R.NB; i++) add(i); }
   [ROOT, BODY, HEAD, MOUTH, PUPL, PUPR, SPR1, SPR2, SPR3, GRIP, ARML, SHADOW] =
     ["root", "body", "head", "mouth", "pupil_l", "pupil_r", "sprout1", "sprout2", "sprout3", "grip_l", "arm_l", "shadow"].map((n) => R.bi[n]);
@@ -209,8 +214,13 @@ function rigBuild(J, CJ) {
     let fam = null; for (const fn of ["body", "eyes", "lids"]) if (R.fam[fn].slots.includes(s.id)) fam = fn;
     if (fam) { o.fam = fam; const F = J.families[fam]; o.morph = makeMorph(F.members.map((m) => F.forms[m][s.id])); }
     else { o.path = new Path2D(s.d); o.nums = parseD(s.d).nums; }
+    // риг 2.3 (D-73): цепочка руки (skin.chains), складки только у слитой цепочки, сдвиг тени woff, маска лица у передней копии контура
+    o.chain = CHAIN_OF[s.part] != null ? CHAIN_OF[s.part] : -1; o.mergeOnly = !!s.mergeOnly; o.woff = s.woff || null; o.fca = s.frontClipAny || null;
     R.shapes.push(o); R.byId[s.id] = o;
   });
+  // передняя копия формы слитой цепочки: отдельная запись в списке рисования (ez хранится на форме)
+  for (const o of R.shapes) if (o.chain >= 0 && o.zFront != null) { o.fc = Object.assign({}, o, { copy: true, fc: null });
+    if (o.fca) o.fc2 = Object.assign({}, o, { copy: true, fc: null, fca: null }); }   // fc2 — полная обводка на zFront (лапа спереди без плеча)
   for (const g in J.families.mouth.groups) { const G = J.families.mouth.groups[g];
     R.mouth[g] = { members: G.members, slots: G.slots.map((sl, i) => ({ id: sl.id, pi: MOUTH, part: "mouth", z: sl.z, fill: sl.fill,
       clip: sl.clip || null, ord: 1000 + i, mouth: true, fam: "mouth", morph: makeMorph(G.members.map((m) => G.forms[m][sl.id])),
@@ -395,24 +405,69 @@ function shapePath(s, ds) { return s.morph ? morphPath(s.morph, famW(s, ds)) : s
 function resolveShape(id, ds) { return R.byId[id] || R.mouth[ds.mg].byId[id]; }
 const MO = [1, 0, 0, 1, 0, 0];
 function shapeM(s, ds, V, out) { mmul(V, ds.world[s.pi], out); if (s.mouth) { const o = MOUTH_O; out[4] += out[0] * o[0] + out[2] * o[1]; out[5] += out[1] * o[0] + out[3] * o[1]; } return out; }
-const TM = [1, 0, 0, 1, 0, 0], TC = [1, 0, 0, 1, 0, 0];
+const TM = [1, 0, 0, 1, 0, 0], TC = [1, 0, 0, 1, 0, 0], TW = [1, 0, 0, 1, 0, 0];
+// Риг 2.3 (D-73, «Общий контур (2.3)» в README рига, skin.rule): цепочка руки СЛИТА, если её плечо arm_* в front.
+// Слитая: каждая форма с zFront — две записи: на своём z (общий проход «контуры, потом заливки» с телом — один внешний контур
+// «тело + рука», на стыке линии нет) и копия на zFront (рука перед лицом); у копии контура с frontClipAny тёмный край виден
+// только над глазами и открытым ртом (объединение — заливка по разу на каждую маску). Складки .crease (mergeOnly) — только у слитой.
+// Не слитая (в front одна лапа: chew, handsDown, handsMid) — как 2.2: zFront вместо z, полная обводка.
+// Плавность (шаг 3 задачи D-73): ds.frontW[часть] 0..1 — вес «часть спереди» (догоняет front за MERGE_FADE, 3 кадра при 60 fps),
+// ds.mergeA[c] — вес слияния цепочки c (вверх сразу, вниз за MERGE_FADE). Форма цепочки с zFront всегда рисуется на своём z
+// (сзади её закрывает тело — ничего не меняет), копия на zFront — с весом frontW: рука проявляется над лицом и уходит за 3 кадра.
+// Контур копии: край над лицом — min(frontW, merge), полная обводка 2.2 — max(0, frontW − merge): у слитой обводки на стыке нет и при
+// уходе в «за тело», а у лапы, оставшейся спереди без плеча (joy / shrug → handsDown), полная обводка проявляется за 3 кадра.
+// Складка — min(merge, frontW). Нет весов в ds (статичные позы рига) — веса 0 / 1 по front.
 function drawRig(ctx, V, ds) {
   const list = R.list; list.length = 0;
+  const MA = ds.mergeA, FW = ds.frontW, mL = ds.front.has("arm_l"), mR = ds.front.has("arm_r");
   for (const s of R.shapes) { if (s.hidden && !ds.show.has(s.id)) continue; if (ds.hide.has(s.part) || ds.hide.has(s.id)) continue;   // hide: кости или отдельные формы (складки долей в hang / fly, риг 2.1)
-    s.ez = s.zFront != null && ds.front.has(s.part) ? s.zFront : s.z; list.push(s); }
+    const ch = s.chain;
+    if (ch < 0 || !(s.fc || s.mergeOnly)) { s.ez = s.zFront != null && ds.front.has(s.part) ? s.zFront : s.z; s.ea = 1; list.push(s); continue; }
+    const m = MA ? MA[ch] : (ch ? mR : mL) ? 1 : 0, w = FW ? FW[s.pi] : ds.front.has(s.part) ? 1 : 0;
+    if (s.mergeOnly) { const a = Math.min(m, w); if (a <= 0.004) continue; s.ez = s.z; s.ea = a; list.push(s); continue; }
+    s.ez = s.z; s.ea = 1; list.push(s);
+    if (w <= 0.004) continue;
+    if (s.fca) { const e = Math.min(w, m), f = Math.max(0, w - m);
+      if (e > 0.004) { s.fc.ez = s.zFront; s.fc.ea = e; list.push(s.fc); }
+      if (f > 0.004) { s.fc2.ez = s.zFront; s.fc2.ea = f; list.push(s.fc2); } }
+    else { s.fc.ez = s.zFront; s.fc.ea = w; list.push(s.fc); } }
   for (const s of R.mouth[ds.mg].slots) { s.ez = s.z; list.push(s); }
-  list.sort((a, b) => a.ez - b.ez || a.ord - b.ord);
+  list.sort((a, b) => a.ez - b.ez || a.ord - b.ord || (a.copy ? 1 : 0) - (b.copy ? 1 : 0));
+  // копии с весом < 1 (3 кадра появления / ухода) — в свой слой на цепочку, слой одним drawImage с альфой: иначе полупрозрачная тёмная
+  // форма контура просвечивает сквозь полупрозрачную заливку и лапа темнеет целиком. Копии (zFront 850+) — самые верхние записи.
+  const LA = drawRig.la || (drawRig.la = [0, 0]); LA[0] = LA[1] = 0;
+  for (const s of list) if (s.copy && !s.fca) LA[s.chain] = Math.max(LA[s.chain], s.ea);
+  const lay = [LA[0] > 0.004 && LA[0] < 0.996 ? rigLayer(ctx, 0) : null, LA[1] > 0.004 && LA[1] < 0.996 ? rigLayer(ctx, 1) : null];
   for (const s of list) {
     if (s.blur) { if (ds.shadowA <= 0.01) continue; shapeM(s, ds, V, TM); const k = ds.shadowS;
       ctx.setTransform(TM[0], TM[1], TM[2], TM[3], TM[4], TM[5]); ctx.globalAlpha = s.opacity * ds.shadowA;
       ctx.translate(SH_IMG.cx, SH_IMG.cy); ctx.scale(k, k); ctx.translate(-SH_IMG.cx, -SH_IMG.cy);
       ctx.drawImage(SH_IMG.img, SH_IMG.x, SH_IMG.y); ctx.globalAlpha = 1; continue; }
+    const L = s.copy ? lay[s.chain] : null;
+    if (L) drawShape(L, s, ds, V, Math.min(1, s.ea / LA[s.chain])); else drawShape(ctx, s, ds, V, s.mouth ? 1 : s.ea);
+  }
+  for (let c = 0; c < 2; c++) if (lay[c]) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = LA[c]; ctx.drawImage(lay[c].canvas, 0, 0); ctx.restore(); }
+}
+function rigLayer(ctx, c) { const k = "L" + c, cv = ctx.canvas, L = (rigLayer[k] = rigLayer[k] || document.createElement("canvas").getContext("2d"));
+  if (L.canvas.width !== cv.width || L.canvas.height !== cv.height) { L.canvas.width = cv.width; L.canvas.height = cv.height; }
+  L.setTransform(1, 0, 0, 1, 0, 0); L.clearRect(0, 0, cv.width, cv.height); return L; }
+function drawShape(ctx, s, ds, V, a) {
+  if (a <= 0.004) return;
+  if (a < 1) ctx.globalAlpha = a;
+  if (s.copy && s.fca) {   // край передней копии: объединение масок лица — по заливке на каждую (один Path2D из разных обходов вырезал бы пересечение)
+    shapeM(s, ds, V, TM); ctx.fillStyle = s.fill; const path = shapePath(s, ds);
+    for (const id of s.fca) { const c = resolveShape(id, ds); if (!c) continue;
+      ctx.save(); shapeM(c, ds, V, TC); ctx.setTransform(TC[0], TC[1], TC[2], TC[3], TC[4], TC[5]); ctx.clip(shapePath(c, ds));
+      ctx.setTransform(TM[0], TM[1], TM[2], TM[3], TM[4], TM[5]); ctx.fill(path); ctx.restore(); } }
+  else {
     if (s.clip) { ctx.save(); for (const id of s.clip) { const c = resolveShape(id, ds); shapeM(c, ds, V, TC);
       ctx.setTransform(TC[0], TC[1], TC[2], TC[3], TC[4], TC[5]); ctx.clip(shapePath(c, ds)); } }
-    shapeM(s, ds, V, TM); ctx.setTransform(TM[0], TM[1], TM[2], TM[3], TM[4], TM[5]);
+    shapeM(s, ds, V, TM);
+    if (s.woff) { mmul(V, ds.place, TW); const wx = s.woff[0], wy = s.woff[1]; TM[4] += TW[0] * wx + TW[2] * wy; TM[5] += TW[1] * wx + TW[3] * wy; }   // сдвиг после кости, в осях персонажа (вид · место)
+    ctx.setTransform(TM[0], TM[1], TM[2], TM[3], TM[4], TM[5]);
     ctx.fillStyle = s.fill; ctx.fill(shapePath(s, ds));
-    if (s.clip) ctx.restore();
-  }
+    if (s.clip) ctx.restore(); }
+  if (a < 1) ctx.globalAlpha = 1;
 }
 function mouthStats(ds) { const G = R.mouth[ds.mg]; let teeth = 0;
   for (const s of G.slots) if (s.upper) { morphPath(s.morph, ds.mw); if (polyArea(s.morph.buf) > 25) teeth++; }
@@ -432,7 +487,7 @@ function makeOm(seed) {
     blink: { next: 1.2, t0: -9 }, noAutoBlink: false,
     shown: { mg: "closed", mw: Float64Array.of(1) }, pend: null, mgB: "closed", mgX: null,
     simT: 0, rng: mulberry(seed || 7), place: { x: 160, y: 344, piv: FEET, rot: 0, flip: 1, fx: 1 },
-    ds: newDS(), pupilNorm: [0, 0], groupSwitches: 0, sv: [1, 0, 1], svOk: false, xEnd: -9, dm: [1, 0, 0, 1, 0, 0], axisDev: 0, rope: null, armRope: 0, armRopeLeft: 0, lastSq: 0, lastLift: 0, lastLean: 0, wR: 0, aw: 0, armMask: [1, 1], state: "stand", open: 0, stretch: 0, tremble: 0 };
+    ds: newDS(), pupilNorm: [0, 0], groupSwitches: 0, sv: [1, 0, 1], svOk: false, xEnd: -9, dm: [1, 0, 0, 1, 0, 0], axisDev: 0, rope: null, armRope: 0, armRopeLeft: 0, lastSq: 0, lastLift: 0, lastLean: 0, wR: 0, aw: 0, armMask: [1, 1], state: "stand", open: 0, stretch: 0, tremble: 0, mA: [0, 0], wF: new Float64Array(R.NB) };
   om.B.keys = om.B.def.variants.breath.keys;
   computePlace(om); om.ds = dsFromPose(R.poses.neutral, om.ds.place); return om;
 }
@@ -547,6 +602,10 @@ function omStep(om, dt) {
   // 7. собираем DS
   ds.v.set(P.b); ds.body.set(P.body); ds.eyes.set(P.eyes); ds.lids.set(lids);
   ds.mg = om.shown.mg; ds.mw = om.shown.mw; ds.show = P.show; ds.hide = P.hide; ds.front = P.front;
+  { const st = dt / MERGE_FADE;   // риг 2.3: веса слияния цепочек (вверх сразу, вниз за MERGE_FADE) и «часть спереди» (оба направления)
+    for (let q = 0; q < 2; q++) om.mA[q] = P.front.has(q ? "arm_r" : "arm_l") ? 1 : Math.max(0, om.mA[q] - st);
+    for (const i of CHAIN_PI) { const tg = P.front.has(R.parts[i].id) ? 1 : 0; om.wF[i] = tg ? Math.min(1, om.wF[i] + st) : Math.max(0, om.wF[i] - st); }
+    ds.mergeA = om.mA; ds.frontW = om.wF; }
   // зрачки: покой + поза + взгляд, зажим в эллипс СВОЕГО глаза (формы глаз смешаны теми же весами)
   for (let e = 0; e < 2; e++) { const id = e ? PUPR : PUPL, side = e ? "r" : "l", base = e ? pr : pl;
     let cx = 0, cy = 0, rx = 0, ry = 0; ["neutral", "wide", "wide2"].forEach((f, i) => { const T = TRAVEL[f][side], w = P.eyes[i];

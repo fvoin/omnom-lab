@@ -313,7 +313,9 @@
   "reachF": {
    "base": "reach",
    "front": ["arm_l", "fore_l", "paw_fl", "arm_r", "fore_r", "paw_fr"
-   ]
+   ],
+   "bones": {"arm_r": {"r": -150}, "fore_r": {"r": -30}},
+   "note": "rig 2.3 (D-73): the right paw is raised out of the body side (upper arm out, forearm up); the rig reach pose kept it as a check mark over the chest, which dissolves in the shared contour"
   },
   "joyF": {
    "base": "joy",
