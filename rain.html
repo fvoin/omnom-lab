@@ -105,37 +105,38 @@ const OMS = (() => {
 // Конфеты кончились — итог: очки (мятная 1, золотая 5), звёзды. Проиграть нельзя.
 const TUNE = {
   gravity: 1100,      // u/с²
-  timeScale: 1.4,     // ускорение полёта: тот же путь за 1/timeScale времени (ручка)
+  timeScale: 1.15,    // «скорость игры» (ручка): все времена полёта ниже — игровые секунды; на экране они идут в timeScale раз быстрее, путь тот же
   springK: 6.0,       // u/с на 1 u оттяжки (ручка): выход vx = −(40 + pull × 6,0), 40–640 u/с
   vx0: 40,
   pullMax: 100, pullMin: 10, pullGain: 1.4, // палец 71 u → оттяжка 100
-  tubeT: 0.25,        // с, конфета в трубе («вжух»)
+  tubeT: 0.35,        // игр. с, конфета в трубе («вжух»)
   aimPreview: 1,      // 0 — пунктир до первой желейки, 1 — плюс короткий хвост после неё (ручка)
   candyR: 12, candyHitR: 9,
   pegHalf: 7, pegThick: 12, pegGap: 17, pegMin: 42, pegMax: 50, jitter: 7,
-  e: 0.72, eTired: 0.3, tiredT: 3.0, // «усталость»: после 3,0 с полёта e 0,3, конфета бледнеет
+  e: 0.68, eTired: 0.3, tiredT: 3.4, // «усталость»: после tiredT игр. с полёта e 0,3, конфета бледнеет
   kt: 0.98, wallE: 0.6, maxSpeed: 1126,
   gold0: 7, goldStep: 2, goldMax: 12, // золотых на поле n: min(12, 7 + 2(n − 1)) — 7, 9, 11, 12…
   shots: 8,           // конфет на раунд; поймал тележкой — +1, поле очищено — +clearBonus
   clearBonus: 2,
   refill: 1.0,        // доля сбитых мятных, которые «дождь» возвращает после выстрела (0 — поле редеет, как в A)
-  bubbleT: 0.8,       // с, пузырь (ручка)
+  bubbleT: 0.92, bubbleArr: 0.14, // игр. с: пузырь живёт; лопается через bubbleArr после прибытия
   bubbleSpeed: 300,   // u/с, пузырь плывёт к пальцу
   bubbleUp: 140,      // u, куда плывёт пузырь без точки (act tap без координат): вверх
   cartSpeed: 0.6, cartAmp: 104, catchW: 15, omScale: 0.7,
   popGap: 0.06, popTotal: 1.0,
-  stuckV: 40, stuckT: 0.5, stuckR: 16, shotMax: 7,
+  stuckV: 40, stuckT: 0.7, stuckR: 16, shotMax: 9.8, // игр. с
   firstTries: 60,
   aimTries: 10, aimNoise: 3,
   ptsMint: 1, ptsGold: 5,
   moveFrom: 3, moveAmp: 26, movePeriod: 3.6, // с поля 3 — едущий ряд, с поля 5 — два
-  star2: 300, star3: 440, // пороги звёзд: 2★ ≈ медиана бота 0,5 (303), 3★ ≈ 0,9 × медиана бота 1 (491) — D-27, rain.md §8
+  star2: 280, star3: 415, // пороги звёзд: 2★ ≈ медиана бота 0,5 (281), 3★ ≈ 0,9 × медиана бота 1 (461) — D-27, rain.md §8
 };
 const KNOBS = [
   ["springK", "Пружина, u/с на 1 u", 4.5, 8, 0.1],
   ["e", "Упругость желеек", 0.5, 0.95, 0.01],
   ["refill", "Дождь: доля возврата", 0, 1, 0.1],
-  ["bubbleT", "Пузырь, с", 0.3, 1.5, 0.05],
+  ["timeScale", "Скорость игры", 0.6, 1.6, 0.05],
+  ["bubbleT", "Пузырь, игр. с", 0.4, 2, 0.05],
   ["bubbleSpeed", "Пузырь, u/с", 120, 500, 10],
   ["catchW", "Рот тележки ±u", 8, 24, 1],
   ["aimPreview", "Пунктир: +хвост", 0, 1, 1],
@@ -316,12 +317,12 @@ function stepBody(c, pegs, dt, onHit, e) {
 }
 // Один тик полёта (SUB подшагов + таймер пузыря). Возвращает true, если пузырь лопнул на этом тике.
 function flyTick(c, pegs, e, onHit) {
-  const dt = DT * TUNE.timeScale / SUB;
+  const g = DT * TUNE.timeScale, dt = g / SUB; // игровое время: при «скорости игры» k всё в полёте идёт в k раз быстрее, путь тот же
   for (let s = 0; s < SUB; s++) stepBody(c, pegs, dt, onHit, e);
   if (c.bubble) { // лопается через bubbleT или через 0,12 с после прибытия к точке
-    c.bubbleT += DT;
-    if (Math.hypot(c.btx - c.x, c.bty - c.y) < 8) c.arrT = (c.arrT || 0) + DT;
-    if (c.bubbleT >= TUNE.bubbleT || c.arrT >= 0.12) { c.bubble = false; c.arrT = 0; c.vx *= 0.3; c.vy = 0; return true; }
+    c.bubbleT += g;
+    if (Math.hypot(c.btx - c.x, c.bty - c.y) < 8) c.arrT = (c.arrT || 0) + g;
+    if (c.bubbleT >= TUNE.bubbleT || c.arrT >= TUNE.bubbleArr) { c.bubble = false; c.arrT = 0; c.vx *= 0.3; c.vy = 0; return true; }
   }
   return false;
 }
@@ -336,7 +337,7 @@ function simRun(c0, pegs, t0, T0, o) {
     if (o.tap && !tapped && t >= o.tap.t) { tapped = true; startBubble(c, o.tap.x, o.tap.y); }
     if (mv.length) placeMoving(pegs, T);
     flyTick(c, pegs, t >= TUNE.tiredT ? TUNE.eTired : TUNE.e, hit);
-    t += DT; T += DT;
+    t += DT * TUNE.timeScale; T += DT * TUNE.timeScale;
     if (o.pts) o.pts.push({ x: c.x, y: c.y, h: hits });
     if (o.first && firstPeg) break;
     if (o.stopHits && hits >= o.stopHits) break;
@@ -421,7 +422,7 @@ function sfx(kind, i, v) {
   try {
     const t = AC.currentTime, st = Math.pow(2, Math.min(i || 0, 26) / 12); v = v == null ? 1 : v;
     if (kind === "creak") tone("square", 260 + (i || 0) * 50, 200 + (i || 0) * 50, 0, t, 0.035, 0.035);
-    else if (kind === "whoosh") { tone("sawtooth", 160, 1400, 0, t, TUNE.tubeT, 0.05); tone("sine", 300, 1800, 0, t, TUNE.tubeT, 0.08); }
+    else if (kind === "whoosh") { const d = TUNE.tubeT / TUNE.timeScale; tone("sawtooth", 160, 1400, 0, t, d, 0.05); tone("sine", 300, 1800, 0, t, d, 0.08); }
     else if (kind === "boing") { const f = 247 * st; tone("triangle", f * 0.7, f * 1.25, f, t, 0.2, 0.24 * v); }
     else if (kind === "gold") { const f = 494 * st; tone("sine", f * 2, f * 2, 0, t + 0.02, 0.18, 0.1); }
     else if (kind === "pop") { const f = 520 * Math.pow(2, Math.min(i || 0, 30) / 24); tone("sine", f * 1.8, f * 0.6, 0, t, 0.08, 0.15); }
@@ -491,7 +492,7 @@ function popPeg(p, k, noScore) {
 function endShot(caught) {
   const c = S.candy;
   S.lastShot = { hits: S.chain, gold: S.shotGold, caught, bubble: S.bubbleUsed, flight: +S.flightT.toFixed(2), pull: +S.lastPull.toFixed(1) };
-  if (STATS) STATS.push({ flight: S.flightT, caught, chain: S.chain, gold: S.shotGold, pull: S.lastPull, bubble: S.bubbleUsed, x: c.x, fieldShot: S.fieldShot, field: S.field, shot: S.shot });
+  if (STATS) STATS.push({ flight: S.flightT / TUNE.timeScale, caught, chain: S.chain, gold: S.shotGold, pull: S.lastPull, bubble: S.bubbleUsed, x: c.x, fieldShot: S.fieldShot, field: S.field, shot: S.shot });
   if (caught) {
     S.shotsLeft++; S.catches++; S.chewT = 0.6;
     popup(cartX(), MOUTH_Y - 34, "+1", "#A82060", 24); sfx("am"); sfx("catch");
@@ -537,7 +538,8 @@ function endRound() {
   updateHud();
 }
 function tick() {
-  S.t += DT; S.phaseT += DT; S.ft += DT; S.cartPh += TUNE.cartSpeed * DT;
+  const GDT = DT * TUNE.timeScale; // игровое время (полёт, тележка, едущие ряды); лопание, дождь, надписи — в реальном
+  S.t += DT; S.phaseT += DT; S.ft += GDT; S.cartPh += TUNE.cartSpeed * GDT;
   if (S.moving) placeMoving(S.pegs, S.ft);
   for (const p of S.pegs) {
     p.sqT += DT; if (p.flash > 0) p.flash -= DT; if (p.cd > 0) p.cd -= DT;
@@ -554,7 +556,7 @@ function tick() {
   S.flyers = S.flyers.filter((f) => f.t < 0.5);
   const c = S.candy;
   if (S.phase === "tube") {
-    S.flightT += DT; c.tt += DT;
+    S.flightT += GDT; c.tt += GDT;
     const T = TUNE.tubeT, t = Math.min(c.tt, T), s = c.v0 * t + (c.vexit - c.v0) * t * t / (2 * T), p = tubePos(c.y0, Math.min(s, c.Ltube));
     c.x = p.x; c.y = p.y; c.rot = s < c.y0 - ELB.cy ? Math.PI / 2 : Math.PI / 2 - (s - (c.y0 - ELB.cy)) / ELB.r;
     if (c.tt >= T - 1e-9) { // выход из колена: горизонтально влево, vy = 0
@@ -562,13 +564,13 @@ function tick() {
       logEv("exit", { vx: +c.vx.toFixed(0) });
     }
   } else if (S.phase === "fly") {
-    S.flightT += DT;
+    S.flightT += GDT;
     if (!S.tired && S.flightT >= TUNE.tiredT) { S.tired = true; logEv("tired", {}); }
     const popped = flyTick(c, S.pegs, S.tired ? TUNE.eTired : TUNE.e, onHit);
-    c.rot += c.vx * DT / 17;
+    c.rot += c.vx * GDT / 17;
     if (popped) { sfx("bpop"); if (!QUIET) S.fx.push({ k: "bpop", x: c.x, y: c.y, t: 0 }); logEv("bubblePop", { x: +c.x.toFixed(0), y: +c.y.toFixed(0) }); }
-    if (Math.hypot(c.vx, c.vy) < TUNE.stuckV && !c.bubble) S.stuckT += DT; else S.stuckT = 0;
-    if (c.bubble || !S.anchor || Math.hypot(c.x - S.anchor.x, c.y - S.anchor.y) > TUNE.stuckR) S.anchor = { x: c.x, y: c.y, t: 0 }; else S.anchor.t += DT;
+    if (Math.hypot(c.vx, c.vy) < TUNE.stuckV && !c.bubble) S.stuckT += GDT; else S.stuckT = 0;
+    if (c.bubble || !S.anchor || Math.hypot(c.x - S.anchor.x, c.y - S.anchor.y) > TUNE.stuckR) S.anchor = { x: c.x, y: c.y, t: 0 }; else S.anchor.t += GDT;
     if (S.stuckT > TUNE.stuckT || S.anchor.t > TUNE.stuckT) { // застряла — желейки под ней лопаются сразу
       S.stuckT = 0; S.anchor = null; const R = TUNE.candyHitR + TUNE.pegThick / 2 + 4;
       for (const p of S.pegs) if (p.alive && ptSeg(c.x, c.y, p.ax, p.ay, p.bx, p.by).d < R) { if (!p.lit) onHit(p, 0, p.x, p.y); popPeg(p, S.chain); }
@@ -608,11 +610,11 @@ function botPlan() {
   const n = Math.max(1, Math.round(1 + skill * (TUNE.aimTries - 1)));
   const rnd = () => TUNE.pullMin + r() * (TUNE.pullMax - TUNE.pullMin);
   const wait = bot && bot.fast ? 0.15 : 0.3 + r() * 1.2;
-  const smart = r() < skill, kidTap = !smart && r() < 0.7 ? { t: 0.4 + r() * 2.2, x: F.x0 + r() * (F.x1 - F.x0), fy: r() } : null;
+  const smart = r() < skill, kidTap = !smart && r() < 0.7 ? { t: (0.4 + r() * 2.2) * TUNE.timeScale, x: F.x0 + r() * (F.x1 - F.x0), fy: r() } : null;
   const noise = (4 + 10 * (1 - skill)) * (r() * 2 - 1), noise2 = (4 + 10 * (1 - skill)) * (r() * 2 - 1);
   const plan = { pull: 0, wait, best: null, smart, kidTap, noise, noise2, decided: false };
   if (n === 1) { plan.pull = rnd(); return plan; }
-  const alive = S.pegs.filter((p) => p.alive && p.drop <= 0), T0 = S.ft + wait + 0.3; let best = null;
+  const alive = S.pegs.filter((p) => p.alive && p.drop <= 0), T0 = S.ft + (wait + 0.3) * TUNE.timeScale; let best = null;
   for (let i = 0; i < n; i++) { const pull = rnd(), s = simShot(alive, pull, T0, false), v = s.gold * 6 + s.n + r() * 0.5; if (!best || v > best.v) best = { v, pull, sim: { n: s.n, gold: s.gold } }; }
   plan.pull = Math.max(TUNE.pullMin, Math.min(TUNE.pullMax, best.pull + (r() * 2 - 1) * TUNE.aimNoise)); plan.best = best;
   return plan;
@@ -620,7 +622,7 @@ function botPlan() {
 function botBubble() {
   const P = S.botPlan, c = S.candy; if (!P || S.bubbleUsed) return;
   if (P.kidTap) { if (S.flightT >= P.kidTap.t) { const k = P.kidTap; P.kidTap = null; tap(k.x, F.y0 + Math.max(0, c.y - F.y0) * k.fy); } return; }
-  if (!P.smart || P.decided || !(c.vy > 0 && (c.y > F.y1 - 60 || S.flightT > 2.6))) return;
+  if (!P.smart || P.decided || !(c.vy > 0 && (c.y > F.y1 - 60 || S.flightT > 2.6 * TUNE.timeScale))) return;
   P.decided = true;
   const alive = S.pegs.filter((p) => p.alive), lit = new Set(S.litOrder);
   const golds = alive.filter((p) => p.gold && !p.lit).sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y)).slice(0, 6);
