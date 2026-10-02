@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" href="data:,">
+<title>Рогатка: Гроздья</title>
+<style>:root{--ink:#4a2512;--cream:#fbebd0;--cream-sh:#e9cfa3;--card:#c98a4b;--card-mid:#b8773d;--card-sh:#8f5427;--act:#e8458a;--act-low:#a82060;--act-line:#4f0c2c}html,body{height:100%;color:var(--ink);margin:0;font:700 14px/1.3 Nunito,system-ui,-apple-system,sans-serif;overflow:hidden}body{-webkit-user-select:none;user-select:none;background:radial-gradient(120% 80% at 30% 0%, #d49a5e 0%, var(--card) 45%, var(--card-mid) 100%);flex-direction:column;height:100dvh;display:flex}header{grid-template-columns:auto 1fr auto auto;align-items:center;gap:4px 6px;padding:8px 10px 4px;display:grid}header a{color:var(--ink);background:var(--cream);box-shadow:0 2px 0 var(--cream-sh);white-space:nowrap;border-radius:10px;padding:5px 8px;font-size:13px;text-decoration:none}header h1{text-align:center;color:var(--cream);text-shadow:0 2px 0 var(--card-sh);white-space:nowrap;margin:0;font-size:17px;font-weight:900}header button{font:inherit;background:var(--cream);color:var(--ink);box-shadow:0 3px 0 var(--cream-sh);cursor:pointer;white-space:nowrap;border:0;border-radius:12px;padding:6px 9px;font-size:13px;font-weight:800}#hud{grid-column:1/5;justify-content:center;gap:8px;font-size:15px;font-weight:900;display:flex}#hud span{background:var(--cream);box-shadow:0 2px 0 var(--cream-sh);border-radius:12px;padding:3px 10px}#hud #seedv{opacity:.8;padding-top:5px;font-size:12px;font-weight:800}#stage{touch-action:none;flex:1;min-height:0;position:relative}canvas{box-shadow:0 0 0 6px var(--card-mid), 0 0 0 9px var(--card-sh), 4px 8px 14px #4a251259;border-radius:14px;display:block;position:absolute}#rule{text-align:center;white-space:nowrap;text-overflow:ellipsis;color:var(--cream);text-shadow:0 1px 0 var(--card-sh);padding:2px 8px;font-size:12px;overflow:hidden}#tune{background:#fbebd0e6;border-radius:12px;margin:0 10px 6px;padding:3px 10px;font-size:12px}#tune summary{cursor:pointer;font-weight:900}#tune label{grid-template-columns:1fr 120px 34px;align-items:center;gap:6px;margin:3px 0;display:grid}#tune input{width:100%}#end{background:#4a251261;justify-content:center;align-items:center;display:none;position:absolute;inset:0}#end .card{background:var(--cream);text-align:center;min-width:210px;max-width:280px;box-shadow:0 6px 0 var(--cream-sh), 0 10px 24px #4a251259;border:3px solid var(--ink);border-radius:22px;padding:16px 22px 20px}#end .omEnd{pointer-events:none;height:96px;margin:-4px auto -2px;display:block}#end .big{font-size:46px;font-weight:900}#end p{margin:6px 0}#end small{opacity:.75;font-weight:700}#end button{font:inherit;color:#fff;text-shadow:0 2px 0 var(--act-line);border:3px solid var(--act-line);background:var(--act);box-shadow:inset 0 -5px 0 var(--act-low);cursor:pointer;border-radius:999px;margin:6px 3px 0;padding:7px 18px;font-size:16px;font-weight:800}#end button.alt{background:var(--cream);color:var(--ink);text-shadow:none;box-shadow:inset 0 -5px 0 var(--cream-sh);border-color:var(--ink)}</style>
+</head>
+<body>
+<header>
+  <a href="index.html">← Лаб</a>
+  <h1>Гроздья</h1>
+  <button id="restart">Заново</button>
+  <button id="newseed">Новый seed</button>
+  <div id="hud"><span id="score">Счёт: 0</span><span id="shots">Конфеты: 30</span><span id="seedv">seed 0</span></div>
+</header>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div id="end"><div class="card">
+    <img class="omEnd" src="./assets/omnom/joy.png" alt="">
+    <p id="endWhy">Раунд окончен</p>
+    <div class="big" id="endScore">0</div>
+    <p><small id="endDetail"></small></p>
+    <button id="again">Ещё раз</button><button id="again2" class="alt">Новый seed</button>
+  </div></div>
+</div>
+<div id="rule">Тяни и пускай: 3 в цвет — чпок, сбей верёвку — обвал Ому Ному</div>
+<details id="tune"><summary>Ручки</summary><div id="knobs"></div></details>
+<script>
+"use strict";
+// ---- Ом Ном кадрами приложения (D-40, не рисунок кодом) ---------------------------
+// Кадры лежат в assets/omnom/ — одна папка на все прототипы; новую версию Ома Нома копируем поверх теми же именами.
+// Числа — из assets/omnom/omnom_frames.json: 6,4024 px на u, лапы = pivot, рот (кадр wide); зрачки — два слоя (левый и правый глаз), каждый ходит в эллипсе своего глаза (pupils.<кадр>.eyes).
+// В файлах Ом Ном смотрит ВЛЕВО от зрителя; flip = смотрит вправо. Кадр: p.mx, p.my — точка рта в игре (u), p.fy — лапы (по умолчанию рот + 20).
+const OMS = (() => {
+  const PX = 6.4024, PIV = [0.5366, 0.0253], MOUTH = [-2.08, -19.98];
+  // Зрачки — по слою на глаз. Для каждого: rest — центр зрачка в покое, c и r — эллипс хода центра зрачка (u от лап, оси кадра до зеркала).
+  // Сдвиг взгляда d одинаков для обоих глаз, но центр каждого зрачка потом зажимается в эллипс СВОЕГО глаза: зрачок не выходит из белка и не переходит шов.
+  const PUP = {
+    neutral: { l: { rest: [-13.93, -44.86], c: [-16.67, -45.33], r: [3.91, 3.98] },
+             r: { rest: [-0.81, -42.67], c: [2.23, -42.67], r: [6.22, 6.39] } },
+    ajar:   { l: { rest: [-13.7, -47.75], c: [-15.42, -48.29], r: [2.61, 2.51] },
+             r: { rest: [-1.6, -45.33], c: [1.92, -42.83], r: [6.06, 6.01] } },
+    wide:   { l: { rest: [-13.39, -51.18], c: [-14.79, -51.42], r: [1.98, 1.54] },
+             r: { rest: [-1.13, -48.76], c: [0.98, -45.95], r: [5.73, 5.06] } },
+    wide2:  { l: { rest: [-13.93, -52.28], c: [-14.95, -52.67], r: [1.64, 1.31] },
+             r: { rest: [-1.52, -49.54], c: [0.83, -46.58], r: [5.85, 5.25] } },
+  };
+  const LOOK = 7; // u: длина полного взгляда, больше любого радиуса хода — на краю эллипса зрачок упирается в границу
+  const NAMES = ["neutral", "ajar", "wide", "wide2", "chew", "chew2", "sad", "joy", "blink", "half", "shadow"];
+  for (const f in PUP) NAMES.push(f + "_pupils_l", f + "_pupils_r");
+  const img = {};
+  const waits = [];
+  for (const n of NAMES) {
+    const i = new Image(); img[n] = i;
+    waits.push(new Promise((res) => { i.onload = i.onerror = res; }));
+    i.src = "assets/omnom/" + n + ".png";
+  }
+  const ok = (i) => i && i.complete && i.naturalWidth > 0;
+  // центр зрачка: покой + сдвиг (dx, dy), затем в эллипс хода своего глаза: q = (p - c) / r; |q| > 1 -> p = c + q/|q| * r
+  function eyePos(e, dx, dy) {
+    let px = e.rest[0] + dx, py = e.rest[1] + dy;
+    const qx = (px - e.c[0]) / e.r[0], qy = (py - e.c[1]) / e.r[1], ql = Math.hypot(qx, qy);
+    if (ql > 1) { px = e.c[0] + qx / ql * e.r[0]; py = e.c[1] + qy / ql * e.r[1]; }
+    return [px, py];
+  }
+  // p: { frame, mx, my, fy?, flip?, tx?, ty?, rot?, piv?, shadow?, alpha? }; st — объект вызывающего: плавный взгляд
+  const last = { frame: null, l: null, r: null, d: null };
+  function draw(ctx, p, st) {
+    let f = p.frame || "neutral";
+    if (f === "neutral" && (performance.now() + (p.blinkOff || 0)) % 3600 < 120) f = "blink";
+    const base = img[f]; if (!ok(base)) return;
+    const flip = p.flip ? -1 : 1, fx = p.mx - flip * MOUTH[0], fy = p.fy != null ? p.fy : p.my - MOUTH[1];
+    const pw = base.naturalWidth, ph = base.naturalHeight, k = 1 / PX;
+    ctx.save();
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+    if (p.alpha != null) ctx.globalAlpha = p.alpha;
+    if (p.shadow && ok(img.shadow)) ctx.drawImage(img.shadow, fx - 32, fy - 6, 64, 12);
+    ctx.translate(fx, p.piv ? fy - p.piv : fy); if (p.rot) ctx.rotate(p.rot); if (p.piv) ctx.translate(0, p.piv);
+    ctx.scale(flip * k, k);
+    ctx.drawImage(base, -PIV[0] * pw, -(1 - PIV[1]) * ph);
+    const pu = PUP[f], pl = img[f + "_pupils_l"], pr = img[f + "_pupils_r"];
+    if (pu && ok(pl) && ok(pr)) {
+      let gx = 0, gy = 0;
+      if (p.tx != null) { // цель в системе кадра до зеркала; общий сдвиг взгляда, потом зажим по каждому глазу
+        const pv = p.piv || 0;
+        let dx = p.tx - fx, dy = p.ty - (fy - pv);
+        if (p.rot) { const c = Math.cos(-p.rot), sn = Math.sin(-p.rot), qx = dx * c - dy * sn, qy = dx * sn + dy * c; dx = qx; dy = qy; }
+        dy -= pv; dx *= flip;
+        const ex = (pu.l.rest[0] + pu.r.rest[0]) / 2, ey = (pu.l.rest[1] + pu.r.rest[1]) / 2; // между глазами
+        const vx = dx - ex, vy = dy - ey, L = Math.hypot(vx, vy) || 1, a = Math.min(1, L / 45);
+        gx = vx / L * a * LOOK; gy = vy / L * a * LOOK;
+      }
+      if (st) { st.x = st.x == null ? gx : st.x + (gx - st.x) * 0.35; st.y = st.y == null ? gy : st.y + (gy - st.y) * 0.35; gx = st.x; gy = st.y; }
+      const pL = eyePos(pu.l, gx, gy), pR = eyePos(pu.r, gx, gy);
+      ctx.drawImage(pl, -PIV[0] * pw + (pL[0] - pu.l.rest[0]) * PX, -(1 - PIV[1]) * ph + (pL[1] - pu.l.rest[1]) * PX);
+      ctx.drawImage(pr, -PIV[0] * pw + (pR[0] - pu.r.rest[0]) * PX, -(1 - PIV[1]) * ph + (pR[1] - pu.r.rest[1]) * PX);
+      last.frame = f; last.l = pL; last.r = pR; last.d = [gx, gy];
+    }
+    ctx.restore();
+  }
+  return { draw, img, PUP, eyePos, last, loaded: Promise.all(waits), ready: () => NAMES.every((n) => ok(img[n])) };
+})();
+// ---- Главные числа. Поле 320×480 u, 1 u = 3,375 опорн. px (ширина 1080). Размеры — cut.md §3 ----
+// ---- «Гроздья» (D-92, концепция 2 из sling-concepts.md): набросок для лаборатории ----
+// Сверху на верёвках висят грозди цветных конфет (гекс-сетка). Рогатка внизу стреляет конфетой по дуге.
+// Попала в гроздь — прилипла; 3+ одного цвета рядом — «чпок». Пролетела через верёвку — верёвка рвётся,
+// всё, что больше ни на чём не держится, падает вниз Ому Ному в рот (k-я съеденная конфета обвала = +10·k).
+const TUNE = {
+  // ручки панели
+  colors: 3,           // цветов в грозди (3–4)
+  ropes: 3,            // верёвок = гроздей (3–5)
+  shots: 30,           // конфет в раунде
+  power: 12.2,         // скорость вылета = оттяжка × power (u/с на u); 90 u → 1100 u/с — хватает на навес через гроздь
+  lowerAfter: 5,       // выстрелов без «чпок» и обвала — гроздь опускается на ряд
+  // остальное
+  gravity: 784, maxPull: 90, minPull: 14, tapPx: 8, tapMs: 350,
+  // ballR = sp/2 − 1 (рисунок), hitD = 0,7·sp (прилипает, если центр ближе к центру ячейки), ropeHit = ballR + 5 — считает setGrid
+  wallBounce: 0.9, ceilBounce: 0.4, cutSlow: 0.9,
+  catchR: 28,          // u, «рот» Ома Нома
+  magnetY: 340, magnetK: 10, // ниже magnetY (у черты) падающие конфеты тянутся к рту (доля 10/с по x) — выше гроздь падает целиком
+  omSpeed: 340,        // u/с, бег Ома Нома под обвал
+  aimDots: 9, aimDotTicks: 4,
+  popPts: 10, dropPts: 10, clearPts: 100,
+  botThink: 0.5, botPullT: 0.3,
+  ropeIters: 20, ropeNodes: 13, ropeSlack: 1.04, ropeDamp: 0.985,
+};
+// генератор: центры гроздей в [x0, x1], верхний ряд top, высота h рядов (по сетке)
+const GEN = { sp: 28, x0: 10, x1: 310, top: [6, 7], h: [4, 5], slant: [40, 80] }; // slant — сдвиг гвоздя верёвки от грозди к середине, u
+const KNOBS = [["colors", "Цветов", 3, 4, 1], ["ropes", "Верёвок", 3, 5, 1], ["shots", "Конфет в раунде", 15, 60, 5], ["power", "Сила рогатки", 9, 14, 0.2], ["lowerAfter", "Опускание после промахов", 3, 10, 1]];
+const W = 320, H = 480, DT = 1 / 60;
+const CEIL = 8, Y0 = 30, LINE_Y = 348, MAXROW = 18;
+// гекс-сетка: шаг sp (Ø конфеты ≈ sp − 2), в чётном ряду nE ячеек, в нечётном nE − 1 (сдвиг на полшага)
+const G = {};
+function setGrid(sp) { G.sp = sp; G.rowH = sp * 0.866; G.nE = Math.floor(W / sp); G.x0 = (W - (G.nE - 1) * sp) / 2; TUNE.ballR = sp / 2 - 1; TUNE.hitD = sp * 0.7; TUNE.ropeHit = TUNE.ballR + 5; }
+const NAIL_A = { x: 116, y: 382 }, NAIL_B = { x: 204, y: 382 }, REST = { x: 160, y: 388 };
+const FLOOR = 478, MOUTH_Y = FLOOR - 22, OM_HOME = 266, NEXT = { x: 56, y: 436 };
+const COL = [{ f: "#E8412F", hi: "#FF9A80" }, { f: "#2F86E0", hi: "#9CCBFF" }, { f: "#F5B800", hi: "#FFE78A" }, { f: "#9B5DE5", hi: "#D6B8FA" }];
+const C = { paper: "#F5A9D0", paperHi: "#F9C3DF", paperLo: "#EE97C3", ink: "#4A2512", cream: "#FBEBD0", card: "#C98A4B", cardSh: "#8F5427", rope: "#7A3B1C", ok: "#A82060", gold: "#FFD23F" };
+
+function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function gauss(r) { const u = Math.max(1e-9, r()), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+
+// ---- Звук: простой синтез, контекст создаётся на первом касании ----
+let AC = null, amNext = 0;
+function audioOn() { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume(); } catch (e) { AC = null; } }
+function tone(f0, f1, dur, type, vol, delay) {
+  if (!AC) return;
+  const t = AC.currentTime + (delay || 0), o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + dur + 0.03);
+}
+const SFX = {
+  shot() { tone(1400, 500, 0.05, "triangle", 0.18); },
+  stick() { tone(420, 260, 0.05, "sine", 0.18); },
+  pop(i) { tone(900 + i * 70, 220, 0.08, "square", 0.08, i * 0.045); tone(2400, 900, 0.03, "sine", 0.1, i * 0.045); },
+  boing() { tone(160, 620, 0.12, "sine", 0.3); tone(620, 150, 0.4, "triangle", 0.22, 0.1); tone(330, 300, 0.4, "sine", 0.1, 0.12); },
+  am(k) { if (!AC) return; const d = Math.max(0, amNext - AC.currentTime); amNext = AC.currentTime + d + 0.07;
+    tone(170 + k * 12, 110, 0.11, "sawtooth", 0.1, d); tone(300 + k * 20, 160, 0.09, "square", 0.06, d + 0.05); },
+  thud() { tone(130, 45, 0.18, "sine", 0.3); },
+  creak() { tone(95, 70, 0.45, "sawtooth", 0.07); },
+};
+
+// ---- Гроздь: гекс-сетка (r, c), чётные ряды 10 ячеек, нечётные 9, шаг 32 ----
+const key = (r, c) => r + "," + c;
+const validRC = (r, c) => r >= 0 && r < MAXROW && c >= 0 && c < (r & 1 ? G.nE - 1 : G.nE);
+function cellPos(cl, r, c) { return { x: G.x0 + (r & 1 ? G.sp / 2 : 0) + G.sp * c, y: Y0 + cl.yOff + r * G.rowH }; }
+function nbrs(r, c) {
+  const o = r & 1 ? 1 : -1; // нечётный ряд сдвинут вправо
+  return [[r, c - 1], [r, c + 1], [r - 1, c], [r - 1, c + (o > 0 ? 1 : -1)], [r + 1, c], [r + 1, c + (o > 0 ? 1 : -1)]];
+}
+function ropeEnd(cl, rp) { const e = cl.cells.get(rp.key); const p = cellPos(cl, e.r, e.c); return { x: p.x, y: p.y - TUNE.ballR + 1 }; }
+function cloneCl(cl) { return { cells: new Map(cl.cells), ropes: cl.ropes.map(r => ({ ...r })), yOff: cl.yOff, yT: cl.yT }; }
+function bottomY(cl, useT) { let b = -1e9; for (const e of cl.cells.values()) b = Math.max(b, Y0 + (useT ? cl.yT : cl.yOff) + e.r * G.rowH + TUNE.ballR); return b; }
+// всё, что не держится ни за одну целую верёвку, удаляется и возвращается (позиции — до удаления)
+function dropUnsupported(cl) {
+  const seen = new Set(), q = [];
+  for (const rp of cl.ropes) if (!rp.cut && cl.cells.has(rp.key) && !seen.has(rp.key)) { seen.add(rp.key); q.push(rp.key); }
+  while (q.length) { const e = cl.cells.get(q.pop()); for (const [r, c] of nbrs(e.r, e.c)) { const k = key(r, c); if (cl.cells.has(k) && !seen.has(k)) { seen.add(k); q.push(k); } } }
+  const out = [];
+  for (const [k, e] of cl.cells) if (!seen.has(k)) out.push({ k, e, p: cellPos(cl, e.r, e.c) });
+  for (const d of out) cl.cells.delete(d.k);
+  return out;
+}
+function applyCut(cl, i) { cl.ropes[i].cut = true; return dropUnsupported(cl); }
+function applyStick(cl, r, c, color) {
+  const k0 = key(r, c); cl.cells.set(k0, { r, c, color });
+  const grp = [k0], seen = new Set(grp);
+  for (let i = 0; i < grp.length; i++) { const e = cl.cells.get(grp[i]); for (const [rr, cc] of nbrs(e.r, e.c)) { const k = key(rr, cc), n = cl.cells.get(k); if (n && n.color === color && !seen.has(k)) { seen.add(k); grp.push(k); } } }
+  const popped = [], freed = [];
+  if (grp.length >= 3) {
+    for (const k of grp) { const e = cl.cells.get(k); popped.push({ k, e, p: cellPos(cl, e.r, e.c) }); }
+    for (const d of popped) cl.cells.delete(d.k);
+    cl.ropes.forEach((rp, i) => { if (!rp.cut && seen.has(rp.key)) { rp.cut = true; freed.push(i); } });
+  }
+  return { popped, freed, dropped: dropUnsupported(cl) };
+}
+function slotFor(cl, hk, x, y) {
+  const e = cl.cells.get(hk); let best = null, bd = 1e9;
+  for (const [r, c] of nbrs(e.r, e.c)) {
+    if (!validRC(r, c) || cl.cells.has(key(r, c))) continue;
+    const p = cellPos(cl, r, c), d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; best = [r, c]; }
+  }
+  return best;
+}
+function distPS(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay, l = dx * dx + dy * dy, t = l ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l)) : 0;
+  return Math.hypot(px - ax - t * dx, py - ay - t * dy);
+}
+function segSeg(ax, ay, bx, by, cx, cy, dx, dy) {
+  const o = (px, py, qx, qy, rx, ry) => Math.sign((qx - px) * (ry - py) - (qy - py) * (rx - px));
+  if (o(ax, ay, bx, by, cx, cy) * o(ax, ay, bx, by, dx, dy) < 0 && o(cx, cy, dx, dy, ax, ay) * o(cx, cy, dx, dy, bx, by) < 0) return 0;
+  return Math.min(distPS(ax, ay, cx, cy, dx, dy), distPS(bx, by, cx, cy, dx, dy), distPS(cx, cy, ax, ay, bx, by), distPS(dx, dy, ax, ay, bx, by));
+}
+// полшага полёта: тот же код для игры, бота и проверки генератора
+function flySub(c, cl, h) {
+  const ox = c.x, oy = c.y, R = TUNE.ballR;
+  c.vy += TUNE.gravity * h; c.x += c.vx * h; c.y += c.vy * h;
+  if (c.x < R) { c.x = R; c.vx = Math.abs(c.vx) * TUNE.wallBounce; } else if (c.x > W - R) { c.x = W - R; c.vx = -Math.abs(c.vx) * TUNE.wallBounce; }
+  if (c.y < CEIL + R) { c.y = CEIL + R; c.vy = Math.abs(c.vy) * TUNE.ceilBounce; }
+  for (let i = 0; i < cl.ropes.length; i++) {
+    const rp = cl.ropes[i]; if (rp.cut) continue;
+    const b = ropeEnd(cl, rp);
+    if (segSeg(ox, oy, c.x, c.y, rp.ax, CEIL, b.x, b.y) < TUNE.ropeHit) return { t: "cut", i };
+  }
+  let hk = null, bd = TUNE.hitD;
+  for (const [k, e] of cl.cells) { const p = cellPos(cl, e.r, e.c), d = Math.hypot(p.x - c.x, p.y - c.y); if (d < bd) { bd = d; hk = k; } }
+  if (hk) return { t: "hit", k: hk };
+  if (c.y > H + 30) return { t: "lost" };
+  return null;
+}
+// бросок «в уме»: результат без побочных эффектов
+function simShot(cl0, dx, dy, color) {
+  const cl = cloneCl(cl0); cl.yOff = cl.yT;
+  const c = { x: REST.x + dx, y: REST.y + dy, vx: -dx * TUNE.power, vy: -dy * TUNE.power };
+  const res = { cuts: [], drops: 0, pops: 0, same: 0, stuckY: null, lost: false };
+  for (let n = 0; n < 600; n++) {
+    const ev = flySub(c, cl, DT / 2); if (!ev) continue;
+    if (ev.t === "cut") { res.cuts.push(ev.i); res.drops += applyCut(cl, ev.i).length; c.vx *= TUNE.cutSlow; c.vy *= TUNE.cutSlow; continue; }
+    if (ev.t === "lost") { res.lost = true; return res; }
+    const s = slotFor(cl, ev.k, c.x, c.y); if (!s) { res.lost = true; return res; }
+    for (const [r, cc] of nbrs(s[0], s[1])) { const e = cl.cells.get(key(r, cc)); if (e && e.color === color) res.same++; }
+    const a = applyStick(cl, s[0], s[1], color);
+    res.pops = a.popped.length; res.drops += a.dropped.length; res.stuckY = cellPos(cl, s[0], s[1]).y; res.cell = s;
+    return res;
+  }
+  res.lost = true; return res;
+}
+function scan(cl, color, step) {
+  const out = [];
+  for (let dx = -TUNE.maxPull; dx <= TUNE.maxPull; dx += step) for (let dy = 10; dy <= TUNE.maxPull; dy += step) {
+    if (Math.hypot(dx, dy) > TUNE.maxPull || Math.hypot(dx, dy) < TUNE.minPull + 2) continue;
+    out.push({ dx, dy, res: simShot(cl, dx, dy, color) });
+  }
+  return out;
+}
+
+// ---- Генератор грозди по seed: R гроздей-«виноградин», у каждой своя верёвка ----
+function genCluster(rng, yOff) {
+  let cl = null, best = null;
+  for (let tries = 0; tries < 30; tries++) {
+    cl = { cells: new Map(), ropes: [], yOff, yT: 0 };
+    // виноградина: верх 1–2, середина 2, «пузо» 3 (при 3 верёвках чаще — тогда грозди срастаются мостиком), низ 1
+    const R = TUNE.ropes, p3 = R <= 3 ? 0.4 : R === 4 ? 0.15 : 0, mid = R >= 5 ? 0.5 : 1, bunches = [];
+    for (let i = 0; i < R; i++) {
+      const cx = GEN.x0 + (GEN.x1 - GEN.x0) * (i + 0.5) / R + (rng() - 0.5) * 16, top = GEN.top[0] + Math.floor(rng() * (GEN.top[1] - GEN.top[0] + 1)), h = GEN.h[0] + Math.floor(rng() * (GEN.h[1] - GEN.h[0] + 1));
+      const belly = 1 + Math.floor(rng() * Math.max(1, h - 2)), fat = rng() < p3;
+      const mine = [];
+      for (let k = 0; k < h; k++) {
+        const r = top + k;
+        let w = k === 0 ? (rng() < 0.3 ? 2 : 1) : k === h - 1 ? 1 : k === belly && fat ? 3 : rng() < mid ? 2 : 1;
+        const cols = []; for (let c = 0; c < (r & 1 ? G.nE - 1 : G.nE); c++) cols.push(c);
+        cols.sort((a, b) => Math.abs(cellPos(cl, r, a).x - cx) - Math.abs(cellPos(cl, r, b).x - cx));
+        for (const c of cols.slice(0, w)) { const k2 = key(r, c); if (!cl.cells.has(k2)) { cl.cells.set(k2, { r, c, color: 0 }); mine.push(k2); } }
+      }
+      if (!mine.length) continue;
+      const topK = mine.filter(k => cl.cells.get(k).r === top).sort((a, b) => Math.abs(cellPos(cl, top, cl.cells.get(a).c).x - cx) - Math.abs(cellPos(cl, top, cl.cells.get(b).c).x - cx))[0] || mine[0];
+      const tp = cellPos(cl, cl.cells.get(topK).r, cl.cells.get(topK).c);
+      const sgn = rng() < 0.5 ? -1 : 1, sl = (GEN.slant[0] + rng() * (GEN.slant[1] - GEN.slant[0])) * (tp.x < W / 2 - 30 ? 1 : tp.x > W / 2 + 30 ? -1 : sgn); // крайние — гвоздём к середине («люстра»)
+      cl.ropes.push({ ax: Math.max(10, Math.min(W - 10, tp.x + sl)), key: topK, cut: false });
+      bunches.push(mine);
+    }
+    // цвета сериями по 2–3, соседние серии разного цвета
+    let col = Math.floor(rng() * TUNE.colors), run = 0, len = 0;
+    for (const mine of bunches) for (const k of mine) {
+      if (run >= len) { let n = Math.floor(rng() * (TUNE.colors - 1)); if (n >= col) n++; col = n; run = 0; len = 2 + (rng() < 0.5 ? 1 : 0); }
+      cl.cells.get(k).color = col; run++;
+    }
+    // верёвка не идёт сквозь чужие конфеты, и до каждой верёвки долетает хоть одна дуга
+    let ok = true;
+    for (const rp of cl.ropes) {
+      const b = ropeEnd({ ...cl, yOff: 0 }, rp);
+      for (const [k, e] of cl.cells) { if (k === rp.key) continue; const p = cellPos({ yOff: 0 }, e.r, e.c); if (distPS(p.x, p.y, rp.ax, CEIL, b.x, b.y) < TUNE.ballR + 2) ok = false; }
+    }
+    if (ok) {
+      const reach = new Set();
+      for (const s of scan(cl, -1, 6)) for (const i of s.res.cuts) reach.add(i);
+      cl.reach = reach.size; cl.tries = tries + 1;
+      if (reach.size === cl.ropes.length) return cl;
+      if (!best || reach.size > best.reach) best = cl;
+    }
+  }
+  return best || cl;
+}
+
+// ---- Состояние ----
+let S, bot = null;
+function newRound(seed) {
+  seed = seed == null ? (Date.now() & 0x7fffffff) : (seed >>> 0);
+  setGrid(GEN.sp); const rng = mulberry(seed);
+  S = {
+    seed, rng, botRng: mulberry(seed ^ 0x5bd1e995), scene: "play", phase: "aim", phaseT: 0, t: 0, why: "",
+    shot: 0, score: 0, dry: 0, cl: genCluster(rng, -260), cur: 0, next: 0, candy: null, pull: null,
+    falling: [], stubs: [], bursts: [], popups: [], chain: 0, chainPts: 0, chainPop: null, shotCut: false,
+    om: { x: OM_HOME, vx: 0, chew: 0, sad: 0, idle: 0 },
+    st: { pops: 0, cuts: 0, drops: 0, caught: 0, lost: 0, biggest: 0, clears: 0, lowered: 0 },
+    last: null, botT: 0, botPlan: null, botK: 0,
+  };
+  S.cur = pickColor(); S.next = pickColor();
+  initRope(); loadCandy();
+  document.getElementById("end").style.display = "none";
+  updateHud();
+}
+function pickColor() {
+  const have = new Set(); for (const e of S.cl.cells.values()) have.add(e.color);
+  const pool = have.size ? [...have] : [...Array(TUNE.colors).keys()];
+  return pool[Math.floor(S.rng() * pool.length)];
+}
+function loadCandy() { S.candy = { x: REST.x, y: REST.y, vx: 0, vy: 0, color: S.cur, vis: true, pop: 0.2 }; rope.pinMid = true; rope.La = rope.Lb = rope.L0; S.phase = "aim"; S.phaseT = 0; }
+
+// ---- Резинка рогатки (Верле, как в sling.html) ----
+let rope;
+function initRope() {
+  const n = TUNE.ropeNodes, L = Math.hypot(NAIL_B.x - NAIL_A.x, NAIL_B.y - NAIL_A.y) / (n - 1) * TUNE.ropeSlack;
+  rope = { L0: L, La: L, Lb: L, mid: (n - 1) / 2, pinMid: true, p: [] };
+  for (let i = 0; i < n; i++) { const x = NAIL_A.x + (NAIL_B.x - NAIL_A.x) * i / (n - 1), y = NAIL_A.y; rope.p.push({ x, y, px: x, py: y }); }
+}
+function stepRope() {
+  const p = rope.p, n = p.length;
+  for (let i = 1; i < n - 1; i++) { const q = p[i], vx = (q.x - q.px) * TUNE.ropeDamp, vy = (q.y - q.py) * TUNE.ropeDamp; q.px = q.x; q.py = q.y; q.x += vx; q.y += vy + TUNE.gravity * DT * DT; }
+  for (let k = 0; k < TUNE.ropeIters; k++) {
+    p[0].x = NAIL_A.x; p[0].y = NAIL_A.y; p[n - 1].x = NAIL_B.x; p[n - 1].y = NAIL_B.y;
+    if (rope.pinMid) { p[rope.mid].x = S.candy.x; p[rope.mid].y = S.candy.y; }
+    for (let i = 0; i < n - 1; i++) {
+      const a = p[i], b = p[i + 1], L = i < rope.mid ? rope.La : rope.Lb;
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1e-6, diff = (d - L) / d * 0.5;
+      const fa = (i === 0 || (rope.pinMid && i === rope.mid)) ? 0 : 1, fb = (i + 1 === n - 1 || (rope.pinMid && i + 1 === rope.mid)) ? 0 : 1, s = fa + fb;
+      if (!s) continue;
+      a.x += dx * diff * 2 * fa / s; a.y += dy * diff * 2 * fa / s; b.x -= dx * diff * 2 * fb / s; b.y -= dy * diff * 2 * fb / s;
+    }
+  }
+}
+function stretchRopeTo(c) { rope.La = Math.max(rope.L0, Math.hypot(c.x - NAIL_A.x, c.y - NAIL_A.y) / rope.mid); rope.Lb = Math.max(rope.L0, Math.hypot(c.x - NAIL_B.x, c.y - NAIL_B.y) / rope.mid); }
+
+// ---- Действия игрока ----
+const canShoot = () => S.scene === "play" && S.phase === "aim" && S.shot < TUNE.shots && S.cl.yOff >= S.cl.yT - 0.5;
+function startPull() { if (!canShoot()) return false; S.phase = "drag"; S.pull = { dx: 0, dy: 0 }; return true; }
+function setPull(dx, dy) {
+  if (S.phase !== "drag") return;
+  const d = Math.hypot(dx, dy); if (d > TUNE.maxPull) { dx *= TUNE.maxPull / d; dy *= TUNE.maxPull / d; }
+  S.pull = { dx, dy }; S.candy.x = REST.x + dx; S.candy.y = REST.y + dy; stretchRopeTo(S.candy);
+}
+function cancelPull() { if (S.phase !== "drag") return; S.pull = null; S.phase = "aim"; S.candy.x = REST.x; S.candy.y = REST.y; rope.La = rope.Lb = rope.L0; }
+function release() {
+  if (S.phase !== "drag") return false;
+  const p = S.pull;
+  if (Math.hypot(p.dx, p.dy) < TUNE.minPull || p.dy < 4) { cancelPull(); return false; }
+  S.pull = null; const c = S.candy; c.vx = -p.dx * TUNE.power; c.vy = -p.dy * TUNE.power;
+  rope.pinMid = false; rope.La = rope.Lb = rope.L0;
+  S.phase = "fly"; S.phaseT = 0; S.shot++; S.shotCut = false; S.last = { dx: p.dx, dy: p.dy, result: "fly", cuts: 0, pops: 0, drops: 0 };
+  SFX.shot(); updateHud(); return true;
+}
+function swap() { if (S.scene !== "play" || S.phase !== "aim") return false; [S.cur, S.next] = [S.next, S.cur]; S.candy.color = S.cur; S.candy.pop = 0.15; SFX.stick(); return true; }
+
+// ---- События броска ----
+function popup(x, y, text, color, big) { S.popups.push({ x, y, text, color, t: 0, big: !!big }); }
+function addFalling(list, stubLen) {
+  if (!list.length) return;
+  S.st.drops++;
+  const vx = (S.rng() - 0.5) * 30;
+  for (const d of list) {
+    const rp = S.cl.ropes.find(r => r.key === d.k);
+    S.falling.push({ x: d.p.x, y: d.p.y, vx: vx + (S.rng() - 0.5) * 12, vy: -30, color: d.e.color, rot: 0, vr: (S.rng() - 0.5) * 4, delay: 0.1, stub: rp ? (stubLen || 26) : 0 });
+  }
+}
+function cutRope(i, c) {
+  const cl = S.cl, rp = cl.ropes[i], b = ropeEnd(cl, rp), L = Math.max(8, Math.hypot(c.x - rp.ax, c.y - CEIL)), full = Math.hypot(b.x - rp.ax, b.y - CEIL);
+  S.stubs.push({ ax: rp.ax, L: Math.min(L, full), a: Math.atan2(b.x - rp.ax, b.y - CEIL), av: c.vx / Math.max(20, L) * 0.4, t: 0 });
+  const dropped = applyCut(cl, i);
+  addFalling(dropped, full - Math.min(L, full));
+  S.st.cuts++; S.shotCut = true; S.last.cuts++; S.last.drops += dropped.length;
+  c.vx *= TUNE.cutSlow; c.vy *= TUNE.cutSlow;
+  SFX.boing();
+}
+function stick(hk) {
+  const c = S.candy, cl = S.cl, s = slotFor(cl, hk, c.x, c.y);
+  if (!s) return endShot("lost");
+  const freedBefore = cl.ropes.map(r => (r.cut ? null : { ax: r.ax, b: ropeEnd(cl, r) }));
+  const res = applyStick(cl, s[0], s[1], c.color);
+  for (const i of res.freed) { const f = freedBefore[i]; S.stubs.push({ ax: f.ax, L: Math.hypot(f.b.x - f.ax, f.b.y - CEIL), a: Math.atan2(f.b.x - f.ax, f.b.y - CEIL), av: 0, t: 0 }); }
+  if (res.popped.length) {
+    const n = res.popped.length, pts = n * TUNE.popPts; let sx = 0, sy = 0;
+    res.popped.forEach((d, j) => { S.bursts.push({ x: d.p.x, y: d.p.y, color: d.e.color, t: -j * 0.045 }); SFX.pop(j); sx += d.p.x; sy += d.p.y; });
+    S.score += pts; S.st.pops += n; popup(sx / n, sy / n, "+" + pts, C.ink);
+  } else SFX.stick();
+  addFalling(res.dropped);
+  S.last.pops = res.popped.length; S.last.drops += res.dropped.length;
+  endShot(res.popped.length || res.dropped.length || S.shotCut ? "good" : "stuck");
+}
+function endShot(result) {
+  const c = S.candy; c.vis = false; S.last.result = S.shotCut && result !== "good" ? "cut" : result;
+  if (result === "good" || S.shotCut) S.dry = 0;
+  else if (++S.dry >= TUNE.lowerAfter && S.cl.cells.size) { S.dry = 0; S.cl.yT += G.rowH; S.st.lowered++; SFX.creak(); }
+  S.phase = "reload"; S.phaseT = 0; updateHud();
+}
+function endRound(why) {
+  S.scene = "end"; S.phase = "end"; S.why = why;
+  document.getElementById("endWhy").textContent = why === "line" ? "Гроздь дошла до черты" : "Конфеты кончились";
+  document.getElementById("endScore").textContent = S.score;
+  document.getElementById("endDetail").textContent = `Чпок: ${S.st.pops} · верёвок: ${S.st.cuts} · съел с обвала: ${S.st.caught} · самый большой обвал: ${S.st.biggest}`;
+  document.getElementById("end").style.display = "flex";
+}
+
+// ---- Тик 1/60 ----
+function tick() {
+  if (S.scene !== "play") { stepRope(); return; }
+  S.t += DT; S.phaseT += DT;
+  const cl = S.cl, om = S.om;
+  if (cl.yOff < cl.yT) cl.yOff = Math.min(cl.yT, cl.yOff + (cl.yT - cl.yOff > 40 ? 420 : 70) * DT);
+  botTick();
+  const c = S.candy;
+  if (S.phase === "fly") {
+    for (let k = 0; k < 2 && S.phase === "fly"; k++) {
+      const ev = flySub(c, cl, DT / 2);
+      if (c.vy > 0 && Math.hypot(c.x - om.x, c.y - MOUTH_Y) < TUNE.catchR) { om.chew = 0.35; SFX.am(1); endShot("eaten"); break; }
+      if (!ev) continue;
+      if (ev.t === "cut") cutRope(ev.i, c);
+      else if (ev.t === "hit") stick(ev.k);
+      else endShot("lost");
+    }
+  } else if (S.phase === "reload" && S.phaseT > 0.2) {
+    if (S.shot < TUNE.shots) { S.cur = S.next; S.next = pickColor(); loadCandy(); } else S.phase = "empty";
+  }
+  if (c.pop > 0) c.pop = Math.max(0, c.pop - DT);
+  // обвал: падают все вместе (одна гравитация — «с весом»), внизу тянутся к рту
+  let tgt = null, lowY = -1e9;
+  for (const f of S.falling) {
+    if (f.delay > 0) { f.delay -= DT; f.x += Math.sin(S.t * 70) * 0.4; continue; }
+    f.vy += TUNE.gravity * DT; f.x += f.vx * DT; f.y += f.vy * DT; f.rot += f.vr * DT;
+    if (f.y > TUNE.magnetY) f.x += (om.x - f.x) * Math.min(1, TUNE.magnetK * DT);
+    if (f.y < MOUTH_Y && f.y > lowY) { lowY = f.y; tgt = f.x + f.vx * Math.max(0, (MOUTH_Y - f.y) / Math.max(200, f.vy)); }
+    if (Math.hypot(f.x - om.x, f.y - MOUTH_Y) < TUNE.catchR) {
+      f.gone = true; S.chain++; const pts = TUNE.dropPts * S.chain; S.chainPts += pts; S.score += pts; S.st.caught++;
+      om.chew = 0.35; SFX.am(S.chain);
+      // одна надпись на обвал: сумма растёт с каждым «ам»
+      if (!S.chainPop || !S.popups.includes(S.chainPop)) { S.chainPop = { x: om.x, y: MOUTH_Y - 50, text: "", color: C.ok, t: 0, big: false }; S.popups.push(S.chainPop); }
+      S.chainPop.text = "+" + S.chainPts; S.chainPop.x = om.x; S.chainPop.t = 0; S.chainPop.big = S.chain >= 3;
+    } else if (f.y > H + 20) { f.gone = true; S.st.lost++; om.sad = 0.6; SFX.thud(); }
+  }
+  if (S.falling.length) { S.falling = S.falling.filter(f => !f.gone); updateHud(); }
+  if (!S.falling.length && S.chain) {
+    S.st.biggest = Math.max(S.st.biggest, S.chain);
+    if (S.chainPop && S.chain >= 3) S.chainPop.text += "!";
+    S.chain = 0; S.chainPts = 0; S.chainPop = null;
+  }
+  // Ом Ном бежит под обвал, потом возвращается домой
+  const goal = tgt != null ? tgt : (om.idle > 1 ? OM_HOME : om.x);
+  om.idle = tgt != null ? 0 : om.idle + DT;
+  const dx = Math.max(-TUNE.omSpeed * DT, Math.min(TUNE.omSpeed * DT, goal - om.x)); om.vx = dx / DT; om.x = Math.max(24, Math.min(W - 24, om.x + dx));
+  om.chew = Math.max(0, om.chew - DT); om.sad = Math.max(0, om.sad - DT);
+  // обрывки верёвок качаются
+  for (const s of S.stubs) { s.t += DT; s.av += -TUNE.gravity / s.L * Math.sin(s.a) * DT * 0.6; s.av *= 0.985; s.a += s.av * DT; }
+  for (const b of S.bursts) b.t += DT; S.bursts = S.bursts.filter(b => b.t < 0.35);
+  for (const p of S.popups) p.t += DT; S.popups = S.popups.filter(p => p.t < (p.big ? 1.4 : 0.8));
+  if (S.phase === "aim" || S.phase === "drag") rope.pinMid = true;
+  stepRope();
+  // гроздь съедена — опускается новая; конец раунда
+  const busy = S.phase === "fly" || S.phase === "drag" || S.falling.length > 0;
+  if (!busy && !cl.cells.size && S.phase !== "empty") {
+    S.st.clears++; S.score += TUNE.clearPts; popup(160, 200, "+" + TUNE.clearPts, C.ok, true);
+    S.cl = genCluster(S.rng, -260); S.stubs = []; S.dry = 0; updateHud();
+  } else if (!busy && cl.yOff >= cl.yT && cl.cells.size && bottomY(cl) >= LINE_Y) endRound("line");
+  else if (!busy && S.phase === "empty") endRound("shots");
+}
+function updateHud() {
+  document.getElementById("score").textContent = "Счёт: " + S.score;
+  document.getElementById("shots").textContent = "Конфеты: " + (TUNE.shots - S.shot);
+  document.getElementById("seedv").textContent = "seed " + S.seed;
+}
+
+// ---- Бот: тот же ввод (startPull → setPull → release); skill 1 — лучший бросок по скану, 0 — случайный ----
+function evalShot(r) { if (r.lost) return -50; const n = r.drops; return n * (n + 1) * 5 + r.pops * 10 + r.same * 4 - (r.stuckY || 0) / 40; }
+function planShot(skill) {
+  if (skill <= 0) { const a = Math.PI * (0.15 + 0.7 * S.botRng()), L = 40 + 60 * S.botRng(); return { dx: -Math.cos(a) * L, dy: Math.sin(a) * L }; }
+  let best = null, bv = -1e9;
+  for (const s of scan(S.cl, S.cur, 5)) { const v = evalShot(s.res) + S.botRng() * 0.5; if (v > bv) { bv = v; best = s; } }
+  const sg = 0.5 + 10 * (1 - skill) ** 2;
+  return { dx: best.dx + gauss(S.botRng) * sg, dy: best.dy + gauss(S.botRng) * sg, v: bv };
+}
+function botTick() {
+  if (!bot || S.scene !== "play") return;
+  if (S.phase === "aim") {
+    S.botT += DT; if (S.botT < TUNE.botThink) return;
+    if (!startPull()) return; S.botPlan = planShot(bot.skill); S.botK = 0;
+  }
+  if (S.phase === "drag" && S.botPlan) {
+    S.botK += DT / TUNE.botPullT; const k = Math.min(1, S.botK);
+    setPull(S.botPlan.dx * k, S.botPlan.dy * k);
+    if (k >= 1) { release(); S.botPlan = null; S.botT = 0; }
+  }
+}
+
+// ---- Рисование ----
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d"), stage = document.getElementById("stage");
+let scale = 1, dpr = 1, lastW = 0, lastH = 0, bg = null;
+function fit() {
+  const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return;
+  const nd = Math.min(2, window.devicePixelRatio || 1);
+  if (w === lastW && h === lastH && nd === dpr) return;
+  lastW = w; lastH = h; dpr = nd;
+  scale = Math.min((w - 24) / W, (h - 24) / H);
+  cv.style.width = W * scale + "px"; cv.style.height = H * scale + "px";
+  cv.style.left = (w - W * scale) / 2 + "px"; cv.style.top = (h - H * scale) / 2 + "px";
+  cv.width = Math.round(W * scale * dpr); cv.height = Math.round(H * scale * dpr); bg = null;
+}
+new ResizeObserver(fit).observe(stage);
+window.addEventListener("resize", fit); window.addEventListener("orientationchange", fit);
+function circle(x, y, r, fill, line, lw) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (line) { ctx.strokeStyle = line; ctx.lineWidth = lw || 2; ctx.stroke(); } }
+function drawBg() {
+  if (!bg) {
+    bg = document.createElement("canvas"); bg.width = cv.width; bg.height = cv.height;
+    const g = bg.getContext("2d"); g.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+    const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, C.paperHi); gr.addColorStop(0.55, C.paper); gr.addColorStop(1, C.paperLo);
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.fillStyle = "rgba(255,255,255,.13)"; for (let x = 12; x < W; x += 40) g.fillRect(x, 0, 16, H);
+    g.fillStyle = "rgba(255,255,255,.18)"; g.beginPath(); g.ellipse(160, 520, 240, 110, 0, 0, 7); g.fill();
+    // потолок-планка
+    g.fillStyle = C.card; g.fillRect(0, 0, W, CEIL); g.fillStyle = C.cardSh; g.fillRect(0, CEIL - 2, W, 2);
+    // стойки рогатки
+    for (const n of [NAIL_A, NAIL_B]) {
+      const lean = n === NAIL_A ? 1 : -1;
+      g.fillStyle = C.card; g.strokeStyle = C.cardSh; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(n.x - 6, n.y); g.lineTo(n.x + 6, n.y); g.lineTo(n.x + 9 + lean * 22, H + 2); g.lineTo(n.x - 9 + lean * 22, H + 2); g.closePath(); g.fill(); g.stroke();
+    }
+    // подставка «следующей»
+    g.fillStyle = "rgba(74,37,18,.15)"; g.beginPath(); g.ellipse(NEXT.x, NEXT.y + 13, 16, 4, 0, 0, 7); g.fill();
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bg, 0, 0); ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+}
+// конфета: цвет + знак формы (кольцо, ромб, звезда, треугольник) — различимы и без цвета
+function drawBall(x, y, ci, s, rot) {
+  const r = TUNE.ballR * (s || 1), col = COL[ci] || COL[0];
+  ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot);
+  const g = ctx.createRadialGradient(-r * 0.35, -r * 0.4, 1, 0, 0, r); g.addColorStop(0, col.hi); g.addColorStop(1, col.f);
+  circle(0, 0, r, g, C.ink, 2.2);
+  ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.lineWidth = 2.6 * (s || 1);
+  const k = r / 15; ctx.beginPath();
+  if (ci === 0) { ctx.arc(0, 1, 5.5 * k, 0, 7); ctx.stroke(); }
+  else if (ci === 1) { ctx.moveTo(0, -6.5 * k); ctx.lineTo(5.5 * k, 1); ctx.lineTo(0, 8 * k); ctx.lineTo(-5.5 * k, 1); ctx.closePath(); ctx.fill(); }
+  else if (ci === 2) { for (let i = 0; i < 10; i++) { const rr = (i % 2 ? 3 : 7) * k, a = -Math.PI / 2 + i * Math.PI / 5; ctx.lineTo(Math.cos(a) * rr, 1 + Math.sin(a) * rr); } ctx.closePath(); ctx.fill(); }
+  else { ctx.moveTo(0, -6 * k); ctx.lineTo(6.5 * k, 6 * k); ctx.lineTo(-6.5 * k, 6 * k); ctx.closePath(); ctx.fill(); }
+  ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.beginPath(); ctx.ellipse(-r * 0.42, -r * 0.5, r * 0.28, r * 0.17, -0.5, 0, 7); ctx.fill();
+  ctx.restore();
+}
+function ropeLine(x1, y1, x2, y2) { ctx.strokeStyle = C.rope; ctx.lineWidth = 2.6; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo((x1 + x2) / 2 + 2, (y1 + y2) / 2, x2, y2); ctx.stroke(); }
+let omFrame = "neutral"; const omGaze = {};
+function render() {
+  fit(); drawBg();
+  const cl = S.cl, om = S.om, warn = cl.cells.size && bottomY(cl, true) > LINE_Y - G.rowH * 1.1;
+  // черта
+  ctx.setLineDash([8, 7]); ctx.lineWidth = 2.5; ctx.strokeStyle = warn ? `rgba(200,30,60,${0.5 + 0.4 * Math.sin(S.t * 10)})` : "rgba(74,37,18,.3)";
+  ctx.beginPath(); ctx.moveTo(4, LINE_Y); ctx.lineTo(W - 4, LINE_Y); ctx.stroke(); ctx.setLineDash([]);
+  // верёвки, гвоздики
+  for (const rp of cl.ropes) {
+    circle(rp.ax, CEIL - 1, 3, C.cream, C.ink, 1.4);
+    if (rp.cut || !cl.cells.has(rp.key)) continue;
+    const b = ropeEnd(cl, rp); ropeLine(rp.ax, CEIL, b.x, b.y);
+  }
+  for (const s of S.stubs) ropeLine(s.ax, CEIL, s.ax + Math.sin(s.a) * s.L, CEIL + Math.cos(s.a) * s.L);
+  for (const e of cl.cells.values()) { const p = cellPos(cl, e.r, e.c); drawBall(p.x, p.y, e.color); }
+  // «чпок»: кольцо и крошки
+  for (const b of S.bursts) {
+    if (b.t < 0) { drawBall(b.x, b.y, b.color, 1 + 0.15 * Math.sin(-b.t * 60)); continue; }
+    const k = b.t / 0.35, a = 1 - k;
+    ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = 3 * a + 1; ctx.beginPath(); ctx.arc(b.x, b.y, 10 + 22 * k, 0, 7); ctx.stroke();
+    for (let i = 0; i < 6; i++) { const an = i * 1.047 + b.x; circle(b.x + Math.cos(an) * 26 * k, b.y + Math.sin(an) * 26 * k + 20 * k * k, 4 * a + 1, COL[b.color].f); }
+  }
+  // Ом Ном
+  const near = S.falling.length ? S.falling.reduce((m, f) => (f.y > m.y && f.y < MOUTH_Y ? f : m), { y: -1e9 }) : null;
+  if (om.chew > 0) omFrame = Math.floor(om.chew * 18) % 2 ? "chew2" : "chew";
+  else if (om.sad > 0) omFrame = "sad";
+  else if (near && near.y > -1e9) omFrame = MOUTH_Y - near.y < 160 ? "wide" : "ajar";
+  else omFrame = "neutral";
+  const look = near && near.y > -1e9 ? near : S.candy.vis ? S.candy : null;
+  OMS.draw(ctx, { frame: omFrame, mx: om.x, my: MOUTH_Y, fy: FLOOR, flip: Math.abs(om.vx) > 5 ? om.vx > 0 : om.x < REST.x, tx: look ? look.x : undefined, ty: look ? look.y : undefined, shadow: true }, omGaze);
+  // падающие
+  for (const f of S.falling) {
+    if (f.stub) { ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot); ropeLine(0, 1 - TUNE.ballR, 1, 1 - TUNE.ballR - Math.min(40, f.stub)); ctx.restore(); }
+    drawBall(f.x, f.y, f.color, 1, f.rot);
+  }
+  // рогатка
+  const sr = Math.max(rope.La, rope.Lb) / rope.L0;
+  ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = sr > 1.8 ? "#E8412F" : sr > 1.15 ? "#B8452A" : "#7A3B1C"; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(rope.p[0].x, rope.p[0].y); for (let i = 1; i < rope.p.length; i++) ctx.lineTo(rope.p[i].x, rope.p[i].y); ctx.stroke();
+  for (const n of [NAIL_A, NAIL_B]) { circle(n.x + 1.5, n.y + 2, 7, "rgba(74,37,18,.3)"); circle(n.x, n.y, 7, C.cream, C.ink, 2); }
+  if (S.phase === "drag" && S.pull && Math.hypot(S.pull.dx, S.pull.dy) >= TUNE.minPull && S.pull.dy >= 4) {
+    let x = S.candy.x, y = S.candy.y, vx = -S.pull.dx * TUNE.power, vy = -S.pull.dy * TUNE.power;
+    for (let i = 0; i < TUNE.aimDots; i++) {
+      for (let j = 0; j < TUNE.aimDotTicks; j++) { vy += TUNE.gravity * DT; x += vx * DT; y += vy * DT; if (x < 15 || x > W - 15) { vx = -vx * TUNE.wallBounce; x = Math.max(15, Math.min(W - 15, x)); } }
+      const f = i / (TUNE.aimDots - 1), a = 0.95 - 0.55 * f; circle(x, y, 5 - 2.2 * f, `rgba(251,235,208,${a})`, `rgba(74,37,18,${a * 0.9})`, 1.6);
+    }
+  }
+  const c = S.candy;
+  if (c.vis) drawBall(c.x, c.y, c.color, c.pop > 0 ? 1 - c.pop * 2 : 1, S.phase === "fly" ? S.phaseT * c.vx / 60 : 0);
+  if (S.scene === "play" && S.shot + (c.vis ? 1 : 0) < TUNE.shots) drawBall(NEXT.x, NEXT.y, S.next, 0.72);
+  // до опускания: точки под «следующей»
+  for (let i = 0; i < TUNE.lowerAfter; i++) circle(NEXT.x - (TUNE.lowerAfter - 1) * 4 + i * 8, NEXT.y + 24, 2.6, i < TUNE.lowerAfter - S.dry ? C.cream : "rgba(74,37,18,.35)", C.ink, 1);
+  // надписи
+  ctx.textAlign = "center"; ctx.lineWidth = 5; ctx.strokeStyle = C.cream; ctx.lineJoin = "round";
+  for (const p of S.popups) {
+    const life = p.big ? 1.4 : 0.8; ctx.font = p.big ? "900 30px Nunito, system-ui" : "900 17px Nunito, system-ui";
+    ctx.globalAlpha = Math.min(1, (life - p.t) * 3); const y = p.y - p.t * (p.big ? 20 : 40);
+    ctx.strokeText(p.text, p.x, y); ctx.fillStyle = p.color; ctx.fillText(p.text, p.x, y);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ---- Ввод: тянуть из любого места поля; тап без сдвига — поменять текущую и следующую ----
+let ptr = null;
+stage.addEventListener("pointerdown", e => {
+  if (ptr !== null || e.target.closest("#end")) return;
+  audioOn();
+  if (bot) { bot = null; if (S.phase === "drag") cancelPull(); }
+  if (!startPull()) return;
+  ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 };
+  try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  e.preventDefault();
+});
+stage.addEventListener("pointermove", e => {
+  if (!ptr || e.pointerId !== ptr.id) return;
+  ptr.moved = Math.max(ptr.moved, Math.hypot(e.clientX - ptr.x, e.clientY - ptr.y));
+  setPull((e.clientX - ptr.x) / scale, (e.clientY - ptr.y) / scale);
+});
+function up(e) {
+  if (!ptr || e.pointerId !== ptr.id) return;
+  const tap = ptr.moved < TUNE.tapPx && performance.now() - ptr.t < TUNE.tapMs; ptr = null;
+  if (e.type === "pointercancel") cancelPull(); else if (tap) { cancelPull(); swap(); } else release();
+}
+stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+document.addEventListener("visibilitychange", () => { if (document.hidden && ptr) { ptr = null; cancelPull(); } });
+window.addEventListener("blur", () => { if (ptr) { ptr = null; cancelPull(); } });
+function onButton(id, fn) { const b = document.getElementById(id); b.addEventListener("pointerdown", e => e.stopPropagation()); b.addEventListener("pointerup", e => { e.stopPropagation(); audioOn(); fn(); }); }
+onButton("restart", () => { ptr = null; newRound(S.seed); });
+onButton("again", () => { ptr = null; newRound(S.seed); });
+onButton("newseed", () => { ptr = null; newRound(); });
+onButton("again2", () => { ptr = null; newRound(); });
+// ручки: смена — новый раунд на том же seed
+const knobs = document.getElementById("knobs");
+for (const [k, label, mn, mx, st] of KNOBS) {
+  const l = document.createElement("label"); l.innerHTML = `<span>${label}</span><input type="range" min="${mn}" max="${mx}" step="${st}" value="${TUNE[k]}"><b>${TUNE[k]}</b>`;
+  const inp = l.querySelector("input"), out = l.querySelector("b");
+  inp.addEventListener("input", () => { TUNE[k] = +inp.value; out.textContent = inp.value; newRound(S.seed); });
+  knobs.appendChild(l);
+}
+
+// ---- Цикл ----
+let manual = false, acc = 0, lastT = performance.now();
+const frames = [];
+function loop(now) {
+  const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+  frames.push(now); if (frames.length > 120) frames.shift();
+  if (!manual) { acc += dt; let n = 0; while (acc >= DT && n < 3) { tick(); acc -= DT; n++; } if (n === 3) acc = 0; }
+  render(); requestAnimationFrame(loop);
+}
+
+// ---- Тестовый API ----
+window.__game = {
+  ready: false,
+  getState() {
+    const cl = S.cl, r = cv.getBoundingClientRect();
+    return {
+      scene: S.scene, phase: S.phase, why: S.why, seed: S.seed, score: S.score, shot: S.shot, shotsLeft: TUNE.shots - S.shot,
+      current: S.cur, next: S.next, dry: S.dry, lowerIn: TUNE.lowerAfter - S.dry, omFrame,
+      cluster: {
+        count: cl.cells.size, yOff: cl.yOff, yT: cl.yT, bottom: cl.cells.size ? bottomY(cl) : null, line: LINE_Y, genTries: cl.tries, ropesReachable: cl.reach,
+        cells: [...cl.cells.values()].map(e => ({ r: e.r, c: e.c, color: e.color, ...cellPos(cl, e.r, e.c) })),
+        ropes: cl.ropes.map((rp, i) => ({ i, ax: rp.ax, cut: rp.cut, end: !rp.cut && cl.cells.has(rp.key) ? ropeEnd(cl, rp) : null })),
+      },
+      falling: S.falling.length, chain: S.chain, om: { x: S.om.x, mouthY: MOUTH_Y },
+      candy: { x: S.candy.x, y: S.candy.y, vx: S.candy.vx, vy: S.candy.vy, vis: S.candy.vis, color: S.candy.color },
+      pull: S.pull, last: S.last, stats: { ...S.st }, bot: bot ? { skill: bot.skill } : null,
+      view: { left: r.left, top: r.top, scale, restX: REST.x, restY: REST.y }, tune: { ...TUNE },
+    };
+  },
+  act(a, p) {
+    if (a === "seed" || a === "restart") newRound(p && p.seed != null ? p.seed : a === "restart" ? S.seed : undefined);
+    else if (a === "newSeed") newRound();
+    else if (a === "shoot") { if (!startPull()) return false; setPull(p.dx, p.dy); return release(); }
+    else if (a === "tap" || a === "swap") return swap();
+    else if (a === "pull") { if (S.phase === "aim") startPull(); setPull(p.dx, p.dy); }
+    else if (a === "release") return release();
+    else if (a === "drag") { const pts = p.points; if (!startPull()) return false; const [x0, y0] = pts[0]; for (const q of pts) setPull(q[0] - x0, q[1] - y0); return release(); }
+    else if (a === "autoplay") { bot = p && p.skill != null ? { skill: Math.max(0, Math.min(1, +p.skill)) } : null; S.botT = 0; S.botPlan = null; if (S.phase === "drag") cancelPull(); }
+    else if (a === "clock") manual = !!(p && p.manual);
+    else if (a === "step") { for (let i = 0; i < (p || 1); i++) tick(); }
+    else if (a === "predict") return simShot(S.cl, p.dx, p.dy, p.color != null ? p.color : S.cur);
+    else if (a === "plan") return planShot(p && p.skill != null ? p.skill : 1);
+    else if (a === "ropeShot") { // оракул: бросок, рвущий верёвку, с самым большим обвалом
+      let best = null; for (const s of scan(S.cl, S.cur, 4)) if (s.res.cuts.length && (!best || s.res.drops > best.res.drops)) best = s;
+      return best ? { dx: best.dx, dy: best.dy, ...best.res } : null;
+    }
+    else if (a === "setTune") { Object.assign(TUNE, p); newRound(S.seed); }
+    else if (a === "render") render();
+  },
+  metrics() {
+    const d = []; for (let i = 1; i < frames.length; i++) d.push(frames[i] - frames[i - 1]);
+    const avg = d.length ? d.reduce((s, x) => s + x, 0) / d.length : 16.7; d.sort((a, b) => a - b);
+    return { fps: Math.round(1000 / avg), frameMsP95: d.length ? d[Math.floor(d.length * 0.95)] : 0, drawCalls: -1 };
+  },
+};
+const q = new URLSearchParams(location.search);
+newRound(q.has("seed") ? +q.get("seed") : undefined);
+if (q.has("bot")) bot = { skill: Math.max(0, Math.min(1, +q.get("bot"))) };
+fit(); render();
+OMS.loaded.then(() => { window.__game.ready = true; });
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
