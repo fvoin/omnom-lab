@@ -826,12 +826,8 @@ function draw() {
   const tmv = S.tm + S.tOff - (S.round.state === "play" && S.mode === "run" && !S.paused ? (1 - ip) * DT : 0);
   const vis = visObs(xa - 150, xb + 150);
   for (const o of vis) drawObs(o, tmv, u);
-  if (!r && S.mode === "run") { // цель до нажатия: пунктир к центру крыши
-    ctx.lineWidth = 1.5 * u; ctx.setLineDash([5 * u, 5 * u]);
-    if (S.tgt) { ctx.strokeStyle = S.tgt.own ? "rgba(30,150,80,.9)" : "rgba(200,140,0,.8)"; ctx.beginPath(); ctx.moveTo(v.x, v.y); ctx.lineTo(S.tgt.x, S.tgt.y); ctx.stroke(); }
-    else { const a = rad(48), L = S.shotT > 0 ? 160 : 90; ctx.strokeStyle = S.shotT > 0 ? "rgba(180,40,40,.8)" : "rgba(40,40,60,.35)"; ctx.beginPath(); ctx.moveTo(v.x, v.y); ctx.lineTo(v.x + Math.cos(a) * L, v.y - Math.sin(a) * L); ctx.stroke(); }
-    ctx.setLineDash([]);
-    if (S.tgt) { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(S.tgt.x, S.tgt.y, 9 * u, 0, 7); ctx.fill(); ctx.fillStyle = S.tgt.own ? COL.own : COL.roofLit; ctx.beginPath(); ctx.arc(S.tgt.x, S.tgt.y, 6.5 * u, 0, 7); ctx.fill(); }
+  if (!r && S.mode === "run" && S.tgt) { // цель до нажатия: только подсветка точки на крыше (пунктира прицела нет)
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(S.tgt.x, S.tgt.y, 9 * u, 0, 7); ctx.fill(); ctx.fillStyle = S.tgt.own ? COL.own : COL.roofLit; ctx.beginPath(); ctx.arc(S.tgt.x, S.tgt.y, 6.5 * u, 0, 7); ctx.fill();
   }
   for (const f of S.flash) { ctx.strokeStyle = f.col; ctx.globalAlpha = f.life / 0.4; ctx.lineWidth = 2 * u; ctx.beginPath(); ctx.arc(f.x, f.y, (8 + (0.4 - f.life) * 40) * u, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
   if (r) { // верёвка: линия, провисла — с прогибом
