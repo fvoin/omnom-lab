@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <link rel="icon" href="data:,">
 <title>Мармеладный дождь</title>
-<style>:root{--ink:#4a2512;--cream:#fbebd0;--cream-sh:#e9cfa3;--card:#c98a4b;--card-mid:#b8773d;--card-sh:#8f5427;--act:#e8458a;--act-low:#a82060;--act-line:#4f0c2c;--gold:#ffd23f}html,body{height:100%;color:var(--ink);margin:0;font:700 14px/1.3 Nunito,system-ui,-apple-system,sans-serif;overflow:hidden}body{-webkit-user-select:none;user-select:none;background:radial-gradient(120% 80% at 30% 0%, #d49a5e 0%, var(--card) 45%, var(--card-mid) 100%);flex-direction:column;height:100dvh;display:flex}header{grid-template-columns:auto 1fr auto;align-items:center;gap:4px 8px;padding:8px 10px 2px;display:grid}header a{color:var(--ink);background:var(--cream);box-shadow:0 2px 0 var(--cream-sh);white-space:nowrap;border-radius:10px;padding:5px 9px;font-size:13px;text-decoration:none}header h1{text-align:center;color:var(--cream);text-shadow:0 2px 0 var(--card-sh);white-space:nowrap;text-overflow:ellipsis;margin:0;font-size:17px;font-weight:900;overflow:hidden}button{font:inherit;background:var(--cream);color:var(--ink);box-shadow:0 3px 0 var(--cream-sh);cursor:pointer;touch-action:manipulation;border:0;border-radius:12px;padding:6px 11px;font-weight:800}#hud{grid-column:1/4;justify-content:center;gap:4px;font-size:13px;font-weight:900;display:flex}#hud span{background:var(--cream);box-shadow:0 2px 0 var(--cream-sh);white-space:nowrap;border-radius:12px;padding:3px 7px}#hud #gold{background:#ffe58a}#stage{touch-action:none;flex:1;min-height:0;position:relative}canvas{box-shadow:0 0 0 6px var(--card-mid), 0 0 0 9px var(--card-sh), 4px 8px 14px #4a251259;border-radius:14px;display:block;position:absolute}#end{background:#4a251261;justify-content:center;align-items:center;display:none;position:absolute;inset:0}#end .card{background:var(--cream);text-align:center;min-width:210px;box-shadow:0 6px 0 var(--cream-sh), 0 10px 24px #4a251259;border:3px solid var(--ink);border-radius:22px;padding:16px 24px 20px}#end .omEnd{pointer-events:none;height:96px;margin:-4px auto -2px;display:block}#end .stars{letter-spacing:4px;color:#e9cfa3;-webkit-text-stroke:1.5px var(--ink);font-size:34px}#end .stars b{color:var(--gold)}#end .big{margin:2px 0;font-size:30px;font-weight:900}#end p{margin:5px 0}#end .rec{color:var(--act-low);font-weight:900}#end .act{color:#fff;text-shadow:0 2px 0 var(--act-line);border:3px solid var(--act-line);background:var(--act);box-shadow:inset 0 -5px 0 var(--act-low);border-radius:999px;margin:6px 4px 0;padding:8px 26px;font-size:17px}footer{color:var(--cream);text-align:center;padding:2px 10px 8px}#rule{white-space:nowrap;text-overflow:ellipsis;text-shadow:0 1px 0 var(--card-sh);font-size:11.5px;overflow:hidden}.bar{flex-wrap:wrap;justify-content:center;align-items:center;gap:3px 6px;margin-top:5px;display:flex}.bar button{box-shadow:0 2px 0 var(--cream-sh);white-space:nowrap;border-radius:10px;padding:5px 9px;font-size:13px}#seed{opacity:.85;white-space:nowrap;font-size:11px}#tune{text-align:left;grid-template-columns:auto 1fr 2.6em;align-items:center;gap:3px 8px;max-width:420px;margin:6px auto 0;font-size:12.5px;display:none}#tune.on{display:grid}#tune input{width:100%;margin:0}</style>
+<style>:root{--ink:#4a2512;--cream:#fbebd0;--cream-sh:#e9cfa3;--card:#c98a4b;--card-mid:#b8773d;--card-sh:#8f5427;--act:#e8458a;--act-low:#a82060;--act-line:#4f0c2c;--gold:#ffd23f}html,body{height:100%;color:var(--ink);margin:0;font:700 14px/1.3 Nunito,system-ui,-apple-system,sans-serif;overflow:hidden}body{-webkit-user-select:none;user-select:none;background:radial-gradient(120% 80% at 30% 0%, #d49a5e 0%, var(--card) 45%, var(--card-mid) 100%);flex-direction:column;height:100dvh;display:flex}header{grid-template-columns:auto 1fr auto;align-items:center;gap:4px 8px;padding:8px 10px 2px;display:grid}header a{color:var(--ink);background:var(--cream);box-shadow:0 2px 0 var(--cream-sh);white-space:nowrap;border-radius:10px;padding:5px 9px;font-size:13px;text-decoration:none}header h1{text-align:center;color:var(--cream);text-shadow:0 2px 0 var(--card-sh);white-space:nowrap;text-overflow:ellipsis;margin:0;font-size:17px;font-weight:900;overflow:hidden}button{font:inherit;background:var(--cream);color:var(--ink);box-shadow:0 3px 0 var(--cream-sh);cursor:pointer;touch-action:manipulation;border:0;border-radius:12px;padding:6px 11px;font-weight:800}#hud{grid-column:1/4;justify-content:center;gap:4px;font-size:13px;font-weight:900;display:flex}#hud span{background:var(--cream);box-shadow:0 2px 0 var(--cream-sh);white-space:nowrap;border-radius:12px;padding:3px 7px}#hud #gold{background:#ffe58a}#hud #bub{opacity:.3;align-items:center;padding:1px 5px;transition:opacity .12s;display:inline-flex}#hud #bub.on{opacity:1}#stage{touch-action:none;flex:1;min-height:0;position:relative}canvas{box-shadow:0 0 0 6px var(--card-mid), 0 0 0 9px var(--card-sh), 4px 8px 14px #4a251259;border-radius:14px;display:block;position:absolute}#end{background:#4a251261;justify-content:center;align-items:center;display:none;position:absolute;inset:0}#end .card{background:var(--cream);text-align:center;min-width:210px;box-shadow:0 6px 0 var(--cream-sh), 0 10px 24px #4a251259;border:3px solid var(--ink);border-radius:22px;padding:16px 24px 20px}#end .omEnd{pointer-events:none;height:96px;margin:-4px auto -2px;display:block}#end .stars{letter-spacing:4px;color:#e9cfa3;-webkit-text-stroke:1.5px var(--ink);font-size:34px}#end .stars b{color:var(--gold)}#end .big{margin:2px 0;font-size:30px;font-weight:900}#end p{margin:5px 0}#end .rec{color:var(--act-low);font-weight:900}#end .act{color:#fff;text-shadow:0 2px 0 var(--act-line);border:3px solid var(--act-line);background:var(--act);box-shadow:inset 0 -5px 0 var(--act-low);border-radius:999px;margin:6px 4px 0;padding:8px 26px;font-size:17px}footer{color:var(--cream);text-align:center;padding:2px 10px 8px}#rule{white-space:nowrap;text-overflow:ellipsis;text-shadow:0 1px 0 var(--card-sh);font-size:11.5px;overflow:hidden}.bar{flex-wrap:wrap;justify-content:center;align-items:center;gap:3px 6px;margin-top:5px;display:flex}.bar button{box-shadow:0 2px 0 var(--cream-sh);white-space:nowrap;border-radius:10px;padding:5px 9px;font-size:13px}#seed{opacity:.85;white-space:nowrap;font-size:11px}#tune{text-align:left;grid-template-columns:auto 1fr 2.6em;align-items:center;gap:3px 8px;max-width:420px;margin:6px auto 0;font-size:12.5px;display:none}#tune.on{display:grid}#tune input{width:100%;margin:0}</style>
 </head>
 <body>
 <header>
   <a href="index.html">← Лаб</a>
   <h1>Мармеладный дождь</h1>
   <button id="restart">Заново</button>
-  <div id="hud"><span id="field">Поле 1</span><span id="shots">Конфеты 8</span><span id="gold">Золото 0/7</span><span id="score">Очки 0</span></div>
+  <div id="hud"><span id="field">Поле 1</span><span id="shots">Конфеты 8</span><span id="gold">Золото 0/7</span><span id="score">Очки 0</span><span id="bub" title="Тап в полёте — пузырь"><svg viewBox="0 0 30 24" width="30" height="24"><circle cx="11" cy="11" r="9" fill="rgba(200,240,255,.7)" stroke="#2F7BC4" stroke-width="2"/><ellipse cx="7.5" cy="7.5" rx="3" ry="1.8" fill="#fff"/><path d="M21 22v-9a2 2 0 0 1 4 0v3l2 1v5z" fill="#FFF3D8" stroke="#4A2512" stroke-width="1.3" stroke-linejoin="round"/></svg></span></div>
 </header>
 <div id="stage">
   <canvas id="cv"></canvas>
@@ -116,20 +116,20 @@ const TUNE = {
   e: 0.68, eTired: 0.3, tiredT: 3.4, // «усталость»: после tiredT игр. с полёта e 0,3, конфета бледнеет
   kt: 0.98, wallE: 0.6, maxSpeed: 1126,
   gold0: 7, goldStep: 2, goldMax: 12, // золотых на поле n: min(12, 7 + 2(n − 1)) — 7, 9, 11, 12…
-  shots: 8,           // конфет на раунд; поймал тележкой — +1, поле очищено — +clearBonus
-  clearBonus: 2,
+  shots: 8,           // конфет на раунд; поймал тележкой — +1, поле очищено — +clearBonus за первые clearBonusFields полей, дальше +clearBonusLate (D-108)
+  clearBonus: 2, clearBonusFields: 2, clearBonusLate: 1,
   refill: 1.0,        // доля сбитых мятных, которые «дождь» возвращает после выстрела (0 — поле редеет, как в A)
   bubbleT: 0.92, bubbleArr: 0.14, // игр. с: пузырь живёт; лопается через bubbleArr после прибытия
   bubbleSpeed: 300,   // u/с, пузырь плывёт к пальцу
   bubbleUp: 140,      // u, куда плывёт пузырь без точки (act tap без координат): вверх
-  cartSpeed: 0.6, cartAmp: 104, catchW: 15, omScale: 0.7,
+  cartSpeed: 0.6, cartAmp: 104, catchW: 24, omScale: 0.7,
   popGap: 0.06, popTotal: 1.0,
   stuckV: 40, stuckT: 0.7, stuckR: 16, shotMax: 9.8, // игр. с
   firstTries: 60,
   aimTries: 10, aimNoise: 3,
   ptsMint: 1, ptsGold: 5,
   moveFrom: 3, moveAmp: 26, movePeriod: 3.6, // с поля 3 — едущий ряд, с поля 5 — два
-  star2: 280, star3: 415, // пороги звёзд: 2★ ≈ медиана бота 0,5 (281), 3★ ≈ 0,9 × медиана бота 1 (461) — D-27, rain.md §8
+  star2: 320, star3: 420, // пороги звёзд: 2★ ≈ медиана бота 0,5, 3★ ≈ 0,9 × медиана бота 1 — D-27, rain.md §8; D-108: бонус поля +2/+2/+1 → медианы 176/321/448
 };
 const KNOBS = [
   ["springK", "Пружина, u/с на 1 u", 4.5, 8, 0.1],
@@ -138,7 +138,7 @@ const KNOBS = [
   ["timeScale", "Скорость игры", 0.6, 1.6, 0.05],
   ["bubbleT", "Пузырь, игр. с", 0.4, 2, 0.05],
   ["bubbleSpeed", "Пузырь, u/с", 120, 500, 10],
-  ["catchW", "Рот тележки ±u", 8, 24, 1],
+  ["catchW", "Рот тележки ±u", 8, 36, 1],
   ["aimPreview", "Пунктир: +хвост", 0, 1, 1],
 ];
 const W = 320, H = 560, DT = 1 / 60, SUB = 2;
@@ -513,18 +513,19 @@ function afterShot() {
 function toAim() { S.phase = "aim"; S.phaseT = 0; S.botT = 0; S.botPlan = null; S.chain = 0; S.tired = false; }
 function startClear() { // поле чисто: оставшиеся мятные лопаются волной сверху вниз (+1 каждая), +2 конфеты, новое поле дождём
   S.fieldsCleared++; if (S.field === 1) S.field1Shots = S.fieldShot;
-  S.shotsLeft += TUNE.clearBonus;
+  S.clearGot = S.fieldsCleared <= TUNE.clearBonusFields ? TUNE.clearBonus : TUNE.clearBonusLate;
+  S.shotsLeft += S.clearGot;
   S.clearQ = S.pegs.filter((p) => p.alive).sort((a, b) => a.y - b.y);
   S.phase = "clear"; S.phaseT = 0; S.popIdx = 0; S.joyT = 1.4;
-  S.banner = { text: "Поле чисто!", sub: "+" + TUNE.clearBonus + " конфеты", t: 0 };
+  S.banner = { text: "Поле чисто!", sub: "+" + S.clearGot + (S.clearGot === 1 ? " конфета" : " конфеты"), t: 0 };
   sfx("clear"); logEv("clear", { field: S.field, shots: S.fieldShot }); updateHud();
 }
 function stars() { return 1 + (S.score >= TUNE.star2 ? 1 : 0) + (S.score >= TUNE.star3 ? 1 : 0); }
 function endRound() {
   S.scene = "end"; S.phase = "end"; S.botT = 0;
-  let best = 0; try { best = +(localStorage.getItem("lab.best.rain") || 0); } catch (e) {}
+  let best = 0; try { best = +(localStorage.getItem("lab.best.rain3") || 0); } catch (e) {}
   S.record = !QUIET && S.score > best;
-  if (S.record) try { localStorage.setItem("lab.best.rain", String(S.score)); } catch (e) {}
+  if (S.record) try { localStorage.setItem("lab.best.rain3", String(S.score)); } catch (e) {}
   logEv("end", { score: S.score, fields: S.fieldsCleared, stars: stars() });
   sfx("end");
   if (QUIET) return;
@@ -592,6 +593,7 @@ function tick() {
   }
   if (bot) botTick();
 }
+let bubOn = false;
 function updateHud() {
   if (QUIET) return;
   document.getElementById("field").textContent = "Поле " + S.field;
@@ -940,8 +942,7 @@ function render() {
   if (S.shotsLeft === 0 && (S.phase === "tube" || S.phase === "fly")) {
     ctx.font = "900 14px Nunito, system-ui"; ctx.textAlign = "center"; ctx.lineWidth = 4; ctx.strokeStyle = C.cream; ctx.strokeText("последняя!", 152, 100); ctx.fillStyle = "#A82060"; ctx.fillText("последняя!", 152, 100);
   }
-  { const bx = 236, by = 22, on = !S.bubbleUsed || S.phase === "aim" || S.phase === "drag";
-    ctx.globalAlpha = on ? 1 : 0.3; circle(bx, by, 11, "rgba(200,240,255,.5)", "rgba(255,255,255,.95)", 2); ellipse(bx - 4, by - 4, 3.5, 2, "#fff"); circle(bx, by, 11.8, null, "rgba(74,37,18,.45)", 1); ctx.globalAlpha = 1; }
+  if (!QUIET) { const on = S.phase === "fly" && !S.bubbleUsed; if (on !== bubOn) { bubOn = on; document.getElementById("bub").classList.toggle("on", on); } } // значок «тап = пузырь» — в шапке, не на поле
   ctx.textAlign = "center"; ctx.textBaseline = "alphabetic"; ctx.lineWidth = 4; ctx.strokeStyle = C.cream;
   for (const p of S.popups) { ctx.globalAlpha = Math.min(1, 2.5 - 3 * p.t); const y = p.y - p.t * 34; ctx.font = `900 ${p.size}px Nunito, system-ui`; ctx.strokeText(p.text, p.x, y); ctx.fillStyle = p.color; ctx.fillText(p.text, p.x, y); }
   ctx.globalAlpha = 1;

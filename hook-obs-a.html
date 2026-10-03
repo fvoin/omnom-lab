@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:,">
+<title>Крючки: Шипы</title>
+<style>:root{--bg:#1d2333;--fg:#f3f5fa;--muted:#a9b1c6;--card:#2a3148;--card2:#323b57;--line:#3d4766;--acc:#ffd166}*{box-sizing:border-box}html,body{background:var(--bg);height:100%;color:var(--fg);margin:0;font:13px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{flex-direction:column;height:100dvh;display:flex}header{flex:none;align-items:center;gap:10px;padding:6px 12px;display:flex}header a{color:var(--muted);font-size:13px;text-decoration:none}header h1{margin:0;font-size:15px;font-weight:700}#app{flex:1;min-height:0;display:flex}#stage{touch-action:none;-webkit-user-select:none;user-select:none;flex:1;min-width:0;min-height:0;position:relative}canvas{touch-action:none;border-radius:8px;display:block;position:absolute}#panel{background:var(--card);border-left:1px solid var(--line);flex-direction:column;flex:none;width:350px;min-height:0;display:flex}.phead{border-bottom:1px solid var(--line);flex-direction:column;flex:none;gap:6px;padding:8px 10px 6px;display:flex}.row{flex-wrap:wrap;align-items:center;gap:5px;display:flex}.pbody{-webkit-overflow-scrolling:touch;flex-direction:column;flex:1;gap:8px;padding:6px 10px 16px;display:flex;overflow:auto}button{font:inherit;color:var(--fg);background:var(--card2);border:1px solid var(--line);cursor:pointer;border-radius:8px;padding:5px 9px;font-weight:600}button.on{background:var(--acc);color:#222;border-color:var(--acc)}#drawerBtn{display:none}.preset-note{color:var(--muted);font-size:12px}.hrow{grid-template-columns:auto 1fr 3.6em;align-items:center;gap:2px 8px;font-size:13px;display:grid}.hrow input{width:100%;margin:0}.hrow b{text-align:right;font-variant-numeric:tabular-nums}.t{align-items:center;gap:6px;font-size:12px;display:flex}#stat{color:var(--muted);font-size:11px;line-height:1.35}.note{color:var(--muted);margin:0;font-size:12px;line-height:1.4}.note b{color:var(--fg)}@media (width<=760px){header{padding:4px 10px}#app{flex-direction:column}#panel{border-left:0;border-top:1px solid var(--line);width:auto;max-height:48%}#panel.closed{max-height:none}#panel.closed .pbody{display:none}#drawerBtn{display:inline-block}.phead button{padding:4px 7px;font-size:12px}.row{gap:4px}}</style>
+</head>
+<body>
+<header><a href="index.html">← Лаборатория</a><h1>Крючки: Шипы</h1></header>
+<div id="app">
+  <div id="stage"><canvas id="cv"></canvas></div>
+  <div id="panel">
+    <div class="phead">
+      <div class="row">
+        <button id="drawerBtn">Настройки ▲</button>
+        <button id="bRestart" title="клавиша R">Рестарт</button>
+        <button id="bPause" title="клавиша P">Пауза</button>
+        <button data-sp="0.25">×0,25</button><button data-sp="0.5">×0,5</button><button data-sp="1">×1</button>
+      </div>
+      <div class="row"><span class="preset-note">Автоигра:</span><button data-bot="">нет</button><button data-bot="plan">Планировщик</button><button data-bot="look">Внимательный</button><button data-bot="blind">Слепой</button></div>
+    </div>
+    <div class="pbody" id="pbody">
+      <div id="sliders" style="display:flex;flex-direction:column;gap:6px"></div>
+      <div class="row"><button id="bWorld">Новый мир</button><button id="bReset">Сбросить</button>
+        <label class="t"><input type="checkbox" id="cDebug"> зоны касания</label></div>
+      <p class="note"><b>Шипы.</b> Конфет нет: на улице висят колючие ежи (и «ворота» из двух), а на краях крыш торчат ряд шипов и колючие каштаны. Держи — цепляешься за центр крыши, отпусти — летишь. Одна жизнь: врезался — Ом Ном падает, забег кончен. Счёт — метры.</p>
+      <p class="note">Боты (100 seed, медиана до падения): «Слепой» 119 м, «Внимательный» 296 м, «Планировщик» не падает — 2560 м за 2 мин (потолок замера). Они же жмутся кнопкой «Автоигра».</p>
+      <div id="stat"></div>
+    </div>
+  </div>
+</div>
+<script>
+"use strict";
+// «Крючки с препятствиями» (D-110): мах, верёвка, генерация домов «Дальнобой» — из hook-tune.html v17 (D-87), конфет нет.
+// Ядро без DOM: его же грузит node-харнесс (боты, замеры на 100 seed). Препятствия — в obs-<вариант>.js, картинка и ввод — в view.js.
+const W = 320, H = 480, DT = 1 / 60, NSUB = 8, FLOOR = 462, TAU = Math.PI * 2;
+const SIZE = { omFeet: 30, omTop: 36 };
+const HIT = { dy: 4, r: 24 }; // зона касания Ома Нома: круг r 24 u с центром на 4 u ниже «рта» — внутри тела (±33 × −27…+30)
+const rad = (d) => d * Math.PI / 180;
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const nowMs = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+class Prng {
+  constructor(seed) { this.s = seed >>> 0; }
+  next() { let t = (this.s = (this.s + 0x6D2B79F5) >>> 0); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
+}
+function hash3(a, b, c) { let t = (Math.imul(a >>> 0, 2654435761) ^ Math.imul(b + 1, 40503) ^ Math.imul(c + 7, 2246822519)) >>> 0; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return (t ^ (t >>> 14)) >>> 0; }
+function lcg(s) { let r = s >>> 0; return () => (r = (r * 1103515245 + 12345) % 2147483648) / 2147483648; }
+const gauss6 = (R) => { let u = 0; for (let i = 0; i < 6; i++) u += R(); return (u - 3) / Math.sqrt(0.5); };
+
+// ---- Числа: физика и улица — «Дальнобой» D-87 без правил мастерства; камера — hook-tune ------------------------------
+const TUNE = {
+  gravity: 1300, airDrag: 0.999, capVx: 1300, capVy: 1400,
+  ropeMin: 80, ropeMax: 800, reel: 330, reelMin: 120, liftDy: 100, ownPad: 40, ctrAhead: 30,
+  jumpVx: 300, jumpVy: -200, groundJumpVx: 350, groundJumpVy: -900, restitution: 0.5, groundFric: 0.8,
+  hMin0: 560, hMinG: 0.4, hMax: 880, wMin: 70, wMax0: 210, wFloor: 210, wShrink: 0, gapMin: 200, gapMax0: 440, gapGrow: 0.003, gapCap: 560,
+  simW: 40, simG: 60, firstX0: 200, firstW: 180, firstH: 560,
+  zoom: 0.3, camSmooth: 0.35, lookahead: 0.1, camAnchor: 0.35, camTopMargin: 200, camGround: 60,
+};
+// ползунки панели (на мир не влияют, кроме препятствий — меняют раунд)
+const KNOB = { density: 1, growth: 1, size: 1 };
+const HOOKS = { tick: null, hit: null, round: null }; // view.js вешает сюда картинки; ядро их не требует
+
+let S = null, QUIET = false;
+
+// ---- Цель: центр крыши (D-75) --------------------------------------------------------------------------------------------
+function firstIdx(bl, x) { let lo = 0, hi = bl.length; while (lo < hi) { const m = (lo + hi) >> 1; if (bl[m].x1 <= x) lo = m + 1; else hi = m; } return lo; }
+function centerOf(b, x, y, own) {
+  const cx = (b.x0 + b.x1) / 2, dy = y - b.top;
+  if (!(cx - x > TUNE.ctrAhead) || dy < TUNE.liftDy) return null;
+  const L = Math.hypot(cx - x, dy);
+  if (L < TUNE.ropeMin || L > TUNE.ropeMax) return null;
+  return { x: cx, y: b.top, L, house: b.id, own, ctr: true };
+}
+function centerAimIn(list, x, y) {
+  let n = 0;
+  for (let i = firstIdx(list, x); i < list.length && n < 2; i++) {
+    const b = list[i], own = b.x0 - TUNE.ownPad <= x;
+    if (!((b.x0 + b.x1) / 2 - x > TUNE.ctrAhead)) continue;
+    n++; const c = centerOf(b, x, y, own); if (c) return c;
+  }
+  return null;
+}
+function aimAt(x, y) {
+  const bl = S.WD.bld, b = bl[firstIdx(bl, x)];
+  if (b && b.x0 - TUNE.ownPad <= x) { const c = centerOf(b, x, y, true); if (c) return c; } // свой дом
+  return centerAimIn(bl, x, y);
+}
+function updateTarget() { if (S.rope) { S.tgt = null; return; } S.tgt = aimAt(S.om.x, S.om.y); }
+
+// ---- Мир: дома (генератор «Дальнобой» D-87 без изменений) -----------------------------------------------------------------
+const gapMaxAt = (d) => Math.max(TUNE.gapMin, Math.min(TUNE.gapCap, TUNE.gapMax0 + TUNE.gapGrow * d));
+const wMaxAt = (d) => Math.max(TUNE.wMin, Math.max(TUNE.wFloor, TUNE.wMax0 - TUNE.wShrink * d));
+const hMinAt = (g) => Math.min(TUNE.hMax, TUNE.hMin0 + TUNE.hMinG * (g - TUNE.gapMin));
+function mkHouse(id, x0, w, h, g) { return { id, x0, x1: x0 + w, top: FLOOR - h, h, g }; }
+function newWorld(seed) {
+  const WD = { seed, rng: new Prng((Math.imul(seed >>> 0, 2654435761) ^ 0x9E3779B9) >>> 0), bld: [], reps: 0, fixes: 0, fails: 0, rerolls: 0,
+    obs: [], bk: new Map(), trial: [], zDone: 0, fixedX: -1e9, ck: [], job: null, stat: { zones: 0, empty: 0, att: [0, 0, 0, 0, 0, 0], ghostMs: 0, ghostRuns: 0, stall: 0, zms: [] }, nextId: 1 };
+  WD.bld.push(mkHouse(0, TUNE.firstX0, TUNE.firstW, TUNE.firstH, 0));
+  return WD;
+}
+function reachOK(A, B) { // с любого x от A.x0 до B.x0 на двух высотах есть цель — центр A или B
+  const list = [A, B];
+  for (let x = Math.floor(A.x0 / 5) * 5; x <= B.x0 + 5; x += 5)
+    for (const hs of [200, 380]) if (!centerAimIn(list, x, FLOOR - hs)) return false;
+  return true;
+}
+const simPair = (P, Q) => TUNE.simW > 0 && Math.abs((P.x1 - P.x0) - (Q.x1 - Q.x0)) < TUNE.simW && Math.abs(P.g - Q.g) < TUNE.simG;
+function genMore(WD, xTo) {
+  while (WD.bld[WD.bld.length - 1].x1 < xTo) {
+    const A = WD.bld[WD.bld.length - 1], r = WD.rng, d0 = A.x1 + TUNE.gapMin;
+    const aRep = WD.bld.length > 1 && simPair(WD.bld[WD.bld.length - 2], A);
+    let g = 0, w = 0, h = 0, ok = false, B = null, alt = null;
+    for (let k = 0; k <= 6 && !ok; k++) {
+      g = lerp(TUNE.gapMin, gapMaxAt(d0), r.next());
+      w = lerp(TUNE.wMin, wMaxAt(A.x1 + g), r.next());
+      h = lerp(Math.max(40, hMinAt(g)), Math.max(40, TUNE.hMax), r.next());
+      B = mkHouse(A.id + 1, A.x1 + g, w, h, g);
+      ok = reachOK(A, B); if (k > 0) WD.rerolls++;
+      if (ok && aRep && simPair(A, B)) { ok = false; if (!alt) alt = B; }
+    }
+    if (!ok && alt) { B = alt; g = B.g; ok = true; WD.reps++; }
+    for (let k = 0; k < 12 && !ok; k++) {
+      g = (g + TUNE.gapMin) / 2; if (k === 11) g = TUNE.gapMin;
+      B = mkHouse(A.id + 1, A.x1 + g, w, h, g); ok = reachOK(A, B);
+    }
+    if (!ok) { g = TUNE.gapMin; B = mkHouse(A.id + 1, A.x1 + g, TUNE.wMin, A.h, g); ok = reachOK(A, B); WD.fixes++; }
+    if (!ok) WD.fails++;
+    WD.bld.push(B);
+  }
+}
+
+// ---- Препятствия: общая модель ---------------------------------------------------------------------------------------------
+// o = { id, k, x, y, ... }. k: ball — круг r (двигается по mv); spk — набор кругов parts [[dx, dy, r]]; wire — провод (ломаная pts, толщина r);
+// box — прямоугольник hw × hh (двигается по mv); pil — столб от земли до верха top(t) шириной 2·hw.
+// mv: { k: "s", dx, dy, T, ph, bob } — синус по оси (dx, dy); { k: "p", ax, ay, L, A, T, ph } — маятник на цепи длины L, размах A (рад).
+let OX = 0, OY = 0;
+function obsPos(o, tm) {
+  const m = o.mv;
+  if (!m) { OX = o.x; OY = o.y; return; }
+  if (m.k === "s") { const q = Math.sin(TAU * tm / m.T + m.ph); OX = o.x + m.dx * q; OY = o.y + m.dy * q + (m.bob ? m.bob * Math.sin(2 * TAU * tm / m.T + m.ph * 2) : 0); }
+  else { const a = m.A * Math.sin(TAU * tm / m.T + m.ph); OX = m.ax + m.L * Math.sin(a); OY = m.ay + m.L * Math.cos(a); }
+}
+const pilTop = (o, tm) => lerp(o.yHi, o.yLo, 0.5 + 0.5 * Math.sin(TAU * tm / o.mv.T + o.mv.ph)); // yHi — верх выдвинутого, yLo — верх спрятанного (y вниз)
+function circRect(px, py, r, cx, cy, hw, hh) { const dx = Math.max(Math.abs(px - cx) - hw, 0), dy = Math.max(Math.abs(py - cy) - hh, 0); return dx * dx + dy * dy < r * r; }
+function segD2(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy; let t = l2 > 0 ? ((px - ax) * dx + (py - ay) * dy) / l2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
+  const qx = ax + dx * t - px, qy = ay + dy * t - py; return qx * qx + qy * qy;
+}
+function obsHit(o, px, py, rOm, tm) {
+  switch (o.k) {
+    case "ball": { obsPos(o, tm); const R = o.r + rOm, dx = px - OX, dy = py - OY; return dx * dx + dy * dy < R * R; }
+    case "spk": { for (const q of o.parts) { const R = q[2] + rOm, dx = px - o.x - q[0], dy = py - o.y - q[1]; if (dx * dx + dy * dy < R * R) return true; } return false; }
+    case "wire": { const R = o.r + rOm, p = o.pts; for (let i = 0; i + 1 < p.length; i++) if (segD2(px, py, p[i][0], p[i][1], p[i + 1][0], p[i + 1][1]) < R * R) return true; return false; }
+    case "box": { obsPos(o, tm); return circRect(px, py, rOm, OX, OY, o.hw, o.hh); }
+    case "pil": { const top = pilTop(o, tm) - (o.spk || 0) * 0.45; return circRect(px, py, rOm, o.x, (top + FLOOR + 80) / 2, o.hw, (FLOOR + 80 - top) / 2); }
+  }
+  return false;
+}
+function obsBox(o) { // x-протяжка (для корзин)
+  let a = o.x, b = o.x;
+  if (o.k === "ball") { const m = o.mv; if (!m) { a = o.x - o.r; b = o.x + o.r; } else if (m.k === "s") { a = o.x - Math.abs(m.dx) - o.r; b = o.x + Math.abs(m.dx) + o.r; } else { a = m.ax - m.L - o.r; b = m.ax + m.L + o.r; } }
+  else if (o.k === "spk") { a = b = o.x; for (const q of o.parts) { a = Math.min(a, o.x + q[0] - q[2]); b = Math.max(b, o.x + q[0] + q[2]); } }
+  else if (o.k === "wire") { a = 1e9; b = -1e9; for (const p of o.pts) { a = Math.min(a, p[0] - o.r); b = Math.max(b, p[0] + o.r); } }
+  else if (o.k === "box") { const dx = o.mv && o.mv.k === "s" ? Math.abs(o.mv.dx) : 0; a = o.x - dx - o.hw; b = o.x + dx + o.hw; }
+  else if (o.k === "pil") { a = o.x - o.hw; b = o.x + o.hw; }
+  o.bx0 = a; o.bx1 = b;
+}
+const BK = 256;
+function addObs(WD, o) {
+  o.id = WD.nextId++; obsBox(o); WD.obs.push(o);
+  for (let i = Math.floor((o.bx0 - 60) / BK), n = Math.floor((o.bx1 + 60) / BK); i <= n; i++) { let l = WD.bk.get(i); if (!l) WD.bk.set(i, l = []); l.push(o); }
+}
+let qStamp = 0;
+function gatherNear(x0, x1) { // в S.near — препятствия, чья протяжка по x пересекает [x0, x1]
+  const L = S.near; L.length = 0; const WD = S.WD; qStamp++;
+  for (let i = Math.floor(x0 / BK), n = Math.floor(x1 / BK); i <= n; i++) {
+    const l = WD.bk.get(i); if (!l) continue;
+    for (let j = 0; j < l.length; j++) { const o = l[j]; if (o._q !== qStamp && o.bx1 >= x0 && o.bx0 <= x1) { o._q = qStamp; L.push(o); } }
+  }
+  const t = WD.trial; for (let j = 0; j < t.length; j++) { const o = t[j]; if (o.bx1 >= x0 && o.bx0 <= x1) L.push(o); }
+}
+
+// ---- Состояние -------------------------------------------------------------------------------------------------------------
+function mkState(seed, WD) {
+  return {
+    seed, WD, steps: 0, time: 0, tm: 0, tOff: 0, held: false, pendCatch: false, paused: false,
+    om: { x: 0, y: 0, vx: 0, vy: 0, grounded: true, rot: 0 }, x0: 0, maxX: 0, rope: null, tgt: null, noPressUntil: 0, skipHouse: -1, misses: 0, catches: 0, groundHits: 0, lastGround: -999,
+    mode: "run", hit: null, dead: false, margin: 0, near: [], hits: 0, hitObs: null, tHit: 0, lieT: 0, spin: 0, recovered: false, bounces: 0, recoveries: 0, lost: 0,
+    round: { state: "ready", over: 0, why: "" }, shotT: 0, bot: null,
+  };
+}
+function cloneState(b) {
+  return Object.assign({}, b, { om: Object.assign({}, b.om), rope: b.rope && Object.assign({}, b.rope), round: Object.assign({}, b.round), near: [], hit: null, bot: null });
+}
+function withS(st, fn) { const p = S, q = QUIET; S = st; QUIET = true; try { return fn(); } finally { S = p; QUIET = q; } }
+const distM = () => Math.max(0, (S.maxX - S.x0) / 40);
+const speed = () => Math.hypot(S.om.vx, S.om.vy);
+function logEv(e) { if (QUIET) return; e.t = +S.tm.toFixed(3); e.step = S.steps; if (!S.log) S.log = []; S.log.push(e); if (S.log.length > 120) S.log.shift(); }
+
+// ---- Верёвка: натянута — маятник в полярных координатах; провисла — баллистика (hook-tune v17 без добавок) -----------------
+function toPolar(r) { const o = S.om, dx = o.x - r.ax, dy = o.y - r.ay; r.phi = Math.atan2(dx, dy); r.w = (o.vx * Math.cos(r.phi) - o.vy * Math.sin(r.phi)) / r.L; }
+function fromPolar(r) { const o = S.om, s = Math.sin(r.phi), c = Math.cos(r.phi); o.x = r.ax + r.L * s; o.y = r.ay + r.L * c; o.vx = r.L * r.w * c + r.rd * s; o.vy = -r.L * r.w * s + r.rd * c; }
+function tautCheck(r) {
+  const o = S.om, dx = o.x - r.ax, dy = o.y - r.ay, d = Math.hypot(dx, dy);
+  if (d < r.L) return false;
+  const nx = dx / d, ny = dy / d, vr = o.vx * nx + o.vy * ny;
+  o.x = r.ax + nx * r.L; o.y = r.ay + ny * r.L;
+  if (vr < r.rd) return false;
+  o.vx -= (vr - r.rd) * nx; o.vy -= (vr - r.rd) * ny;
+  r.taut = true; toPolar(r); return true;
+}
+function substep(h, k, tm) {
+  const o = S.om, r = S.rope, g = TUNE.gravity;
+  if (r) r.rd = (S.held && r.L > TUNE.reelMin + 1e-6) ? -TUNE.reel : 0;
+  if (r && r.taut) {
+    const L0 = r.L;
+    if (r.rd === 0) { r.w += -(g / L0) * Math.sin(r.phi) * h * 0.5; r.phi += r.w * h; r.w += -(g / L0) * Math.sin(r.phi) * h * 0.5; }
+    else { r.w += (-(g / L0) * Math.sin(r.phi) - 2 * r.rd * r.w / L0) * h; r.L = Math.max(TUNE.reelMin, L0 + r.rd * h); r.phi += r.w * h; }
+    fromPolar(r);
+    if (r.L * r.w * r.w + g * Math.cos(r.phi) < 0) r.taut = false; // верёвка не толкает: провисает
+  } else {
+    o.x += o.vx * h; o.y += o.vy * h + 0.5 * g * h * h; o.vy += g * h;
+    if (!r) { o.vx *= k.air; o.vy *= k.air; }
+    if (r) { if (r.rd !== 0) r.L = Math.max(TUNE.reelMin, Math.min(r.L, Math.hypot(o.x - r.ax, o.y - r.ay)) + r.rd * h); tautCheck(r); }
+  }
+  if (S.near.length) {
+    const px = o.x, py = o.y + HIT.dy, rr = HIT.r + S.margin;
+    for (let i = 0; i < S.near.length; i++) if (obsHit(S.near[i], px, py, rr, tm)) { S.hit = S.near[i]; return; }
+  }
+  if (o.y + SIZE.omFeet >= FLOOR) ground();
+}
+function ground() {
+  const o = S.om;
+  if (S.steps - S.lastGround > 30) S.groundHits++; S.lastGround = S.steps;
+  o.y = FLOOR - SIZE.omFeet;
+  if (S.rope) S.rope = null;
+  o.vy = -Math.abs(o.vy) * TUNE.restitution; o.vx *= TUNE.groundFric;
+  if (Math.abs(o.vy) < 60) { o.vy = 0; o.vx = 0; o.grounded = true; }
+  S.bounces++;
+  logEv({ type: "ground" });
+}
+function applyCaps() {
+  const o = S.om;
+  let hit = false;
+  if (Math.abs(o.vx) > TUNE.capVx) { o.vx = Math.sign(o.vx) * TUNE.capVx; hit = true; }
+  if (Math.abs(o.vy) > TUNE.capVy) { o.vy = Math.sign(o.vy) * TUNE.capVy; hit = true; }
+  if (hit && S.rope && S.rope.taut) { toPolar(S.rope); fromPolar(S.rope); }
+}
+
+// ---- Действия игрока ----------------------------------------------------------------------------------------------------------
+function hold() {
+  if (S.held || S.mode !== "run") return;
+  const R = S.round; if (R.state === "over") return; if (R.state === "ready") { R.state = "play"; logEv({ type: "roundStart" }); }
+  S.held = true;
+  if (S.rope || S.steps < S.noPressUntil) return;
+  const o = S.om;
+  let jumped = false;
+  if (o.grounded) { // на крыше старта — небольшой прыжок (hook-tune), с земли — большой: иначе до верёвки не достать
+    if (o.y > FLOOR - 80) { o.vx = TUNE.groundJumpVx; o.vy = TUNE.groundJumpVy; } else { o.vx = TUNE.jumpVx; o.vy = TUNE.jumpVy; }
+    o.grounded = false; jumped = true;
+  }
+  updateTarget();
+  const t = S.tgt;
+  if (!t && jumped) { S.pendCatch = true; return; } // прыжок без цели: верёвка выстрелит, как только цель появится, пока палец держит
+  catchAt(t);
+}
+function catchAt(t) {
+  const o = S.om; S.pendCatch = false;
+  if (!t) { S.misses++; S.noPressUntil = S.steps + 7; S.shotT = 0.22; logEv({ type: "miss" }); return; }
+  const L = Math.hypot(t.x - o.x, t.y - o.y);
+  S.rope = { ax: t.x, ay: t.y, L, L0: L, house: t.house, taut: false, phi: 0, w: 0, rd: 0 };
+  tautCheck(S.rope);
+  S.catches++; S.tgt = null; S.skipHouse = -1;
+  logEv({ type: "catch", L: +L.toFixed(1), house: t.house });
+}
+function release() {
+  if (!S.held) return;
+  S.held = false; S.pendCatch = false;
+  if (!S.rope) return;
+  S.rope = null; applyCaps();
+  logEv({ type: "release" });
+}
+
+// ---- Падение после удара ---------------------------------------------------------------------------------------------------------
+// VAR.fall: "end" — забег кончается (после 0,9 с на земле — итог); "recover" — встаёт через VAR.loss с после удара, забег идёт дальше
+function crashStart(o) {
+  const om = S.om; S.hits++; S.hitObs = o; S.mode = "tumble"; S.tHit = S.tm; S.lieT = 0; S.rope = null; S.held = false; S.pendCatch = false;
+  const fwd = Math.max(0, om.vx);
+  om.vx = -(70 + fwd * 0.12); om.vy = -340; om.grounded = false; S.spin = om.vx < 0 ? -6.5 : 6.5;
+  S.hitAt = { x: om.x, y: om.y, k: o.k, v: fwd }; S.hitStep = S.steps;
+  logEv({ type: "hit", kind: o.k, sub: o.sub || "", x: +om.x.toFixed(0), y: +om.y.toFixed(0), dist: +distM().toFixed(1) });
+  if (HOOKS.hit) HOOKS.hit(o);
+}
+function crashTick() {
+  const o = S.om, g = TUNE.gravity;
+  if (S.mode === "tumble") {
+    o.vy += g * DT; o.x += o.vx * DT; o.y += o.vy * DT; o.vx *= 0.995; o.rot += S.spin * DT;
+    if (o.y + SIZE.omFeet >= FLOOR) {
+      o.y = FLOOR - SIZE.omFeet;
+      if (o.vy > 220) { o.vy = -o.vy * 0.33; o.vx *= 0.5; S.spin *= 0.5; S.bounces++; }
+      else { S.mode = "lie"; o.vx = o.vy = 0; S.lieT = 0; if (HOOKS.round) HOOKS.round("lie"); }
+    }
+  } else if (S.mode === "lie") {
+    S.lieT += DT; o.rot += (0 - o.rot) * 0.12;
+    if (VAR.fall === "end") { if (S.lieT >= 0.9) endRound("fall"); }
+    else if (S.tm - S.tHit >= VAR.loss && S.lieT >= 0.6) { // встаёт: стоит на земле, первое нажатие — большой прыжок
+      S.mode = "run"; S.getupT = S.tm; o.grounded = true; o.rot = 0; o.vx = o.vy = 0; S.held = false; S.recoveries++; S.lost += S.tm - S.tHit; S.recovered = true; logEv({ type: "getup" });
+    }
+  }
+}
+function endRound(why) {
+  const R = S.round; if (R.state === "over") return;
+  R.state = "over"; R.over = 0; R.why = why; S.rope = null; S.held = false;
+  const d = Math.floor(distM()); S.newBest = d > best;
+  if (S.newBest) { best = d; try { localStorage.setItem(bestKey(), String(d)); } catch (e) {} }
+  if (HOOKS.round) HOOKS.round("over");
+}
+
+// ---- Шаг 1/60 с ---------------------------------------------------------------------------------------------------------------------
+function simTick() {
+  if (S.dead) return;
+  S.steps++; S.time += DT;
+  if (S.round.state === "play") S.tm += DT;
+  if (S.mode !== "run") { if (!QUIET) crashTick(); return; }
+  const o = S.om, tmEnd = S.tm + S.tOff;
+  gatherNear(o.x - 40 - Math.abs(o.vx) * DT, o.x + 40 + Math.abs(o.vx) * DT);
+  if (!o.grounded) {
+    const k = { air: Math.pow(TUNE.airDrag, 1 / NSUB) };
+    for (let i = 0; i < NSUB && !o.grounded && !S.hit; i++) substep(DT / NSUB, k, tmEnd - DT + DT * (i + 1) / NSUB);
+    if (S.hit) { const h = S.hit; S.hit = null; if (QUIET) { S.dead = true; return; } crashStart(h); return; }
+    applyCaps();
+  } else if (S.near.length) { // на земле/крыше тоже могут задеть
+    for (let i = 0; i < S.near.length; i++) if (obsHit(S.near[i], o.x, o.y + HIT.dy, HIT.r + S.margin, tmEnd)) { if (QUIET) { S.dead = true; return; } crashStart(S.near[i]); return; }
+  }
+  if (S.maxX < o.x) S.maxX = o.x;
+  if (S.skipHouse >= 0) { const sb = S.WD.bld.find((b) => b.id === S.skipHouse); if (!sb || o.x >= sb.x1) S.skipHouse = -1; }
+  const r = S.rope;
+  const rt = r ? Math.atan2(r.ax - o.x, o.y - r.ay) : 0;
+  o.rot += (rt - o.rot) * 0.2;
+  if (S.shotT > 0) S.shotT -= DT;
+  updateTarget();
+  if (S.pendCatch && S.held && !S.rope && S.tgt) catchAt(S.tgt);
+}
+
+// ---- Опорный игрок («призрак») и поиск ----------------------------------------------------------------------------------------------
+// Решение — по фазам: на верёвке «через сколько тиков отпустить» (k), в полёте «через сколько тиков нажать» (d). Каждое кандидатное решение — прокрутка копии
+// состояния: действие, потом «Точный» (отпускание при 30…55°, нажатие на спуске при цели) до горизонта. Выживает и дальше всех — выбираем.
+const velAng = () => Math.atan2(-S.om.vy, S.om.vx) * 180 / Math.PI;
+const accPress = (relAt, wait) => { const o = S.om, t = S.tgt; return !!t && S.steps - relAt > wait && o.vy > 0 && t.x > o.x && t.y < o.y - 60; };
+function cont(c) { // «Точный», слепой к препятствиям
+  const o = S.om;
+  if (!S.held) { if (o.grounded || accPress(c.relAt, 21)) { hold(); c.ropeAt = S.steps; } return; }
+  if (!S.rope) { if (!S.pendCatch) { release(); c.relAt = S.steps; } return; }
+  const a = velAng(); if ((o.vx > 0 && a > 30 && a < 55) || S.steps - c.ropeAt > 180) { release(); c.relAt = S.steps; }
+}
+function evalCand(kind, c, P) { // → { dead, t, x }
+  const base = S, bq = QUIET, cl = cloneState(base); cl.margin = P.margin; S = cl; QUIET = true;
+  try {
+    const cc = { relAt: -99, ropeAt: S.steps }, x0 = S.om.x, n = P.H + c;
+    for (let i = 0; i < n; i++) {
+      if (i === c) { if (kind === "rope") { release(); cc.relAt = S.steps; } else { hold(); cc.ropeAt = S.steps; } }
+      else if (i > c) cont(cc);
+      simTick(); if (S.dead) return { dead: true, t: i, x: S.om.x - x0 };
+    }
+    return { dead: false, t: n, x: S.om.x - x0 };
+  } finally { S = base; QUIET = bq; }
+}
+function chooseAction(kind, P) { // → { c, alive, x } на текущем S; P.coarse — сначала через шаг, потом уточнить рядом с лучшим
+  let bc = 0, bx = -1e9, alive = false, bt = -1, tc = 0;
+  const maxC = kind === "rope" ? P.maxK : P.maxD, st = P.coarse ? P.step * 2 : P.step;
+  const one = (c) => { const r = evalCand(kind, c, P); if (!r.dead) { if (!alive || r.x > bx + 1e-6) { alive = true; bx = r.x; bc = c; } } else if (!alive && r.t > bt) { bt = r.t; tc = c; } };
+  for (let c = 0; c <= maxC; c += st) one(c);
+  if (P.coarse && alive) { const c0 = bc; for (const c of [c0 - P.step, c0 + P.step]) if (c >= 0 && c <= maxC) one(c); }
+  return alive ? { c: bc, alive: true, x: bx } : { c: tc, alive: false, x: bx };
+}
+function execUnit(kind, c, lim) { // одно решение на S; → "dead" | "ok"
+  if (kind === "rope") {
+    for (let i = 0; i < c; i++) { simTick(); if (S.dead) return "dead"; }
+    release(); simTick(); return S.dead ? "dead" : "ok";
+  }
+  for (let i = 0; i < c; i++) { simTick(); if (S.dead) return "dead"; if (S.rope) return "ok"; }
+  hold(); simTick(); if (S.dead) return "dead";
+  for (let n = 0; n < 40 && !S.rope && S.held && !S.dead; n++) simTick();
+  if (S.dead) return "dead";
+  if (!S.rope) release();
+  return "ok";
+}
+const GH = { H: 100, step: 3, maxK: 63, maxD: 45, margin: 7, coarse: true, lead: 900 };
+function dfsSurvive(depth, P, budget) { // есть ли цепочка решений глубины ≤ depth, после которой доживаем до P.goalX (или H тиков, если goalX нет); budget.n — предел прокруток
+  const kind = S.rope ? "rope" : "air", maxC = kind === "rope" ? P.maxK : P.maxD;
+  for (let c = 0; c <= maxC; c += P.step) {
+    if (budget.n-- <= 0) return null;
+    const cl = cloneState(S), base = S, bq = QUIET; cl.margin = P.margin; S = cl; QUIET = true;
+    try {
+      const st = execUnit(kind, c);
+      if (st === "dead") continue;
+      if (P.goalX && S.om.x >= P.goalX) return true;
+      if (depth <= 1 || P.leaf) { const cc = { relAt: -99, ropeAt: S.steps }; let dead = false; for (let i = 0; i < P.H; i++) { if (P.goalX && S.om.x >= P.goalX) return true; cont(cc); simTick(); if (S.dead) { dead = true; break; } } if (!dead && !P.goalX) return true; }
+      if (depth > 1) { const r = dfsSurvive(depth - 1, P, budget); if (r === true) return true; if (r === null) return null; }
+    } finally { S = base; QUIET = bq; }
+  }
+  return false;
+}
+
+// ---- Генерация препятствий с проверкой призраком --------------------------------------------------------------------------------------------
+// Зона z — промежуток между домами z и z+1 и крыша z+1: якоря препятствий в x ∈ [A.x1 + 60, B.x1 − 40]. Раскладка принимается, если призрак
+// (решения по фазам, Ом Ном с запасом GH.margin к зоне касания) проходит зону при каждом сдвиге времени VAR.shifts (для движущихся) и не задевает ничего;
+// не прошла — следующая попытка (раскладка легче), последняя — пустая.
+function ckBefore(WD, x) { let c = WD.ck[0]; for (const q of WD.ck) if (q.om.x <= x) c = q; return c; }
+function mkLayout(WD, z, A, B, att) { const l = VAR.layout(WD, z, A, B, att); for (const o of l) obsBox(o); return l; }
+function mkRuns() { const r = []; for (let ph = 0; ph < VAR.shifts.length; ph++) for (const dv of VAR.dvs) r.push({ ph, dv }); r.sort((p, q) => (p.dv !== 0) - (q.dv !== 0) || p.ph - q.ph); return r; }
+function startJob(WD) {
+  const z = WD.zDone, A = WD.bld[z], B = WD.bld[z + 1];
+  const job = { z, A, B, att: 0, lay: null, ri: 0, runs: mkRuns(), cl: null, cks: null, newCks: null, xGoal: B.x1 + 100, first: false };
+  job.lay = mkLayout(WD, z, A, B, 0);
+  WD.job = job;
+  if (!job.lay.length) finishJob(WD, true);
+}
+function finishJob(WD, noRun) {
+  const job = WD.job; WD.trial = [];
+  for (const o of job.lay) addObs(WD, o);
+  if (job.ms) { WD.stat.zms.push(job.ms); if (WD.stat.zms.length > 3000) WD.stat.zms.shift(); }
+  WD.stat.zones++; if (!job.lay.length) WD.stat.empty++; WD.stat.att[job.att]++;
+  if (job.newCks && job.newCks.length) { const x0 = job.newCks[0].om.x; WD.ck = WD.ck.filter((q) => q.om.x < x0).concat(job.newCks); }
+  const lim = job.A.x1 - 4000; while (WD.ck.length > 2 && WD.ck[1].om.x < lim) WD.ck.shift();
+  WD.zDone = job.z + 1; WD.fixedX = job.B.x1; WD.job = null;
+}
+// Одна прогонка призрака: старт с контрольного состояния до зоны, сдвиг времени run.ph (для движущихся), первое решение сдвинуто на run.dv тиков
+// (проверка устойчивости: человек не повторяет призрака тик в тик); если сдвинутое первое решение само ведёт к удару — этот прогон не считается.
+function jobStep(WD) { // одно решение призрака
+  const job = WD.job; if (!job) return;
+  const t0 = nowMs(), run = job.runs[job.ri];
+  if (!job.pre) { // один раз на зону: довести призрака по уже принятым зонам до начала этой (иначе каждый прогон повторял бы путь)
+    const ck = ckBefore(WD, 1e12);
+    if (ck.om.x >= job.A.x1 - 700 - GH.lead) job.pre = { done: true };
+    else {
+      if (!job.pre0) { job.pre0 = { cl: cloneState(ck), cks: [], n: 0 }; job.pre0.cl.margin = GH.margin; job.pre0.cl.tOff = 0; }
+      const pr = job.pre0, pS2 = S, pQ2 = QUIET; S = pr.cl; QUIET = true; let st = "ok";
+      try { pr.cks.push(cloneState(S)); const kind = S.rope ? "rope" : "air", ch = chooseAction(kind, GH); st = execUnit(kind, ch.c); } finally { S = pS2; QUIET = pQ2; }
+      pr.n++; const dtp = nowMs() - t0; WD.stat.ghostMs += dtp; job.ms = (job.ms || 0) + dtp;
+      if (st === "dead" || pr.cl.om.x >= job.A.x1 - 700 - GH.lead || pr.n > 80) { WD.ck = WD.ck.filter((q) => q.om.x < pr.cks[0].om.x).concat(pr.cks); job.pre = { done: true }; }
+      return;
+    }
+  }
+  if (!job.cl) {
+    WD.trial = job.lay;
+    const ck = ckBefore(WD, job.A.x1 + 40 - GH.lead), cl = cloneState(ck);
+    cl.tOff = VAR.shifts[run.ph] || 0; cl.margin = GH.margin; cl.dead = false;
+    job.cl = cl; job.ticks0 = cl.steps; job.maxTicks = 260 + Math.max(0, job.xGoal - cl.om.x) / 9; job.cks = job.ri === 0 ? [] : null; job.first = true; WD.stat.ghostRuns++;
+  }
+  const cl = job.cl, pS = S, pQ = QUIET; S = cl; QUIET = true;
+  let res = "cont";
+  try {
+    if (job.cks) job.cks.push(cloneState(cl));
+    const kind = S.rope ? "rope" : "air", ch = chooseAction(kind, GH);
+    if (!ch.alive || ch.x < 150) res = "dead"; // не живой или не продвигается вперёд — раскладка не годится
+    else {
+      let c = ch.c;
+      if (job.first && run.dv !== 0) { c = clamp(c + run.dv, 0, kind === "rope" ? GH.maxK + 18 : GH.maxD + 18); if (c === ch.c || evalCand(kind, c, GH).dead) res = "skip"; }
+      job.first = false;
+      if (res !== "skip") { const st = execUnit(kind, c); res = st === "dead" ? "dead" : S.om.x >= job.xGoal ? "goal" : S.steps - job.ticks0 > job.maxTicks ? "stall" : "cont"; }
+    }
+  } finally { S = pS; QUIET = pQ; }
+  const dtj = nowMs() - t0; WD.stat.ghostMs += dtj; job.ms = (job.ms || 0) + dtj;
+  if (res === "cont") return;
+  if (res === "goal" || res === "skip") {
+    if (job.ri === 0) job.newCks = job.cks;
+    job.ri++; job.cl = null;
+    if (job.ri >= job.runs.length) finishJob(WD);
+    return;
+  }
+  // dead / stall — раскладка не прошла: легче
+  job.att++; job.ri = 0; job.cl = null; job.newCks = null;
+  if (res === "stall") WD.stat.stall++;
+  job.lay = job.att >= 5 ? [] : mkLayout(WD, job.z, job.A, job.B, job.att);
+  if (!job.lay.length) { job.att = Math.min(job.att, 5); finishJob(WD, true); } // пустую зону принимаем без прогона
+}
+function genPump(WD, ms, lead) { // до WD.fixedX ≥ lead; ms — бюджет времени (Infinity — без ограничений)
+  const t0 = nowMs();
+  while (WD.fixedX < lead) {
+    genMore(WD, Math.max(lead, WD.fixedX) + 2000);
+    if (!WD.job) startJob(WD);
+    if (WD.job) jobStep(WD);
+    if (ms !== Infinity && nowMs() - t0 > ms) break;
+  }
+}
+
+// ---- Раунд ----------------------------------------------------------------------------------------------------------------------------------
+let best = 0;
+const bestKey = () => "lab.best." + VAR.slug;
+function newRound(seed) {
+  if (seed == null) seed = (Date.now() ^ (Math.random() * 1e9)) >>> 0;
+  seed >>>= 0;
+  const WD = newWorld(seed), b = WD.bld[0], keep = S ? S.paused : false;
+  S = mkState(seed, WD); S.paused = keep;
+  S.om.x = Math.max(b.x0 + 20, b.x1 - 40); S.om.y = b.top - SIZE.omFeet; S.x0 = S.maxX = S.om.x; S.skipHouse = b.id;
+  S.cam = { x: 0, y: 0, vx: 0, vy: 0, vxs: 0, vys: 0, zoom: TUNE.zoom, spS: 0 };
+  S.log = []; S.trail = []; S.fx = []; S.prev = null; S.flash = [];
+  genMore(WD, S.om.x + 4200);
+  WD.ck.push(cloneState(S));
+  genPump(WD, Infinity, S.om.x + 2600);
+  camStep(true); updateTarget(); snapPrev();
+  S.bot = AUTO && BOTS[AUTO] ? BOTS[AUTO](seed) : null;
+  return S;
+}
+let AUTO = null;
+function snapPrev() { const o = S.om, c = S.cam; S.prev = { x: o.x, y: o.y, rot: o.rot, cx: c.x, cy: c.y, z: c.zoom }; }
+function stepPlayer(budgetMs) {
+  if (S.bot) S.bot();
+  const R = S.round;
+  snapPrev();
+  if (R.state === "over") { R.over += DT; if (HOOKS.tick) HOOKS.tick(); return; }
+  simTick();
+  const o = S.om;
+  if (R.state === "play" && VAR.roundSec > 0 && S.tm >= VAR.roundSec) endRound("time");
+  camStep(false);
+  if (HOOKS.tick) HOOKS.tick();
+  if (budgetMs !== -1) genPump(S.WD, budgetMs == null ? Infinity : budgetMs, o.x + 2600);
+}
+function setAuto(name) { AUTO = BOTS[name] ? name : null; if (S) S.bot = AUTO ? BOTS[AUTO](S.seed) : null; return AUTO; }
+
+// ---- Камера: критически демпфированная пружина (hook-tune) ---------------------------------------------------------------------------------
+function smoothDamp(cur, target, vel, T, dt) {
+  const om = 2 / Math.max(1e-4, T), x = om * dt, ex = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+  const ch = cur - target, tmp = (vel + om * ch) * dt;
+  return [target + (ch + tmp) * ex, (vel - om * tmp) * ex];
+}
+function camStep(snap) {
+  const c = S.cam, o = S.om;
+  const a = snap ? 1 : 1 - Math.exp(-DT / 0.25);
+  c.vxs += (o.vx - c.vxs) * a; c.vys += (o.vy - c.vys) * a;
+  c.zoom = TUNE.zoom;
+  const Wv = W / c.zoom, Hv = H / c.zoom, T = TUNE.camSmooth;
+  const tx = o.x + c.vxs * (TUNE.lookahead + T) - TUNE.camAnchor * Wv;
+  const ty = Math.min(FLOOR + TUNE.camGround - Hv, o.y - SIZE.omTop - TUNE.camTopMargin + Math.min(0, c.vys) * T);
+  if (snap) { c.x = tx; c.y = ty; c.vx = c.vy = 0; return; }
+  [c.x, c.vx] = smoothDamp(c.x, tx, c.vx, T, DT);
+  [c.y, c.vy] = smoothDamp(c.y, ty, c.vy, T, DT);
+}
+
+// Боты (замеры на 100 seed, режим «автоигра» в странице). Все решают на каждом тике до шага, как харнесс: «бот, потом шаг».
+// plan  — «Планировщик»: перебирает решения по фазам (отпустить через k / нажать через d тиков) прокрутками копии состояния, видит препятствия на 100 тиков вперёд (1,7 с),
+//         пересматривает решение каждые 3 тика. Верхняя граница мастерства.
+// look  — «Внимательный»: как человек — через 0,2 с после начала фазы выбирает из 6 вариантов, видит только 55 тиков (0,9 с — столько видно на экране),
+//         исполняет с разбросом ±4 тика, иногда (4 %) зевает — запаздывает на 0,33 с.
+// blind — «Слепой»: «Обычный» из hook-tune — не видит препятствий вообще (показывает, что препятствия действительно мешают).
+const BOTP = { H: 100, step: 3, maxK: 60, maxD: 45, margin: 0 };
+const BOTS = {
+  plan: () => { let pendT = 0; return () => {
+    if (S.mode !== "run" || S.round.state === "over") return;
+    const o = S.om;
+    pendT = S.pendCatch ? pendT + 1 : 0;
+    if (S.held && !S.rope && (!S.pendCatch || pendT > 40)) { release(); return; }
+    if (S.steps % 3) return;
+    if (!S.held) { if (!S.tgt && !o.grounded) return; if (chooseAction("air", BOTP).c === 0) hold(); }
+    else if (S.rope) { if (chooseAction("rope", BOTP).c === 0) release(); }
+  }; },
+  look: (seed) => {
+    const R = lcg(seed * 13 + 5), P = { H: 55, step: 9, maxK: 45, maxD: 45, margin: 0 };
+    let ph = null, lastKind = "", phaseT = 0, react = 12, pendT = 0;
+    return () => {
+      if (S.mode !== "run" || S.round.state === "over") return;
+      pendT = S.pendCatch ? pendT + 1 : 0;
+      if (S.held && !S.rope && (!S.pendCatch || pendT > 40)) { release(); return; }
+      const kind = S.rope ? "rope" : "air";
+      if (kind !== lastKind) { lastKind = kind; phaseT = S.steps; ph = null; react = Math.max(6, Math.round(12 + 3 * gauss6(R))); }
+      if (!ph && S.steps - phaseT >= react && (kind === "rope" || S.tgt || S.om.grounded)) {
+        const ch = chooseAction(kind, P);
+        let at = S.steps + Math.max(0, Math.round(ch.c + 4 * gauss6(R)));
+        if (R() < 0.04) at += 20;
+        ph = { kind, at };
+      }
+      if (ph && ph.kind === kind && S.steps >= ph.at) { if (kind === "rope") release(); else hold(); ph = null; }
+    };
+  },
+  blind: (seed) => { const R = lcg(seed * 7 + 3); let relAt = -99, ropeAt = 0, armed = -1, relA = 42; // «Обычный» hook-tune: реакция N(11; 3,6), отпуск > N(42; 12)°
+    return () => { const o = S.om; if (S.mode !== "run" || S.round.state === "over") return;
+      if (!S.held) { const ok = accPress(relAt, 15);
+        if (o.grounded) { hold(); ropeAt = S.steps; return; }
+        if (ok && armed < 0) armed = S.steps + Math.max(3, Math.round(11 + 3.6 * gauss6(R)));
+        if (!ok && armed >= 0 && !S.tgt) armed = -1;
+        if (armed >= 0 && S.steps >= armed) { armed = -1; hold(); ropeAt = S.steps; relA = Math.min(80, Math.max(5, 42 + 12 * gauss6(R))); } return; }
+      if (!S.rope) { release(); relAt = S.steps; return; }
+      if ((o.vx > 0 && velAng() > relA) || S.steps - ropeAt > 180) { release(); relAt = S.steps; } }; },
+};
+const BOT_NAME = { plan: "Планировщик", look: "Внимательный", blind: "Слепой" };
+
+// Вариант A «Шипы»: колючие ежи висят в воздухе на пути маха (одиночные и «ворота» из двух), на краях крыш — ряд шипов и колючий каштан.
+// Одна жизнь: удар — падение, конец забега; счёт — метры.
+const VAR = { id: "a", slug: "hook-obs-a", name: "Шипы", fall: "end", loss: 0, roundSec: 0, shifts: [0], hint1: "Нажми и держи — прицепишься к крыше.", hint2: "Отпусти — полетишь. Не задень шипы!", moving: false, dvs: [0, -12, 12, 24, 36] };
+const SIZES = { urchinRs: 56, urchinHit: 43, chestRs: 50, chestHit: 39, spkW: 32, spkH: 72, spkN: 3, gateHalf: 135 };
+function levelA(dM) { // 0 … 1: до 25 м пусто, к 60 м — первые ежи, дальше растёт по ползунку «Рост трудности»
+  if (dM < 25) return 0;
+  const k = clamp((dM - 25) / 35, 0, 1), ramp = clamp(0.3 + 0.7 * KNOB.growth * Math.max(0, dM - 60) / 700, 0, 1);
+  return ramp * k * k * (3 - 2 * k);
+}
+function mkUrchin(x, y, sub, rs, hit, extra) { return Object.assign({ k: "ball", sub, x, y, r: hit, rs }, extra || {}); }
+function mkSpikes(x, topY, n, w, h) { // ряд из n шипов, основания на крыше (topY), левый край x; круги внутри треугольников
+  const parts = [];
+  for (let i = 0; i < n; i++) { const cx = (i + 0.5) * w; parts.push([cx, -0.2 * h, 0.35 * w], [cx, -0.5 * h, 0.2 * w], [cx, -0.78 * h, 0.09 * w]); }
+  return { k: "spk", sub: "spikes", x, y: topY, parts, n, w, h };
+}
+VAR.layout = function (WD, z, A, B, att) { // раскладка зоны: att > 0 — без первых att препятствий
+  const R = new Prng(hash3(WD.seed, z, 11)), dM = (A.x1 - 340) / 40, L = levelA(dM), Z = KNOB.size;
+  const nf = KNOB.density * (0.32 + 0.9 * L) * (L > 0 ? 1 : 0), n0 = Math.floor(nf) + (R.next() < nf - Math.floor(nf) ? 1 : 0);
+  const out = [], xs = [], xa = A.x1 + 60, xb = B.x1 - 40;
+  const spotOk = (x, y) => xs.every((q) => Math.abs(q[0] - x) > 190 || Math.abs(q[1] - y) > 260);
+  for (let i = 0; i < n0; i++) {
+    const wRoof = (B.x1 - B.x0) >= 110 && L > 0.15 ? 0.8 : 0, wGate = L > 0.5 ? 0.9 * (L - 0.5) / 0.5 + 0.1 : 0, wChest = L > 0.15 ? 0.5 : 0;
+    let u = R.next() * (1 + wRoof + wGate + wChest), kind = "urchin";
+    if (u > 1) { u -= 1; kind = u < wRoof ? "spikes" : u < wRoof + wGate ? "gate" : "chest"; }
+    if (kind === "spikes" || kind === "chest") { // край крыши B (левый или правый угол)
+      const left = R.next() < 0.5, w = SIZES.spkW * Z, h = SIZES.spkH * Z, rowW = w * SIZES.spkN;
+      if (kind === "spikes") out.push(mkSpikes(left ? B.x0 + 6 : B.x1 - 6 - rowW, B.top, SIZES.spkN, w, h));
+      else { const rs = SIZES.chestRs * Z, rh = SIZES.chestHit * Z; out.push(mkUrchin(left ? B.x0 + rs * 0.8 : B.x1 - rs * 0.8, B.top - rs * 0.55, "chest", rs, rh, { rot0: R.next() * 6 })); }
+      continue;
+    }
+    for (let tries = 0; tries < 6; tries++) { // плавающий еж: x в зоне, высота над землёй 300…950 (середина — чаще)
+      const x = lerp(xa, xb, R.next()), hg = lerp(300, 950, (R.next() + R.next()) / 2), y = FLOOR - hg;
+      if (!spotOk(x, y)) continue;
+      const rs = SIZES.urchinRs * Z, rh = SIZES.urchinHit * Z;
+      if (kind === "gate") { const gh = SIZES.gateHalf * Z * 0.9 + 6; xs.push([x, y]);
+        out.push(mkUrchin(x, y - gh, "gate", rs, rh, { rot0: R.next() * 6 }), mkUrchin(x, y + gh, "gate", rs, rh, { rot0: R.next() * 6 })); }
+      else { xs.push([x, y]); out.push(mkUrchin(x, y, "urchin", rs, rh, { rot0: R.next() * 6 })); }
+      break;
+    }
+  }
+  return out.slice(att >= out.length ? out.length : att);
+};
+
+// Картинки препятствий (процедурно, canvas). Палитра «опасно, но мило»: красно-фиолетовый, тёмный контур, яркие шипы; на синем фоне домов видно издалека.
+// Все размеры в мировых единицах; u = 1 / зум = мировых единиц на 1 пиксель окна 320×480 (контур и мелочи — в пикселях окна, не мельчают).
+const PAL = {
+  ink: "#2a1238", body: "#d6347a", bodyHi: "#ff8cb8", spike: "#8a2fb0", spikeHi: "#bc66e2",
+  chBody: "#a93a9e", chHi: "#e290d8", chSpike: "#5c2a8a", chSpikeHi: "#8a52c0",
+  maceBody: "#7a35b4", maceHi: "#b883ea", maceSpike: "#e23c7e", maceSpikeHi: "#ff86b0",
+  wire: "#c3306f", wireHi: "#ff9fc4", spark: "#fff3a0", sparkEdge: "#ffc928",
+  bird: "#b83a8a", birdHi: "#f2a4d4", wing: "#7e3cc0", wingHi: "#b680f0", beak: "#ffc928", belly: "#fde4f4",
+  pil: "#7a35b4", pilHi: "#a468dc", pilSpike: "#e23c7e",
+};
+function look2(tx, ty, x, y, lim) { const dx = tx - x, dy = ty - y, d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 160) * lim; return [dx / d * k, dy / d * k]; }
+function drawUrchin(x, y, rs, rot, u, tx, ty, p) { // rs — радиус по кончикам шипов; взгляд — на точку (tx, ty)
+  const rb = rs * 0.66, n = 11, lw = 1.7 * u;
+  ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.lineWidth = lw; ctx.strokeStyle = PAL.ink;
+  for (let i = 0; i < n; i++) {
+    const a = rot + i * TAU / n, ca = Math.cos(a), sa = Math.sin(a), pa = a + Math.PI / 2, hw = rb * 0.3;
+    ctx.beginPath(); ctx.moveTo(x + ca * rb * 0.75 + Math.cos(pa) * hw, y + sa * rb * 0.75 + Math.sin(pa) * hw);
+    ctx.lineTo(x + ca * rs, y + sa * rs); ctx.lineTo(x + ca * rb * 0.75 - Math.cos(pa) * hw, y + sa * rb * 0.75 - Math.sin(pa) * hw); ctx.closePath();
+    ctx.fillStyle = i % 2 ? p.spike : p.spikeHi; ctx.fill(); ctx.stroke();
+  }
+  ctx.fillStyle = p.body; ctx.beginPath(); ctx.arc(x, y, rb, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.beginPath(); ctx.ellipse(x - rb * 0.38, y - rb * 0.5, rb * 0.3, rb * 0.16, -0.6, 0, TAU); ctx.fill();
+  const [lx, ly] = look2(tx, ty, x, y, rb * 0.09), ey = y - rb * 0.1;
+  for (const sg of [-1, 1]) { // глаза: белые с чёрным зрачком, брови чуть сердитые
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x + sg * rb * 0.3, ey, rb * 0.22, 0, TAU); ctx.fill(); ctx.lineWidth = lw * 0.6; ctx.stroke();
+    ctx.fillStyle = PAL.ink; ctx.beginPath(); ctx.arc(x + sg * rb * 0.3 + lx, ey + ly, rb * 0.1, 0, TAU); ctx.fill();
+    ctx.lineWidth = lw * 0.8; ctx.beginPath(); ctx.moveTo(x + sg * rb * 0.54, ey - rb * 0.34); ctx.lineTo(x + sg * rb * 0.1, ey - rb * 0.22); ctx.stroke();
+  }
+  ctx.lineWidth = lw * 0.8; ctx.beginPath(); ctx.arc(x, y + rb * 0.42, rb * 0.17, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke(); // маленькая улыбка
+}
+const URCH = { body: PAL.body, spike: PAL.spike, spikeHi: PAL.spikeHi }, CHEST = { body: PAL.chBody, spike: PAL.chSpike, spikeHi: PAL.chSpikeHi }, MACE = { body: PAL.maceBody, spike: PAL.maceSpike, spikeHi: PAL.maceSpikeHi };
+function drawSpikeRow(o, u) { // ряд шипов на крыше: основание на roof top (o.y), левый край o.x
+  const lw = 1.7 * u, w = o.w, h = o.h;
+  ctx.lineJoin = "round"; ctx.lineWidth = lw; ctx.strokeStyle = PAL.ink;
+  ctx.fillStyle = PAL.ink; ctx.fillRect(o.x - 2 * u, o.y - 2.5 * u, w * o.n + 4 * u, 5 * u);
+  for (let i = 0; i < o.n; i++) {
+    const x0 = o.x + i * w, cx = x0 + w / 2;
+    ctx.beginPath(); ctx.moveTo(x0, o.y); ctx.lineTo(cx, o.y - h); ctx.lineTo(x0 + w, o.y); ctx.closePath(); ctx.fillStyle = i % 2 ? PAL.spike : PAL.spikeHi; ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.28)"; ctx.beginPath(); ctx.moveTo(x0 + w * 0.2, o.y - h * 0.08); ctx.lineTo(cx - w * 0.02, o.y - h * 0.8); ctx.lineTo(cx - w * 0.02, o.y - h * 0.08); ctx.closePath(); ctx.fill();
+  }
+}
+function drawChain(ax, ay, bx, by, u) { // звенья цепи
+  const L = Math.hypot(bx - ax, by - ay), n = Math.max(2, Math.round(L / 20)), a = Math.atan2(by - ay, bx - ax);
+  ctx.lineWidth = 1.3 * u; ctx.strokeStyle = PAL.ink; ctx.fillStyle = "#d9d4e6";
+  for (let i = 1; i < n; i++) { const t = i / n, cx = lerp(ax, bx, t), cy = lerp(ay, by, t); ctx.beginPath(); ctx.ellipse(cx, cy, 9, 5, a + (i % 2 ? Math.PI / 2 : 0), 0, TAU); ctx.fill(); ctx.stroke(); }
+}
+function drawMace(o, tm, u, tx, ty) {
+  obsPos(o, tm);
+  const px = OX, py = OY, post = o.ay;
+  ctx.lineWidth = 1.7 * u; ctx.strokeStyle = PAL.ink; ctx.fillStyle = "#59456f"; // столб на крыше и ушко
+  const top = o.ay + 26; ctx.beginPath(); ctx.rect(o.ax - 5, o.ay, 10, 26); ctx.fill(); ctx.stroke();
+  drawChain(o.ax, o.ay, px, py, u);
+  ctx.fillStyle = "#d9d4e6"; ctx.beginPath(); ctx.arc(o.ax, o.ay, 7, 0, TAU); ctx.fill(); ctx.stroke();
+  drawUrchin(px, py, o.rs, S.time * 1.6 * (o.id % 2 ? 1 : -1), u, tx, ty, MACE);
+}
+function drawPillar(o, tm, u) {
+  const top = pilTop(o, tm), hw = o.hw, lw = 1.7 * u, h = FLOOR - top;
+  ctx.fillStyle = "rgba(30,20,50,.35)"; ctx.beginPath(); ctx.ellipse(o.x, FLOOR + 2, hw * 1.25, 7, 0, 0, TAU); ctx.fill(); // лунка
+  ctx.lineJoin = "round"; ctx.lineWidth = lw; ctx.strokeStyle = PAL.ink;
+  if (h > 2) { ctx.fillStyle = PAL.pil; ctx.beginPath(); ctx.rect(o.x - hw, top, hw * 2, h + 1); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = PAL.pilHi; for (let y = top + 18; y < FLOOR - 8; y += 34) ctx.fillRect(o.x - hw + 3, y, hw * 2 - 6, 8); // полосы-«ступени»
+    ctx.save(); ctx.beginPath(); ctx.rect(o.x - hw, top, hw * 2, h); ctx.clip(); ctx.restore(); }
+  const n = 4, w = hw * 2 / n, sh = o.spk;
+  for (let i = 0; i < n; i++) { const x0 = o.x - hw + i * w; ctx.beginPath(); ctx.moveTo(x0, top); ctx.lineTo(x0 + w / 2, top - sh); ctx.lineTo(x0 + w, top); ctx.closePath(); ctx.fillStyle = i % 2 ? PAL.pilSpike : PAL.maceSpikeHi; ctx.fill(); ctx.stroke(); }
+}
+function drawWire(o, tm, u) {
+  const p = o.pts, N = p.length;
+  const path = () => { ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]); for (let i = 1; i < N; i++) ctx.lineTo(p[i][0], p[i][1]); };
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  const pulse = 0.5 + 0.5 * Math.sin(tm * 9 + o.ph);
+  ctx.strokeStyle = "rgba(255,80,150," + (0.14 + 0.1 * pulse).toFixed(2) + ")"; ctx.lineWidth = 2 * o.r + 14 * u; path(); ctx.stroke(); // горячее свечение
+  ctx.strokeStyle = PAL.ink; ctx.lineWidth = 2 * o.r + 3.2 * u; path(); ctx.stroke();
+  ctx.strokeStyle = PAL.wire; ctx.lineWidth = 2 * o.r; path(); ctx.stroke();
+  ctx.strokeStyle = PAL.wireHi; ctx.lineWidth = 2.2 * u; ctx.setLineDash([9 * u, 14 * u]); ctx.lineDashOffset = -tm * 90 * u; path(); ctx.stroke(); ctx.setLineDash([]);
+  for (const q of [p[0], p[N - 1]]) { ctx.fillStyle = "#d9d4e6"; ctx.strokeStyle = PAL.ink; ctx.lineWidth = 1.5 * u; ctx.beginPath(); ctx.arc(q[0], q[1], 8, 0, TAU); ctx.fill(); ctx.stroke(); } // изоляторы
+  // искры бегут по проводу: яркое ядро и колючие вспышки
+  const span = Math.hypot(p[N - 1][0] - p[0][0], p[N - 1][1] - p[0][1]), ns = Math.max(1, Math.round(span / 180));
+  for (let k = 0; k < ns; k++) {
+    const t = ((tm * 0.55 + k / ns + o.ph * 0.17) % 1) * (N - 1), i = Math.min(N - 2, Math.floor(t)), f = t - i, sx = lerp(p[i][0], p[i + 1][0], f), sy = lerp(p[i][1], p[i + 1][1], f);
+    ctx.fillStyle = "rgba(255,243,160,.45)"; ctx.beginPath(); ctx.arc(sx, sy, 17 + 3 * pulse, 0, TAU); ctx.fill();
+    const seed = Math.floor(tm * 16) + k * 7 + o.id; ctx.strokeStyle = PAL.sparkEdge; ctx.lineWidth = 2.2 * u;
+    for (let b = 0; b < 5; b++) { const a = ((seed * 2654435761 + b * 977) % 1000) / 1000 * TAU, r0 = 6, r1 = 22 + ((seed + b) % 4) * 4; ctx.beginPath(); ctx.moveTo(sx + Math.cos(a) * r0, sy + Math.sin(a) * r0); ctx.lineTo(sx + Math.cos(a + 0.35) * (r0 + r1) / 2, sy + Math.sin(a + 0.35) * (r0 + r1) / 2); ctx.lineTo(sx + Math.cos(a) * r1, sy + Math.sin(a) * r1); ctx.stroke(); }
+    ctx.fillStyle = PAL.spark; ctx.strokeStyle = PAL.ink; ctx.lineWidth = 1.2 * u; ctx.beginPath(); ctx.arc(sx, sy, 7, 0, TAU); ctx.fill(); ctx.stroke();
+  }
+}
+function drawBird(o, tm, u, tx, ty) {
+  obsPos(o, tm); const x = OX, y = OY, m = o.mv, face = Math.cos(TAU * tm / m.T + m.ph) * Math.sign(m.dx || 1) >= 0 ? 1 : -1; // летит вправо — смотрит вправо
+  const s = o.rs / 40, fl = Math.sin(tm * 14 + o.id), lw = 1.7 * u;
+  ctx.save(); ctx.translate(x, y); ctx.scale(face * s, s); ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.strokeStyle = PAL.ink; ctx.lineWidth = lw / s;
+  const wing = (a, col, dx) => { ctx.save(); ctx.translate(-4 + dx, -2); ctx.rotate(a); ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, 0); ctx.bezierCurveTo(-8, -26, -30, -36, -44, -22); ctx.bezierCurveTo(-32, -20, -26, -10, -22, 2); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); };
+  wing(-0.1 + 0.8 * fl, PAL.wing, -4); // дальнее крыло
+  ctx.fillStyle = PAL.bird; ctx.beginPath(); ctx.moveTo(-22, 2); ctx.lineTo(-44, -8); ctx.lineTo(-40, 4); ctx.lineTo(-45, 14); ctx.closePath(); ctx.fill(); ctx.stroke(); // хвост
+  ctx.beginPath(); ctx.ellipse(0, 2, 27, 22, 0, 0, TAU); ctx.fill(); ctx.stroke(); // тело
+  ctx.fillStyle = PAL.belly; ctx.beginPath(); ctx.ellipse(3, 10, 17, 9, 0.1, 0.1, Math.PI - 0.1); ctx.fill();
+  ctx.fillStyle = PAL.beak; ctx.beginPath(); ctx.moveTo(24, -2); ctx.lineTo(40, 3); ctx.lineTo(24, 8); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(13, -7, 8, 0, TAU); ctx.fill(); ctx.lineWidth = lw * 0.6 / s; ctx.stroke();
+  const [lx, ly] = look2(tx, ty, x, y, 2.5); ctx.fillStyle = PAL.ink; ctx.beginPath(); ctx.arc(15 + lx * face, -6.5 + ly, 3.6, 0, TAU); ctx.fill();
+  ctx.lineWidth = lw * 0.9 / s; ctx.beginPath(); ctx.moveTo(5, -18); ctx.lineTo(22, -12); ctx.stroke(); // сердитая бровь
+  wing(-0.4 - 0.8 * fl, PAL.wingHi, 2); // ближнее крыло
+  ctx.restore();
+}
+const obsLook = () => { const o = S.om; return [o.x, o.y]; };
+function drawObs(o, tm, u) { // tm — время мира для движущихся
+  const [tx, ty] = obsLook();
+  switch (o.sub) {
+    case "urchin": case "gate": drawUrchin(o.x, o.y + 3 * Math.sin(S.time * 2.6 + o.id), o.rs, o.rot0 + S.time * 0.35 * (o.id % 2 ? 1 : -1), u, tx, ty, URCH); break;
+    case "chest": drawUrchin(o.x, o.y, o.rs, o.rot0 + Math.sin(S.time * 1.4 + o.id) * 0.08, u, tx, ty, CHEST); break;
+    case "spikes": drawSpikeRow(o, u); break;
+    case "mace": drawMace(o, tm, u, tx, ty); break;
+    case "pillar": drawPillar(o, tm, u); break;
+    case "wire": drawWire(o, tm, u); break;
+    case "bird": drawBird(o, tm, u, tx, ty); break;
+  }
+}
+
+// Картинка, ввод, панель и тестовый API (window.__game). Ядро и препятствия — выше в этом же файле страницы.
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d"), stage = document.getElementById("stage");
+const QS = new URLSearchParams(location.search);
+const STORE = "lab." + VAR.slug + ".v1";
+
+// ---- Ом Ном: кадры v2 (assets/omnom/), рот на физической точке, как в hook-tune --------------------------------
+const OM = { PX: 6.4024, PIV: [0.5366, 0.0253], MOUTH_X: -2.08, img: {} };
+const FR_NAMES = ["neutral", "blink", "wide", "wide2", "ajar", "sad", "joy", "neutral_pupils_l", "neutral_pupils_r", "wide_pupils_l", "wide_pupils_r", "wide2_pupils_l", "wide2_pupils_r", "ajar_pupils_l", "ajar_pupils_r"];
+const omWaits = FR_NAMES.map((n) => new Promise((res) => { const i = new Image(); OM.img[n] = i; i.onload = i.onerror = res; i.src = "assets/omnom/" + n + ".png"; }));
+const imgOk = (i) => i && i.complete && i.naturalWidth > 0;
+const COL = { sky: "#cfe6f2", h1: "#8d9cc0", h2: "#7686ae", roof: "#3f4c74", ground: "#6f8f45", groundTop: "#4c6a2c", rope: "#3a2a1a", ink: "#1f2433", roofLit: "#f0b400", own: "#22a25a" };
+function drawOm(x, y, rot, frame) {
+  const b = OM.img[frame] || OM.img.neutral;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+  if (!imgOk(b)) { ctx.fillStyle = "#98CC24"; ctx.beginPath(); ctx.arc(0, 0, 30, 0, 7); ctx.fill(); ctx.restore(); return; }
+  ctx.translate(OM.MOUTH_X, SIZE.omFeet); ctx.scale(-1 / OM.PX, 1 / OM.PX); // кадр смотрит влево — зеркалим: смотрит вправо
+  const pw = b.naturalWidth, ph = b.naturalHeight, x0 = -OM.PIV[0] * pw, y0 = -(1 - OM.PIV[1]) * ph;
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(b, x0, y0);
+  for (const sfx of ["_pupils_l", "_pupils_r"]) { const q = OM.img[frame + sfx]; if (imgOk(q)) ctx.drawImage(q, x0, y0); }
+  ctx.restore();
+}
+function omFrame() {
+  const R = S.round, now = performance.now();
+  if (R.state === "over") return R.why === "time" ? "joy" : "sad";
+  if (S.mode === "tumble") return S.tm - S.tHit < 0.5 ? "wide2" : "wide";
+  if (S.mode === "lie") return "sad";
+  if (S.getupT && S.tm - S.getupT < 0.7) return "ajar";
+  if (S.worry) return "wide";
+  return now % 3600 < 120 ? "blink" : "neutral";
+}
+
+// ---- Мир ------------------------------------------------------------------------------------------------------------------
+let scale = 1, dpr = 1, ip = 1, DEBUG = false, SPEED = 1, manual = false, acc = 0, lastT = 0;
+const frameTimes = [];
+function fit() {
+  const r = stage.getBoundingClientRect();
+  if (r.width < 2 || r.height < 2) return false;
+  const s = Math.min((r.width - 8) / W, (r.height - 8) / H);
+  dpr = Math.min(2, window.devicePixelRatio || 1);
+  const cw = Math.floor(W * s), ch = Math.floor(H * s);
+  if (cv.width !== Math.round(cw * dpr) || cv.height !== Math.round(ch * dpr)) { cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr); }
+  cv.style.width = cw + "px"; cv.style.height = ch + "px";
+  cv.style.left = Math.floor((r.width - cw) / 2) + "px"; cv.style.top = Math.floor((r.height - ch) / 2) + "px";
+  scale = s; return true;
+}
+function view() {
+  const p = S.prev, o = S.om, c = S.cam, t = ip;
+  if (!p) return { x: o.x, y: o.y, rot: o.rot, cx: c.x, cy: c.y, z: c.zoom };
+  return { x: lerp(p.x, o.x, t), y: lerp(p.y, o.y, t), rot: lerp(p.rot, o.rot, t), cx: lerp(p.cx, c.x, t), cy: lerp(p.cy, c.y, t), z: lerp(p.z, c.zoom, t) };
+}
+function visObs(xa, xb) { // препятствия в кадре (корзины; призрачная раскладка в проверке не рисуется)
+  const out = [], WD = S.WD; qStamp++;
+  for (let i = Math.floor(xa / BK), n = Math.floor(xb / BK); i <= n; i++) { const l = WD.bk.get(i); if (!l) continue; for (const o of l) if (o._q !== qStamp && o.bx1 >= xa && o.bx0 <= xb) { o._q = qStamp; out.push(o); } }
+  return out;
+}
+function worryCheck() { // впереди ≤ 480 u и не дальше 300 u по высоте — Ом Ном пугается
+  const o = S.om; let w = false;
+  for (const q of visObs(o.x - 20, o.x + 480)) { if (q.bx0 > o.x - 60 + 0) { const yy = q.k === "wire" ? q.pts[(q.pts.length >> 1)][1] : q.k === "pil" ? q.yHi : q.k === "spk" ? q.y - 40 : q.y; if (Math.abs(yy - o.y) < 300) { w = true; break; } } }
+  S.worry = w && S.mode === "run" && !o.grounded;
+}
+const fmt = (v, d = 0) => (Math.round(v * 10 ** d) / 10 ** d).toFixed(d).replace(".", ",").replace("-", "−");
+function draw() {
+  if (!fit() || !S) return;
+  const v = view(), z = v.z, k = scale * dpr, u = 1 / z, r = S.rope;
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+  ctx.fillStyle = COL.sky; ctx.fillRect(0, 0, W, H);
+  ctx.setTransform(k * z, 0, 0, k * z, -v.cx * z * k, -v.cy * z * k);
+  const xa = v.cx - 20, xb = v.cx + W / z + 20, bl = S.WD.bld;
+  const litId = !r && S.tgt ? S.tgt.house : -1;
+  for (let i = firstIdx(bl, xa); i < bl.length; i++) {
+    const b = bl[i]; if (b.x0 > xb) break;
+    ctx.fillStyle = b.id % 2 ? COL.h2 : COL.h1; ctx.fillRect(b.x0, b.top, b.x1 - b.x0, FLOOR - b.top + 1);
+    ctx.fillStyle = b.id === litId ? (S.tgt.own ? COL.own : COL.roofLit) : COL.roof; ctx.fillRect(b.x0, b.top - 2.5 * u, b.x1 - b.x0, 5 * u);
+  }
+  ctx.fillStyle = COL.ground; ctx.fillRect(xa, FLOOR, xb - xa, H / z + 400);
+  ctx.fillStyle = COL.groundTop; ctx.fillRect(xa, FLOOR, xb - xa, 3 * u);
+  const tmv = S.tm + S.tOff - (S.round.state === "play" && S.mode === "run" && !S.paused ? (1 - ip) * DT : 0);
+  const vis = visObs(xa - 150, xb + 150);
+  for (const o of vis) drawObs(o, tmv, u);
+  if (!r && S.mode === "run") { // цель до нажатия: пунктир к центру крыши
+    ctx.lineWidth = 1.5 * u; ctx.setLineDash([5 * u, 5 * u]);
+    if (S.tgt) { ctx.strokeStyle = S.tgt.own ? "rgba(30,150,80,.9)" : "rgba(200,140,0,.8)"; ctx.beginPath(); ctx.moveTo(v.x, v.y); ctx.lineTo(S.tgt.x, S.tgt.y); ctx.stroke(); }
+    else { const a = rad(48), L = S.shotT > 0 ? 160 : 90; ctx.strokeStyle = S.shotT > 0 ? "rgba(180,40,40,.8)" : "rgba(40,40,60,.35)"; ctx.beginPath(); ctx.moveTo(v.x, v.y); ctx.lineTo(v.x + Math.cos(a) * L, v.y - Math.sin(a) * L); ctx.stroke(); }
+    ctx.setLineDash([]);
+    if (S.tgt) { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(S.tgt.x, S.tgt.y, 9 * u, 0, 7); ctx.fill(); ctx.fillStyle = S.tgt.own ? COL.own : COL.roofLit; ctx.beginPath(); ctx.arc(S.tgt.x, S.tgt.y, 6.5 * u, 0, 7); ctx.fill(); }
+  }
+  for (const f of S.flash) { ctx.strokeStyle = f.col; ctx.globalAlpha = f.life / 0.4; ctx.lineWidth = 2 * u; ctx.beginPath(); ctx.arc(f.x, f.y, (8 + (0.4 - f.life) * 40) * u, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+  if (r) { // верёвка: линия, провисла — с прогибом
+    const d = Math.hypot(v.x - r.ax, v.y - r.ay), sag = d < r.L - 1 ? Math.sqrt(r.L * r.L - d * d) * 0.5 : 0;
+    ctx.strokeStyle = COL.rope; ctx.lineWidth = 2.2 * u; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(r.ax, r.ay); ctx.quadraticCurveTo((r.ax + v.x) / 2, (r.ay + v.y) / 2 + sag, v.x, v.y); ctx.stroke();
+    ctx.fillStyle = COL.rope; ctx.beginPath(); ctx.arc(r.ax, r.ay, 3 * u, 0, 7); ctx.fill();
+  }
+  drawOm(v.x, v.y, v.rot, omFrame());
+  if (S.mode === "lie" || (S.round.state === "over" && S.round.why !== "time")) drawDizzy(v.x, v.y - 58, u);
+  drawFx(u);
+  if (DEBUG) drawDebug(vis, tmv, v, u);
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+  drawHud();
+  if (S.paused) { ctx.textAlign = "center"; ctx.font = "700 16px system-ui,sans-serif"; ctx.textBaseline = "top"; ctx.fillStyle = COL.ink; ctx.fillText("пауза", W / 2, 64); }
+  if (S.round.state === "over") drawCard();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+function drawDizzy(x, y, u) { // над головой кружатся звёздочки
+  const t = performance.now() / 1000;
+  for (let i = 0; i < 3; i++) { const a = t * 4 + i * TAU / 3, sx = x + Math.cos(a) * 34, sy = y + Math.sin(a) * 9 - 6, r = 8;
+    ctx.beginPath(); for (let q = 0; q < 10; q++) { const aa = -Math.PI / 2 + q * Math.PI / 5, rr = q % 2 ? r * 0.45 : r; ctx.lineTo(sx + Math.cos(aa) * rr, sy + Math.sin(aa) * rr); } ctx.closePath();
+    ctx.fillStyle = "#ffc21a"; ctx.fill(); ctx.strokeStyle = COL.ink; ctx.lineWidth = 1.3 * u; ctx.lineJoin = "round"; ctx.stroke(); }
+}
+function drawFx(u) {
+  for (const f of S.fx) {
+    const t = f.t0 - f.life, p = t / f.t0;
+    if (f.type === "burst") { ctx.globalAlpha = 1 - p; for (const q of f.ps) { const px = f.x + q.vx * t, py = f.y + q.vy * t + 700 * t * t; ctx.fillStyle = q.col; ctx.beginPath(); ctx.arc(px, py, q.r * (1 - 0.5 * p), 0, 7); ctx.fill(); } ctx.globalAlpha = 1; }
+    else if (f.type === "oy") { // «Ой!» над головой
+      const pp = Math.min(1, t / 0.12), a = p > 0.7 ? (1 - p) / 0.3 : 1; ctx.globalAlpha = a; ctx.font = "900 " + (20 * u * (0.6 + 0.4 * pp)).toFixed(2) + "px system-ui,sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+      const ty = f.y - 70 - 40 * t * 0; ctx.lineWidth = 5 * u; ctx.strokeStyle = "#fff"; ctx.strokeText(f.txt, f.x, ty); ctx.fillStyle = "#c2306f"; ctx.fillText(f.txt, f.x, ty); ctx.globalAlpha = 1; }
+    else if (f.type === "ring") { ctx.globalAlpha = 1 - p; ctx.strokeStyle = f.col; ctx.lineWidth = 3 * u; ctx.beginPath(); ctx.arc(f.x, f.y, (20 + 90 * p), 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+  }
+}
+function drawDebug(vis, tm, v, u) { // зоны касания: Ом Ном и препятствия — ровно то, что считает физика
+  ctx.lineWidth = 1.5 * u; ctx.strokeStyle = "#00e0ff"; ctx.beginPath(); ctx.arc(S.om.x, S.om.y + HIT.dy, HIT.r, 0, 7); ctx.stroke();
+  ctx.strokeStyle = "#ffe600";
+  for (const o of vis) {
+    if (o.k === "ball") { obsPos(o, tm); ctx.beginPath(); ctx.arc(OX, OY, o.r, 0, 7); ctx.stroke(); }
+    else if (o.k === "spk") { for (const q of o.parts) { ctx.beginPath(); ctx.arc(o.x + q[0], o.y + q[1], q[2], 0, 7); ctx.stroke(); } }
+    else if (o.k === "wire") { ctx.lineWidth = 2 * o.r; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.moveTo(o.pts[0][0], o.pts[0][1]); for (const p of o.pts) ctx.lineTo(p[0], p[1]); ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = 1.5 * u; }
+    else if (o.k === "box") { obsPos(o, tm); ctx.strokeRect(OX - o.hw, OY - o.hh, 2 * o.hw, 2 * o.hh); }
+    else if (o.k === "pil") { const top = pilTop(o, tm) - o.spk * 0.45; ctx.strokeRect(o.x - o.hw, top, 2 * o.hw, FLOOR - top); }
+  }
+}
+// ---- Окно: метры, раунд, итог ---------------------------------------------------------------------------------------------
+const clock = (s) => { const n = Math.max(0, Math.ceil(s - 1e-9)); return Math.floor(n / 60) + ":" + String(n % 60).padStart(2, "0"); };
+function outlined(txt, x, y, w, col) { ctx.lineJoin = "round"; ctx.lineWidth = w; ctx.strokeStyle = "rgba(255,255,255,.92)"; ctx.strokeText(txt, x, y); ctx.fillStyle = col || COL.ink; ctx.fillText(txt, x, y); }
+function rrect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function drawHud() {
+  const R = S.round;
+  ctx.textBaseline = "middle"; ctx.textAlign = "left"; ctx.font = "800 22px system-ui,sans-serif";
+  outlined(fmt(distM()) + " м", 8, 17, 4);
+  ctx.font = "600 10px system-ui,sans-serif"; ctx.fillStyle = "rgba(31,36,51,.75)"; ctx.fillText("рекорд " + fmt(Math.max(best, distM())) + " м", 9, 36);
+  if (VAR.roundSec > 0) {
+    const left = R.state === "ready" ? VAR.roundSec : Math.max(0, VAR.roundSec - S.tm);
+    ctx.textAlign = "right"; ctx.font = "800 22px system-ui,sans-serif"; outlined(clock(left), W - 8, 17, 4, left <= 10 && R.state === "play" ? "#c2306f" : COL.ink);
+    ctx.font = "600 10px system-ui,sans-serif"; ctx.fillStyle = "rgba(31,36,51,.75)"; ctx.fillText(S.hits ? "ударов " + S.hits : "раунд " + VAR.roundSec + " с", W - 9, 36);
+  }
+  if (R.state === "ready") { ctx.textAlign = "center"; ctx.font = "700 11px system-ui,sans-serif"; outlined(VAR.hint1, W / 2, 62, 3); ctx.font = "600 11px system-ui,sans-serif"; outlined(VAR.hint2, W / 2, 78, 3); }
+}
+function drawCard() {
+  const R = S.round, a = Math.min(1, R.over / 0.25), cx = W / 2, time = R.why === "time";
+  ctx.globalAlpha = a; ctx.fillStyle = "rgba(20,24,36,.4)"; ctx.fillRect(0, 0, W, H);
+  rrect(48, 116, W - 96, 200, 16); ctx.fillStyle = "#fff"; ctx.fill(); ctx.strokeStyle = COL.ink; ctx.lineWidth = 2; ctx.stroke();
+  ctx.textBaseline = "middle"; ctx.textAlign = "center"; ctx.font = "900 26px system-ui,sans-serif"; ctx.fillStyle = time ? "#2f9e5b" : "#c2306f"; ctx.fillText(time ? "Время!" : "Упал!", cx, 148);
+  ctx.font = "900 46px system-ui,sans-serif"; ctx.fillStyle = COL.ink; ctx.fillText(fmt(distM()) + " м", cx, 198);
+  if (S.newBest) { rrect(cx - 46, 228, 92, 24, 12); ctx.fillStyle = "#e8412f"; ctx.fill(); ctx.font = "800 14px system-ui,sans-serif"; ctx.fillStyle = "#fff"; ctx.fillText("рекорд!", cx, 241); }
+  else { ctx.font = "600 13px system-ui,sans-serif"; ctx.fillStyle = "rgba(31,36,51,.65)"; ctx.fillText("рекорд " + fmt(best) + " м", cx, 240); }
+  ctx.font = "600 11px system-ui,sans-serif"; ctx.fillStyle = "rgba(31,36,51,.6)";
+  if (VAR.roundSec > 0) ctx.fillText("ударов: " + S.hits + " · потеряно " + fmt(S.lost, 1) + " с", cx, 268);
+  ctx.fillText("тап — ещё раз", cx, 296);
+  ctx.globalAlpha = 1;
+}
+
+// ---- Картинки событий ---------------------------------------------------------------------------------------------------------
+HOOKS.hit = (o) => {
+  const om = S.om, cols = o.k === "wire" ? ["#fff3a0", "#ffc928", "#ff86b0"] : o.sub === "bird" ? ["#f2a4d4", "#b83a8a", "#fde4f4"] : ["#ff86b0", "#8a2fb0", "#fff3a0"];
+  const ps = []; for (let i = 0; i < 14; i++) { const a = i / 14 * TAU + 0.3, sp = 120 + (i * 37 % 90); ps.push({ vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 100, r: 4 + (i % 3) * 2, col: cols[i % 3] }); }
+  S.fx.push({ type: "burst", x: om.x, y: om.y, ps, life: 0.7, t0: 0.7 }, { type: "ring", x: om.x, y: om.y, col: cols[2], life: 0.35, t0: 0.35 }, { type: "oy", x: om.x, y: om.y, txt: o.sub === "bird" ? "Ай!" : o.k === "wire" ? "Бзз!" : "Ой!", life: 1.1, t0: 1.1 });
+};
+HOOKS.tick = () => {
+  for (const f of S.fx) f.life -= DT; S.fx = S.fx.filter((f) => f.life > 0);
+  for (const f of S.flash) f.life -= DT; S.flash = S.flash.filter((f) => f.life > 0);
+  if (S.mode === "run" && S.steps % 3 === 0) worryCheck(); else if (S.mode !== "run") S.worry = false;
+};
+
+// ---- Цикл -----------------------------------------------------------------------------------------------------------------------
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (lastT) {
+    frameTimes.push(now - lastT); if (frameTimes.length > 120) frameTimes.shift();
+    if (!manual && !S.paused) {
+      acc += Math.min(0.05, (now - lastT) / 1000) * SPEED;
+      let n = 0; const t0 = performance.now();
+      while (acc >= DT && n < 4) { acc -= DT; n++; stepPlayer(acc >= DT && n < 4 ? -1 : 0); }
+      if (n === 4) acc = 0;
+      if (S.WD.fixedX < S.om.x + 1800) genPump(S.WD, Infinity, S.om.x + 2200); // запас кончился (редко): догоняем сразу — препятствия не должны появляться внезапно
+      S.genMs = performance.now() - t0;
+    }
+  }
+  lastT = now;
+  ip = manual || S.paused ? 1 : clamp(acc / DT, 0, 1);
+  draw();
+  if (S.steps % 6 === 0) statTick();
+}
+function restart(seed) { newRound(seed == null ? S.seed : seed); S.hint = 0; acc = 0; syncUi(); }
+function newWorldBtn() { restart((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+// ---- Панель -----------------------------------------------------------------------------------------------------------------------
+const SL = [
+  { key: "density", label: "Плотность препятствий", min: 0.2, max: 2, step: 0.05, show: (v) => "×" + fmt(v, 2) },
+  { key: "growth", label: "Рост трудности", min: 0, max: 2, step: 0.05, show: (v) => v === 0 ? "нет" : "×" + fmt(v, 2) },
+  { key: "size", label: "Размер", min: 0.7, max: 1.5, step: 0.05, show: (v) => "×" + fmt(v, 2) },
+  { key: "zoom", label: "Обзор", min: 0.2, max: 0.4, step: 0.01, show: (v) => fmt(W / v / 40) + " м" },
+];
+const ZOOM0 = TUNE.zoom;
+function setKnob(key, v, noRestart) {
+  v = +v; if (!isFinite(v)) return false;
+  if (key === "zoom") { TUNE.zoom = clamp(v, 0.2, 0.4); S.cam.zoom = TUNE.zoom; camStep(true); snapPrev(); }
+  else if (key in KNOB) { KNOB[key] = v; if (!noRestart) restart(); }
+  else return false;
+  saveUi(); syncUi(); return true;
+}
+function saveUi() { try { localStorage.setItem(STORE, JSON.stringify({ knob: KNOB, zoom: TUNE.zoom, debug: DEBUG, speed: SPEED })); } catch (e) {} }
+function loadUi() {
+  let d = null; try { d = JSON.parse(localStorage.getItem(STORE) || "null"); } catch (e) {}
+  if (!d) return;
+  for (const k of ["density", "growth", "size"]) if (typeof d.knob?.[k] === "number") KNOB[k] = d.knob[k];
+  if (typeof d.zoom === "number") TUNE.zoom = clamp(d.zoom, 0.2, 0.4);
+  DEBUG = d.debug === true; if ([0.25, 0.5, 1].includes(d.speed)) SPEED = d.speed;
+}
+const ui = {};
+function buildPanel() {
+  const body = document.getElementById("sliders");
+  for (const s of SL) {
+    const row = document.createElement("div"); row.className = "hrow";
+    row.innerHTML = '<span></span><input type="range"><b></b>'; row.firstChild.textContent = s.label;
+    const inp = row.querySelector("input"); inp.min = s.min; inp.max = s.max; inp.step = s.step;
+    inp.addEventListener("input", () => setKnob(s.key, inp.value)); body.appendChild(row); ui[s.key] = { inp, out: row.querySelector("b"), s };
+  }
+}
+function syncUi() {
+  for (const s of SL) { const v = s.key === "zoom" ? TUNE.zoom : KNOB[s.key]; ui[s.key].inp.value = v; ui[s.key].out.textContent = s.show(v); }
+  document.querySelectorAll("[data-sp]").forEach((b) => b.classList.toggle("on", +b.dataset.sp === SPEED));
+  document.querySelectorAll("[data-bot]").forEach((b) => b.classList.toggle("on", (b.dataset.bot || null) === (AUTO || "")));
+  document.getElementById("bPause").classList.toggle("on", !!S.paused);
+  document.getElementById("cDebug").checked = DEBUG;
+}
+function statTick() {
+  const el = document.getElementById("stat"); if (!el) return;
+  const st = S.WD.stat;
+  el.textContent = "метры " + fmt(distM(), 1) + " · ударов " + S.hits + (VAR.roundSec ? " · потеряно " + fmt(S.lost, 1) + " с" : "") + " · зон " + st.zones + " (пустых " + st.empty + ") · ghost " + fmt(st.ghostMs) + " мс · мир на " + fmt((S.WD.fixedX - S.om.x) / 40) + " м вперёд";
+}
+function setPause(v) { S.paused = v == null ? !S.paused : !!v; acc = 0; syncUi(); }
+function setSpeed(v) { if ([0.25, 0.5, 1].includes(+v)) SPEED = +v; saveUi(); syncUi(); }
+
+// ---- Ввод ---------------------------------------------------------------------------------------------------------------------------
+const downs = new Set();
+function press() { if (S.round.state === "over") { if (S.round.over > 0.4) newWorldBtn(); return; } if (!S.paused) hold(); }
+stage.addEventListener("pointerdown", (e) => { e.preventDefault(); downs.add(e.pointerId); try { stage.setPointerCapture(e.pointerId); } catch (_) {} press(); });
+function up(e) { if (!downs.delete(e.pointerId)) return; if (!downs.size) release(); }
+stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+stage.addEventListener("contextmenu", (e) => e.preventDefault());
+window.addEventListener("blur", () => { downs.clear(); if (S.held) release(); });
+const typing = (e) => /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) && e.target.type !== "checkbox" && e.target.type !== "range";
+window.addEventListener("keydown", (e) => {
+  if (typing(e)) return;
+  if (e.code === "Space") { e.preventDefault(); if (!e.repeat) press(); }
+  else if (e.code === "KeyR" && !e.repeat) restart();
+  else if (e.code === "KeyP" && !e.repeat) setPause();
+});
+window.addEventListener("keyup", (e) => { if (e.code === "Space" && !typing(e)) release(); });
+document.getElementById("bRestart").addEventListener("click", () => restart());
+document.getElementById("bWorld").addEventListener("click", newWorldBtn);
+document.getElementById("bPause").addEventListener("click", () => setPause());
+document.getElementById("bReset").addEventListener("click", () => { KNOB.density = 1; KNOB.growth = 1; KNOB.size = 1; TUNE.zoom = ZOOM0; saveUi(); restart(); });
+document.getElementById("cDebug").addEventListener("change", (e) => { DEBUG = e.target.checked; saveUi(); });
+document.getElementById("drawerBtn").addEventListener("click", () => { document.getElementById("panel").classList.toggle("closed"); });
+document.querySelectorAll("[data-sp]").forEach((b) => b.addEventListener("click", () => setSpeed(b.dataset.sp)));
+document.querySelectorAll("[data-bot]").forEach((b) => b.addEventListener("click", () => { setAuto(b.dataset.bot || null); syncUi(); }));
+document.querySelectorAll("button").forEach((b) => b.addEventListener("mouseup", () => b.blur()));
+new ResizeObserver(() => draw()).observe(stage);
+
+// ---- Тестовый API ---------------------------------------------------------------------------------------------------------------------
+function obsInfo(o, tm) { obsPos(o, tm); return { id: o.id, k: o.k, sub: o.sub, x: o.k === "pil" || o.k === "spk" || o.k === "wire" ? o.x : OX, y: o.k === "pil" ? pilTop(o, tm) : o.k === "spk" || o.k === "wire" ? o.y : OY, r: o.r || o.hw || 0 }; }
+window.__game = {
+  ready: false,
+  getState() {
+    const o = S.om, r = S.rope, c = S.cam, t = S.tgt, tm = S.tm + S.tOff;
+    return {
+      variant: VAR.id, name: VAR.name, steps: S.steps, tm: S.tm, time: S.time, seed: S.seed, held: S.held, paused: S.paused, speedMul: SPEED, mode: S.mode,
+      om: { x: o.x, y: o.y, vx: o.vx, vy: o.vy, grounded: o.grounded, rot: o.rot }, speed: speed(), frame: omFrame(),
+      rope: r ? { ax: r.ax, ay: r.ay, L: r.L, house: r.house, taut: r.taut } : null, target: t ? { x: t.x, y: t.y, L: t.L, house: t.house } : null,
+      cam: { x: c.x, y: c.y, zoom: c.zoom }, zoom: c.zoom, dist: distM(), best, newBest: !!S.newBest, catches: S.catches, misses: S.misses, groundHits: S.groundHits,
+      hits: S.hits, hitKind: S.hitObs ? (S.hitObs.sub || S.hitObs.k) : null, recoveries: S.recoveries, lost: S.lost, lieT: S.lieT, worry: !!S.worry,
+      round: { state: S.round.state, why: S.round.why, over: S.round.over, sec: VAR.roundSec, left: VAR.roundSec ? Math.max(0, VAR.roundSec - S.tm) : null },
+      knob: Object.assign({}, KNOB), autoplay: AUTO, debug: DEBUG, log: S.log.slice(-40),
+      houses: S.WD.bld.filter((b) => b.x1 > c.x - 100 && b.x0 < c.x + W / c.zoom + 100).map((b) => ({ id: b.id, x0: b.x0, x1: b.x1, top: b.top, h: b.h })),
+      obstacles: visObs(c.x - 100, c.x + W / c.zoom + 100).map((q) => obsInfo(q, tm)),
+      gen: { zones: S.WD.stat.zones, empty: S.WD.stat.empty, att: S.WD.stat.att.slice(), ghostMs: S.WD.stat.ghostMs, ghostRuns: S.WD.stat.ghostRuns, stall: S.WD.stat.stall, fixedX: S.WD.fixedX, obs: S.WD.obs.length, ahead: (S.WD.fixedX - o.x) / 40 },
+      view: (() => { const q = cv.getBoundingClientRect(); return { left: q.left, top: q.top, width: q.width, height: q.height, scale: q.width / W }; })(),
+    };
+  },
+  act(a, p) {
+    if (a === "hold") hold();
+    else if (a === "release") release();
+    else if (a === "restart") restart(p && p.seed != null ? p.seed : undefined);
+    else if (a === "newWorld") { if (p && p.seed != null) restart(p.seed); else newWorldBtn(); }
+    else if (a === "knob") return setKnob(p.key, p.v);
+    else if (a === "clock") { manual = !!(p && p.manual); acc = 0; }
+    else if (a === "step") { for (let i = 0; i < (p || 1); i++) stepPlayer(); }
+    else if (a === "draw") draw();
+    else if (a === "pause") setPause(p);
+    else if (a === "speed") setSpeed(p);
+    else if (a === "debug") { DEBUG = !!p; saveUi(); syncUi(); }
+    else if (a === "autoplay") { const r = setAuto(p && p.bot); syncUi(); return r; }
+    else if (a === "place") { const o = S.om; o.x = p.x; o.y = p.y; o.vx = p.vx || 0; o.vy = p.vy || 0; o.grounded = false; S.rope = null; S.held = false; S.mode = "run"; camStep(true); updateTarget(); snapPrev(); }
+    else if (a === "obstacles") { // dev: свои препятствия вместо сгенерированных [{...как в layout}]
+      const WD = S.WD; WD.obs = []; WD.bk = new Map(); WD.trial = []; WD.job = null; for (const q of (p && p.list) || []) addObs(WD, q); WD.zDone = 1e6; WD.fixedX = 1e12;
+    }
+    else if (a === "next") { if (S.round.state === "over") newWorldBtn(); }
+  },
+  metrics() {
+    const s = frameTimes.slice().sort((x, y) => x - y), mean = s.reduce((q, x) => q + x, 0) / (s.length || 1);
+    return { fps: s.length ? Math.round(1000 / mean) : 0, frameMsP95: s.length ? s[Math.floor(s.length * 0.95)] : 0, genMs: S.genMs || 0, drawCalls: -1 };
+  },
+};
+try { best = +localStorage.getItem(bestKey()) || 0; } catch (e) {}
+loadUi();
+buildPanel();
+newRound(QS.has("seed") ? +QS.get("seed") : undefined);
+if (QS.has("bot")) setAuto(QS.get("bot"));
+syncUi();
+draw();
+Promise.all(omWaits).then(() => { window.__game.ready = true; });
+requestAnimationFrame(frame);
+
+</script>
+</body>
+</html>

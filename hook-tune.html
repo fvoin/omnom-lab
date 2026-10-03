@@ -721,7 +721,7 @@ function placeChain(WD, pts, nr, grp, minH) {
   const put = (sv, list, g, sMax) => { // сдвиг вперёд по пути, если на фоне дома
     for (let d = 0; d <= TUNE.pStep / 2 && sv + d <= sMax; d += 10) { const [x, y] = at(sv + d);
       const oh = inHouseBody(WD, x, y);
-      if (y > FLOOR - Math.max(120, minH || 0) || x < WD.bld[0].x1 + 40 || (oh && !TUNE.pOverHouse)) continue; // не на крыше старта; на фоне дома — только с pOverHouse
+      if (y > FLOOR - Math.max(120, minH || 0) || x < WD.bld[0].x1 + 40 || (oh && !TUNE.pOverHouse) || onButton(WD, x, y)) continue; // не на крыше старта; не на пуговице крыши (Q-14-7); на фоне дома — только с pOverHouse
       const c = addChainCand(WD, x, y, g); if (c) { if (oh) c.oh = true; list.push(c); } return sv + d; }
     return sv;
   };
@@ -760,6 +760,16 @@ function swingCandies(WD, B) {
     len += Math.hypot(x - pts[pts.length - 2], y - pts[pts.length - 1]); pts.push(x, y);
   }
   placeChain(WD, pts, nr, 2e6 + 2 * B.id);
+}
+// Q-14-7: центр конфеты не ближе 44 u по горизонтали / 34 u по вертикали (эллипс) к центру пуговицы-якоря крыши (Ø 44 u в центре крыши: R 22 + диск завитка ≈ 12 + запас; крылья обёртки могут задеть край). Боты: −0,5…−0,8 % конфет (замер D-Q14-7, 100 seed)
+const BTN_AX = 44, BTN_AY = 34;
+function onButton(WD, x, y) {
+  const bl = WD.bld;
+  for (let i = firstIdx(bl, x - BTN_AX - 110); i < bl.length && bl[i].x0 <= x + BTN_AX + 110; i++) {
+    const u = (x - (bl[i].x0 + bl[i].x1) / 2) / BTN_AX, v = (y - bl[i].top) / BTN_AY;
+    if (u * u + v * v < 1) return true;
+  }
+  return false;
 }
 function inHouseBody(WD, x, y) {
   const bl = WD.bld, m = TUNE.candyDrawR + 8;
