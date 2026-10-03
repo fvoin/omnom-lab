@@ -20,8 +20,8 @@
         <button data-sp="0.25">×0,25</button><button data-sp="0.5">×0,5</button><button data-sp="1">×1</button>
       </div>
       <div class="row2">
-        <div class="pr3"><button data-pr="dense">Густо</button><span>≈ 64 конфеты на 100 м</span></div>
-        <div class="pr3"><button data-pr="sparse">Редко</button><span>≈ 37 конфет на 100 м</span></div>
+        <div class="pr3"><button data-pr="dense">Густо</button><span>≈ 54 конфеты на 100 м</span></div>
+        <div class="pr3"><button data-pr="sparse">Редко</button><span>≈ 34 конфеты на 100 м</span></div>
       </div>
       <div class="row lowrow" id="lowRow"><span class="preset-note">Конфеты внизу:</span><button data-dn="path">по пути</button><button data-dn="circle">дугой</button><button data-dn="off">нет</button></div>
       <div class="hrow" id="hRow"><span>Высота конфет</span><input type="range" id="cH" min="1" max="18" step="0.5"><b id="cHv"></b>
@@ -175,11 +175,11 @@ const D87 = Object.assign({}, FAR, { wMin: 70, wMax0: 210, wShrink: 0, wFloor: 2
   // он коснулся земли, цепочки не получает
   pDeepShare: 1, pDeepMin: 140, deepDelay: 32, deepClear: 30, deepRel: 25 }); // доп. 3: цепочка и на фоне дома (Ом Ном качается перед домами) — 4–6 на верёвке // доп. 2: цепочка по пути опорного игрока (мах + 6 по полёту); верхние дуги в пролётах — как в D-91
 // звёзды (доп. 80, path: только цепочки — высокая, низкая и у земли): 0,9 × медиана «Обычного» и 0,8 × медиана «Сборщика» (seed 1–30):
-// D-99 (6 м / 80 %, пол 5 м, высокая цепочка на своей высоте): Густо 58,5 / 327,5 → 53 / 262, Редко 31 / 177,5 → 28 / 142; D-98 было 31 / 224 и 16 / 93 (доп. 80 при 11 м / 100 %: 90 / 213 и 50 / 121); для circle и off — см. LOW_OV
+// D-100 (без наложений, эллипс 86 × 70): Густо 60 / 214,5 → 54 / 172, Редко 30,5 / 139,5 → 27 / 112; D-99 было 53 / 262 и 28 / 142; D-98 было 31 / 224 и 16 / 93 (доп. 80 при 11 м / 100 %: 90 / 213 и 50 / 121); для circle и off — см. LOW_OV
 // доп. 80: шаг по полёту 130 и 7 конфет — цепочка дотягивается до следующего зацепа (иначе перед каждым домом пусто: 7 % окон по 400 u без конфет → 1 %)
-const DENSE = Object.assign({}, D87, { chPer: 170, chMin: 0, chMax: 0, rowMinW: 150, rowN: 0, dnWhich: "all", pWhich: "all", pFly: 7, pFlyStep: 130, star2: 53, star3: 262 });
+const DENSE = Object.assign({}, D87, { chPer: 170, chMin: 0, chMax: 0, rowMinW: 150, rowN: 0, dnWhich: "all", pWhich: "all", pStep: 88, pFly: 7, pFlyStep: 130, star2: 54, star3: 172 }); // D-100: шаг 88 — соседние конфеты цепочки не ближе эллипса 86 × 70
 const SPARSE = Object.assign({}, D87, { chPer: 150, chMin: 0, chMax: 0, rowMinW: 170, rowN: 0, dnWhich: "alt", pWhich: "all",
-  pHiShare: 0.5, pLowShare: 0.5, pStep: 130, pMax: 4, pFly: 5, pFlyStep: 200, star2: 28, star3: 142 }); // доп. 80: «Редко» — те же три дороги на каждом махе, но точки реже (через один мах давало пустые экраны)
+  pHiShare: 0.5, pLowShare: 0.5, pStep: 130, pMax: 4, pFly: 5, pFlyStep: 200, star2: 27, star3: 112 }); // доп. 80: «Редко» — те же три дороги на каждом махе, но точки реже (через один мах давало пустые экраны)
 // «Конфеты внизу» — переключатель рядом с «Густо» / «Редко»: path — числа наборов; circle — числа D-91 (доп. 1); off — нижних конфет нет
 const LOW_OV = {
   // доп. 80: в «по пути» коротких дуг в пролётах и рядов над крышами нет (chMax 0, rowN 0); «дугой» и «нет» — как были (дуги 2…3 / 1…2, ряды 3 / 2)
@@ -201,8 +201,8 @@ const PR_NAME = { dense: "Густо", sparse: "Редко", fire: "Огоньк
   swing: "Раскачка", tarzan: "Тарзан", glider: "Планер", hopper: "Кузнечик", far: "Дальнобой",
   sky: "Небоскрёбы", canyon: "Каньон", peaks: "Горы", roofs: "Крыши", moon: "Луна", pull: "Подтяжка", clean: "Чистый", v1: "v1", v2: "v2" };
 const PR_NOTE = {
-  dense: "Финал D-87 + D-91: «Дальнобой» + конфеты. Только цепочки по настоящему пути маха — три дороги: высокая (так летит «Точный»), низкая (кто цепляется позже) и у самой земли (цепляется как можно позже, но не падает); мах под крышей, отпускание, полёт к следующему зацепу. Коротких дуг в пролётах и рядов над крышами нет. Раунд 60 с с первого нажатия, на 0:00 — сразу итог; счёт — съеденные конфеты. ★★ от 53, ★★★ от 262 («по пути»).",
-  sparse: "Финал D-87 + D-91: конфеты пореже. Те же три дороги, точки в цепочках реже; коротких дуг и рядов нет. Раунд 60 с, счёт — съеденные конфеты. ★★ от 28, ★★★ от 142 («по пути»).",
+  dense: "Финал D-87 + D-91: «Дальнобой» + конфеты. Только цепочки по настоящему пути маха — три дороги: высокая (так летит «Точный»), низкая (кто цепляется позже) и у самой земли (цепляется как можно позже, но не падает); мах под крышей, отпускание, полёт к следующему зацепу. Коротких дуг в пролётах и рядов над крышами нет. Раунд 60 с с первого нажатия, на 0:00 — сразу итог; счёт — съеденные конфеты. ★★ от 54, ★★★ от 172 («по пути»).",
+  sparse: "Финал D-87 + D-91: конфеты пореже. Те же три дороги, точки в цепочках реже; коротких дуг и рядов нет. Раунд 60 с, счёт — съеденные конфеты. ★★ от 27, ★★★ от 112 («по пути»).",
   spider: "Короткие верёвки, быстрый пологий полёт над крышами. Энергия — сильная подтяжка 350 u/с, пока держишь.",
   pend: "Длинные верёвки, большие дуги между высокими домами, камера дальше. Энергия — подтяжка 150 u/с.",
   rocket: "Высокие полёты над крышами. Энергия — подтяжка 120 u/с и буст ×1,3, если отпустить на подъёме 20…65°.",
@@ -418,8 +418,8 @@ const SPEC_KEYS = []; for (const g of SPEC) for (const f of g[2]) SPEC_KEYS.push
 const W = 320, H = 480, DT = 1 / 60, NSUB = 8, FLOOR = 462;
 const SIZE = { omFeet: 30, omTop: 36, mouthDy: 10, candyR: 20 };
 const START = { x: 80, y: 300, boxX0: 40, boxX1: 120, boxTop: 330 };
-const STORE = "lab.hook-tune.v16", BEST_KEY = "lab.best.hook-tune";
-const bestKey87 = () => "lab.best.hook-d87-" + PRESET + (LOW_OV[PRESET] ? (LOWER !== "path" ? "-" + LOWER : "-p99") : ""); // рекорд — свой у каждого набора и «конфет внизу»
+const STORE = "lab.hook-tune.v17", BEST_KEY = "lab.best.hook-tune";
+const bestKey87 = () => "lab.best.hook-d87-" + PRESET + (LOW_OV[PRESET] ? (LOWER !== "path" ? "-" + LOWER : "-p100") : ""); // рекорд — свой у каждого набора и «конфет внизу»
 const rad = (d) => d * Math.PI / 180;
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -722,7 +722,7 @@ function placeChain(WD, pts, nr, grp, minH) {
     for (let d = 0; d <= TUNE.pStep / 2 && sv + d <= sMax; d += 10) { const [x, y] = at(sv + d);
       const oh = inHouseBody(WD, x, y);
       if (y > FLOOR - Math.max(120, minH || 0) || x < WD.bld[0].x1 + 40 || (oh && !TUNE.pOverHouse)) continue; // не на крыше старта; на фоне дома — только с pOverHouse
-      const c = addCandSorted(WD, x, y, g); if (c) { if (oh) c.oh = true; if (g >= 4e6) { c.by = y; c.y = adjY(y); } list.push(c); } /* высокая дорога (1e6…4e6) — на своей высоте */ return sv + d; }
+      const c = addChainCand(WD, x, y, g); if (c) { if (oh) c.oh = true; list.push(c); } return sv + d; }
     return sv;
   };
   let sv = TUNE.pStart * Lr;
@@ -765,6 +765,29 @@ function inHouseBody(WD, x, y) {
   const bl = WD.bld, m = TUNE.candyDrawR + 8;
   for (let i = firstIdx(bl, x - m); i < bl.length && bl[i].x0 <= x + m; i++) if (y > bl[i].top - m) return true;
   return false;
+}
+// D-100 (пользователь: «не накладывай конфеты друг на друга»): конфета цепочки ставится только если не перекрывает ни одну уже поставленную
+// по ИТОГОВЫМ координатам (после высоты/разброса/пола; высокая дорога — на своей высоте). Рисунок конфеты: обёртка 2 × 1,55 r = 74 u в ширину,
+// ореол 2 × (r + 6) = 60 u в высоту (r 24); зазор 12 u по горизонтали и 10 u по вертикали (покачивание ±3) → эллипс 86 × 70 u.
+// Лишняя конфета не ставится (детерминированно: порядок постановки зависит только от seed).
+const CAND_GAP_X = 86, CAND_GAP_Y = 70;
+const candHit = (ax, ay, bx, by) => { const u = (ax - bx) / CAND_GAP_X, v = (ay - by) / CAND_GAP_Y; return u * u + v * v < 1; };
+let CAND_ID = 0;
+function addChainCand(WD, x, by, grp) { // by — база (как поставил призрак); высокая дорога (1e6…4e6) — на своей высоте
+  const L = WD.cand; if (x < (WD.streamX || -1e9)) { WD.late = (WD.late || 0) + 1; return null; }
+  const adj = grp >= 4e6, y = adj ? adjY(by) : by;
+  let i = L.length; while (i > 0 && L[i - 1].x > x) i--;
+  for (let j = i - 1; j >= 0 && x - L[j].x < CAND_GAP_X; j--) if (!L[j].hid && candHit(x, y, L[j].x, L[j].y)) return null;
+  for (let j = i; j < L.length && L[j].x - x < CAND_GAP_X; j++) if (!L[j].hid && candHit(x, y, L[j].x, L[j].y)) return null;
+  const c = { x, y, grp, gn: 1, id: ++CAND_ID }; if (adj) c.by = by; L.splice(i, 0, c); return c;
+}
+function hideOverlaps(WD) { // после сдвига ползунков: заново решаем, какие конфеты видны (раньше поставленная — главнее), без сдвига
+  const L = WD.cand, idx = L.map((c, k) => k).filter((k) => L[k].id != null).sort((a, b) => L[a].id - L[b].id);
+  for (const k of idx) L[k].hid = true;
+  for (const k of idx) { const c = L[k]; let ok = true;
+    for (let j = k - 1; ok && j >= 0 && c.x - L[j].x < CAND_GAP_X; j--) if (!L[j].hid && candHit(c.x, c.y, L[j].x, L[j].y)) ok = false;
+    for (let j = k + 1; ok && j < L.length && L[j].x - c.x < CAND_GAP_X; j++) if (!L[j].hid && candHit(c.x, c.y, L[j].x, L[j].y)) ok = false;
+    c.hid = !ok; }
 }
 function addCandSorted(WD, x, y, grp) { // вставка на место по x; ближе 50 u к соседней — не ставим
   const L = WD.cand; if (x < (WD.streamX || -1e9)) { WD.late = (WD.late || 0) + 1; return null; } // уже подано в кадр — не вставляем
@@ -1112,7 +1135,7 @@ const bobY = (c) => c.y + 3 * Math.sin(S.time * Math.PI * 2 / 1.2 + c.x * 0.013)
 function eat87() {
   const o = S.om, mx = o.x, my = o.y + SIZE.mouthDy, e2 = TUNE.eatDist * TUNE.eatDist, L = S.cand;
   for (let i = L.length - 1; i >= 0; i--) {
-    const c = L[i], dx = mx - c.x, dy = my - c.y; if (dx * dx + dy * dy >= e2) continue;
+    const c = L[i], dx = mx - c.x, dy = my - c.y; if (c.hid || dx * dx + dy * dy >= e2) continue;
     L[i] = L[L.length - 1]; L.pop(); S.candies++;
     let full = true; for (const q of L) if (q.grp === c.grp) { full = false; break; } // группа целиком: в ней не осталось несъеденных
     if (TUNE.kickOn) { // рывок от конфеты (ручка; в наборах D-87 выкл.)
@@ -1180,7 +1203,7 @@ function sfx(kind, idx) {
 function eatCandies() {
   const o = S.om, mx = o.x, my = o.y + SIZE.mouthDy, e2 = TUNE.eatDist * TUNE.eatDist, L = S.cand;
   for (let i = L.length - 1; i >= 0; i--) {
-    const c = L[i], dx = mx - c.x, dy = my - c.y; if (dx * dx + dy * dy >= e2) continue;
+    const c = L[i], dx = mx - c.x, dy = my - c.y; if (c.hid || dx * dx + dy * dy >= e2) continue;
     L[i] = L[L.length - 1]; L.pop(); S.candies++;
     if (TUNE.kickOn) {
       const sp = speed(), ux = sp > 1 ? o.vx / sp : 1, uy = sp > 1 ? o.vy / sp : 0;
@@ -1364,7 +1387,7 @@ function draw() {
   ctx.fillStyle = COL.ground; ctx.fillRect(xa, FLOOR, xb - xa, H / z + 400);
   ctx.fillStyle = COL.groundTop; ctx.fillRect(xa, FLOOR, xb - xa, 3 * u);
   if (TUNE.startMode === "box" && START.boxX1 > xa) { ctx.fillStyle = COL.crate; ctx.fillRect(START.boxX0, START.boxTop, START.boxX1 - START.boxX0, FLOOR - START.boxTop); }
-  if (TUNE.candyOn) { const cr = TUNE.candyDrawR, lw = Math.max(3, u); for (const c of S.cand) if (c.x > xa - 60 && c.x < xb + 60) drawCandy(c.x, bobY(c), cr, lw, 6, c.oh); }
+  if (TUNE.candyOn) { const cr = TUNE.candyDrawR, lw = Math.max(3, u); for (const c of S.cand) if (!c.hid && c.x > xa - 60 && c.x < xb + 60) drawCandy(c.x, bobY(c), cr, lw, 6, c.oh); }
   else if (TUNE.candiesOn) { ctx.fillStyle = COL.candy; for (const c of S.cand) if (c.x > xa - 30 && c.x < xb + 30) { ctx.beginPath(); ctx.arc(c.x, c.y, SIZE.candyR, 0, 7); ctx.fill(); } }
   // цель до нажатия: пунктир к точке; цели нет — короткий серый луч
   if (!r) {
@@ -1692,6 +1715,7 @@ function setCandAdj(hM, spP) { // ползунки: высота в м (1…18),
   if (hM != null && isFinite(+hM)) CANDH = clamp(+hM, 1, 18) * 40;
   if (spP != null && isFinite(+spP)) CANDSP = clamp(+spP, 0, 200) / 100;
   for (const c of S.WD.cand) if (c.by != null) c.y = adjY(c.by);
+  hideOverlaps(S.WD);
   save(); syncUi(); return true;
 }
 function setHiChain(on) { HICH = !!on; restart(); save(); return true; } // цепочки ставятся при генерации — перезапуск раунда
