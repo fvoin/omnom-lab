@@ -1,0 +1,366 @@
+{
+ "game": "smash",
+ "field": [
+  1080,
+  1920
+ ],
+ "unit": "u (1080 = ширина экрана, y вниз; 13 м = 1080 u, 1 м = 83,08 u); anchor — доля размера",
+ "naming": "без states: file как есть. Со states: <file без .png>_<state>.png, а если кадров больше 1 — <file без .png>_<state>_<кадр с 0>.png (пример: jar_fill0.png, jar_crack.png, om_chew_0.png, blast_play_0..4.png)",
+ "art": "art:false — рисуется заглушка-фигура того же размера и якоря. После того как файлы положены в эту папку: node games/lab/view-src/sync-manifest.mjs smash (выставит art:true)",
+ "slice": "slice [l,t,r,b] — поля 9-среза в u номинального размера спрайта; растягиваемые спрайты (plank, stone, ground_block) рисуются в нужный размер",
+ "codeDrawn": "пунктир прицела, дым-кольцо выстрела, текст HUD и всплывающие надписи (Цепь, Одним!) — кодом",
+ "sprites": [
+  {
+   "name": "bg_smash",
+   "file": "bg_smash.png",
+   "w": 1080,
+   "h": 1920,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "фон; земля на 76 % высоты (y=1459), небо/холмы, лишняя высота закрашивается цветом фона"
+  },
+  {
+   "name": "cannon_base",
+   "file": "cannon_base.png",
+   "w": 170,
+   "h": 120,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "основание пушки, низ по центру стоит на земле (182,1459)"
+  },
+  {
+   "name": "cannon_barrel",
+   "file": "cannon_barrel.png",
+   "w": 200,
+   "h": 80,
+   "anchor": [
+    0.25,
+    0.5
+   ],
+   "states": {
+    "idle": 1,
+    "fire": 2
+   },
+   "fps": 12,
+   "art": false,
+   "note": "ствол; якорь — ось вращения (182,1376); смотрит вправо, поворот кодом; fire — 2 кадра по 75 мс"
+  },
+  {
+   "name": "ball",
+   "file": "ball.png",
+   "w": 70,
+   "h": 70,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "ядро-карамель, диаметр 70 u (0,84 м), крутится"
+  },
+  {
+   "name": "jar",
+   "file": "jar.png",
+   "w": 58,
+   "h": 83,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "fill0": 1,
+    "fill1": 1,
+    "fill2": 1,
+    "crack": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "банка с конфетами 0,7x1,0 м; 3 вида начинки; crack — прозрачная накладка с трещиной поверх начинки (после сильного, но не разбивающего удара)"
+  },
+  {
+   "name": "shard",
+   "file": "shard.png",
+   "w": 30,
+   "h": 30,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "a": 1,
+    "b": 1,
+    "c": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "осколок банки/бутылки, 20–40 u, 3 вида; масштаб кодом"
+  },
+  {
+   "name": "ice_shard",
+   "file": "ice_shard.png",
+   "w": 30,
+   "h": 30,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "a": 1,
+    "b": 1,
+    "c": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "осколок льда (доп. слот), 3 вида"
+  },
+  {
+   "name": "plank",
+   "file": "plank.png",
+   "w": 83,
+   "h": 21,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "half": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "доска, 1 м = 83 u в длину, 21 u толщина; тянется 9-срезом по длине; half — для половинок после слома",
+   "slice": [
+    14,
+    6,
+    14,
+    6
+   ]
+  },
+  {
+   "name": "stone",
+   "file": "stone.png",
+   "w": 166,
+   "h": 166,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "камень (тянется 9-срезом до любого размера)",
+   "slice": [
+    40,
+    40,
+    40,
+    40
+   ]
+  },
+  {
+   "name": "ground_block",
+   "file": "ground_block.png",
+   "w": 166,
+   "h": 166,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "неподвижная платформа/колонна (тянется 9-срезом)",
+   "slice": [
+    40,
+    40,
+    40,
+    40
+   ]
+  },
+  {
+   "name": "soda",
+   "file": "soda.png",
+   "w": 50,
+   "h": 100,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "idle": 1,
+    "fuse": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "газировка-бомба 0,6x1,2 м; fuse — запал горит (мигает) за 0,12 с до взрыва"
+  },
+  {
+   "name": "ice",
+   "file": "ice.png",
+   "w": 66,
+   "h": 66,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "crack": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "кубик льда 0,8 м; crack — трещины, рисуется поверх normal"
+  },
+  {
+   "name": "blast",
+   "file": "blast.png",
+   "w": 330,
+   "h": 330,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "play": 5
+   },
+   "fps": 42,
+   "art": false,
+   "note": "вспышка взрыва, диаметр 330 u (радиус 2 м); 5 кадров на 120 мс"
+  },
+  {
+   "name": "candy_0",
+   "file": "candy_0.png",
+   "w": 40,
+   "h": 40,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "конфета в полёте к Ому Ному, вид 0"
+  },
+  {
+   "name": "candy_1",
+   "file": "candy_1.png",
+   "w": 40,
+   "h": 40,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "конфета в полёте к Ому Ному, вид 1"
+  },
+  {
+   "name": "candy_2",
+   "file": "candy_2.png",
+   "w": 40,
+   "h": 40,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "конфета в полёте к Ому Ному, вид 2"
+  },
+  {
+   "name": "candy_3",
+   "file": "candy_3.png",
+   "w": 40,
+   "h": 40,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "конфета в полёте к Ому Ному, вид 3"
+  },
+  {
+   "name": "shelf_om",
+   "file": "shelf_om.png",
+   "w": 300,
+   "h": 60,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "полка Ома Нома, центр (900,430), верх на y=400"
+  },
+  {
+   "name": "om",
+   "file": "om.png",
+   "w": 260,
+   "h": 260,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {
+    "idle": 2,
+    "want": 1,
+    "open": 1,
+    "chew": 3,
+    "happy": 1,
+    "sad": 1,
+    "oops": 1
+   },
+   "fps": 6,
+   "art": false,
+   "note": "Ом Ном, общий набор om.* §0.3 (ровно 2 руки и 2 ноги); низ по центру (900,400); idle_0 глаза открыты, idle_1 моргание; chew 3 кадра 0,6 с"
+  },
+  {
+   "name": "btn_pause",
+   "file": "btn_pause.png",
+   "w": 120,
+   "h": 120,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "доп. слот: кнопка паузы, центр (90,110)"
+  },
+  {
+   "name": "ball_icon",
+   "file": "ball_icon.png",
+   "w": 56,
+   "h": 56,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "full": 1,
+    "spent": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "доп. слот: значок ядра в HUD (осталось/потрачено), центры (230,110),(300,110),(370,110)"
+  }
+ ]
+}

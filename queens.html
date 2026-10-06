@@ -5,284 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <link rel="icon" href="data:,">
 <title>Om Nom Queens</title>
-<style>:root{--ink:#2a2140;--cream:#fff6e0;--bg:#6a4fb3;--bg2:#4d3790;--act:#ff5fa8;--red:#e8283c}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{background:var(--bg);height:100%;color:var(--ink);-webkit-user-select:none;user-select:none;margin:0;font:800 14px/1.25 ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{flex-direction:column;height:100dvh;display:flex}header{color:var(--cream);align-items:center;gap:10px;padding:10px 12px 4px;display:flex}header a{color:var(--cream);padding:0 4px;font-size:24px;line-height:1;text-decoration:none}header .t{flex:1;font-size:17px;font-weight:900}header .tm{font-variant-numeric:tabular-nums;font-size:22px;font-weight:900}#rule{color:var(--cream);opacity:.85;text-align:center;padding:0 14px 6px;font-size:12px}#wrap{flex:1;justify-content:center;align-items:center;min-height:0;padding:6px 8px;display:flex;position:relative}#board{border:4px solid var(--ink);background:var(--ink);touch-action:manipulation;border-radius:10px;display:grid;position:relative}.cell{border:0 solid var(--ink);cursor:pointer;justify-content:center;align-items:center;display:flex;position:relative;overflow:hidden}.cell.bad:before{content:"";background:repeating-linear-gradient(45deg,#e8283c8c 0 5px,#e8283c26 5px 10px);position:absolute;inset:0}.cell.bad{box-shadow:inset 0 0 0 3px var(--red)}.cell.hint{animation:.9s ease-out 2 hint}@keyframes hint{0%,to{box-shadow:inset 0 0 #fff}40%{box-shadow:inset 0 0 0 6px #fff}}.cell svg{pointer-events:none;width:84%;height:84%;position:relative}.cell .x{font-size:calc(var(--cs) * .55);color:#2a2140b3;pointer-events:none;font-weight:900;line-height:1;position:relative}#bar{justify-content:center;gap:10px;padding:8px 56px 12px 12px;display:flex}button{font:inherit;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;border-radius:999px;padding:10px 18px;font-size:16px;font-weight:800;box-shadow:0 3px #00000059}button:active{transform:translateY(2px);box-shadow:0 1px #00000059}button.big{background:var(--act);color:#fff;text-shadow:0 1px 0 var(--ink);padding:12px 26px;font-size:20px}#gear{z-index:6;width:38px;height:38px;padding:0;font-size:20px;position:fixed;bottom:12px;right:8px}#panel{background:var(--cream);border:2px solid var(--ink);z-index:6;border-radius:16px;width:250px;padding:10px 12px;display:none;position:fixed;bottom:56px;right:8px;box-shadow:0 6px 18px #0006}#panel .r{grid-template-columns:70px 1fr 40px;align-items:center;gap:6px;margin:6px 0;font-size:12px;display:grid}#panel input{width:100%;margin:0}#panel b{text-align:right}.ov{z-index:5;background:#2a21408c;justify-content:center;align-items:center;display:none;position:fixed;inset:0}.card{background:var(--cream);border:3px solid var(--ink);text-align:center;border-radius:24px;width:min(86%,320px);padding:18px 22px 20px;box-shadow:0 6px #00000059}.card h1{color:#a8205f;margin:0 0 6px;font-size:28px}.card p{margin:6px 0 14px;font-size:14px;font-weight:700}.card small{opacity:.7;margin-top:12px;font-weight:700;display:block}.card a{color:#a8205f;text-decoration:none}.card .col{flex-direction:column;align-items:stretch;gap:10px;display:flex}</style>
+<style>:root{--ink:#2a2140;--cream:#fff6e0;--bg:#6a4fb3;--act:#ff5fa8}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{background:var(--bg);height:100%;color:var(--ink);overscroll-behavior:none;-webkit-user-select:none;user-select:none;margin:0;font:800 14px/1.25 ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}#stage{position:absolute;inset:0}canvas{touch-action:none;width:100%;height:100%;display:block;position:absolute;top:0;left:0}button{font:inherit;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;border-radius:999px;padding:10px 18px;font-size:16px;font-weight:800;box-shadow:0 3px #00000059}button:active{transform:translateY(2px);box-shadow:0 1px #00000059}button.big{background:var(--act);color:#fff;text-shadow:0 1px 0 var(--ink);padding:12px 26px;font-size:20px}#gear{z-index:6;opacity:.8;width:34px;height:34px;padding:0;font-size:18px;position:absolute;top:8px;right:8px}#panel{background:var(--cream);border:2px solid var(--ink);z-index:6;border-radius:16px;width:250px;padding:10px 12px;display:none;position:absolute;top:48px;right:8px;box-shadow:0 6px 18px #0006}#panel .r{grid-template-columns:70px 1fr 40px;align-items:center;gap:6px;margin:6px 0;font-size:12px;display:grid}#panel input{width:100%;margin:0}#panel b{text-align:right}.ov{z-index:5;background:#2a21408c;justify-content:center;align-items:center;display:none;position:absolute;inset:0}.ov.on{display:flex}.card{background:var(--cream);border:3px solid var(--ink);text-align:center;border-radius:24px;width:min(86%,330px);padding:18px 22px 20px;box-shadow:0 6px #00000059}.card h1{color:#a8205f;margin:0 0 6px;font-size:28px}.card p{margin:6px 0 12px;font-size:14px;font-weight:700}.card small{opacity:.7;margin-top:12px;font-weight:700;display:block}.card a{color:#a8205f;text-decoration:none}.card .col{flex-direction:column;align-items:stretch;gap:10px;display:flex}.stars{letter-spacing:4px;margin:4px 0 8px;font-size:44px;line-height:1}.stars span{color:#d9cfe6}.stars span.on{color:#ffc928;-webkit-text-stroke:2px var(--ink)}.rew{color:#a8205f;margin:4px 0 12px;font-size:22px;font-weight:900}.rew s{color:var(--ink);opacity:.7;margin-top:2px;font-size:12px;font-weight:700;text-decoration:none;display:block}</style>
+  <script type="module" crossorigin src="./assets/queens-CrR-BBUZ.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-P2Xu9kJm.js">
+  <link rel="modulepreload" crossorigin href="./assets/layer-CHPe9y9m.js">
 </head>
 <body>
-<header><a href="index.html" title="Lab">&larr;</a><span class="t" id="title">Om Nom Queens</span><span class="tm" id="timer">0:00</span></header>
-<div id="rule">One Om Nom per row, column and color. No touching!</div>
-<div id="wrap"><div id="board"></div></div>
-<div id="bar"><button id="hintBtn">Hint</button><button id="restartBtn">Restart</button></div>
-<button id="gear" title="Settings">&#9881;</button>
-<div id="panel"><div class="r"><span>Board size</span><input type="range" id="szr" min="4" max="9" step="1"><b id="szv"></b></div>
-  <div style="font-size:11px;opacity:.7">4 = auto (grows with level)</div></div>
-<div class="ov" id="start" style="display:flex"><div class="card">
-  <h1>Om Nom Queens</h1>
-  <p>One Om Nom per row, column and color. No touching!</p>
-  <div class="col"><button class="big" id="play">Play</button></div>
-  <small>Tap: &times; mark &rarr; Om Nom &rarr; empty</small>
-  <small id="recs"></small>
-  <small><a href="index.html">&larr; Lab</a></small>
-</div></div>
-<div class="ov" id="win"><div class="card">
-  <h1>Solved!</h1>
-  <p id="winT"></p>
-  <div class="col"><button class="big" id="next">Next level</button><button id="replay">Menu</button></div>
-</div></div>
-<script>
-"use strict";
-const $ = (id) => document.getElementById(id);
-const PALETTE = ["#ffb3ba", "#ffdfba", "#fff39a", "#b5f0c1", "#a4defa", "#c9b8ff", "#ffc2ee", "#d9c3a0", "#c4e68f"];
-const rint = (n) => Math.floor(Math.random() * n);
-function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = rint(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-
-// ---- generator: planted solution -> regions grow from it -> solver checks uniqueness ------------------
-function plant(N) {
-  const cols = new Array(N).fill(-1), used = new Array(N).fill(false);
-  function rec(r) {
-    if (r === N) return true;
-    for (const c of shuffle([...Array(N).keys()])) {
-      if (used[c] || (r > 0 && Math.abs(c - cols[r - 1]) <= 1)) continue;
-      cols[r] = c; used[c] = true;
-      if (rec(r + 1)) return true;
-      used[c] = false;
-    }
-    return false;
-  }
-  rec(0); return cols;
-}
-function grow(N, cols) {
-  const reg = new Array(N * N).fill(-1);
-  cols.forEach((c, r) => { reg[r * N + c] = r; });
-  const nb = (i) => { const r = Math.floor(i / N), c = i % N, o = []; if (r > 0) o.push(i - N); if (r < N - 1) o.push(i + N); if (c > 0) o.push(i - 1); if (c < N - 1) o.push(i + 1); return o; };
-  for (;;) {
-    const cand = [];
-    for (let i = 0; i < N * N; i++) if (reg[i] < 0) { const a = nb(i).filter((j) => reg[j] >= 0); if (a.length) cand.push([i, a]); }
-    if (!cand.length) break;
-    const [i, a] = cand[rint(cand.length)];
-    reg[i] = reg[a[rint(a.length)]];
-  }
-  return reg;
-}
-function solve(reg, N, limit) {
-  const sols = [], cols = new Array(N);
-  let cm = 0, rm = 0;
-  (function rec(r) {
-    if (sols.length >= limit) return;
-    if (r === N) { sols.push(cols.slice()); return; }
-    for (let c = 0; c < N; c++) {
-      if ((cm >> c) & 1) continue;
-      const g = reg[r * N + c];
-      if ((rm >> g) & 1) continue;
-      if (r > 0 && Math.abs(c - cols[r - 1]) <= 1) continue;
-      cols[r] = c; cm |= 1 << c; rm |= 1 << g;
-      rec(r + 1);
-      cm &= ~(1 << c); rm &= ~(1 << g);
-    }
-  })(0);
-  return sols;
-}
-function stillConnected(reg, N, id, skip) { // is region `id` connected after removing cell `skip`?
-  const cells = []; for (let i = 0; i < N * N; i++) if (reg[i] === id && i !== skip) cells.push(i);
-  if (!cells.length) return false;
-  const seen = new Set([cells[0]]), st = [cells[0]];
-  while (st.length) {
-    const i = st.pop(), r = Math.floor(i / N), c = i % N;
-    for (const j of [r > 0 ? i - N : -1, r < N - 1 ? i + N : -1, c > 0 ? i - 1 : -1, c < N - 1 ? i + 1 : -1]) {
-      if (j >= 0 && j !== skip && reg[j] === id && !seen.has(j)) { seen.add(j); st.push(j); }
-    }
-  }
-  return seen.size === cells.length;
-}
-// tries a few thousand tweaks; returns {N, reg, solution} with exactly ONE solution
-function generate(N) {
-  for (let attempt = 0; attempt < 200; attempt++) {
-    const planted = plant(N), reg = grow(N, planted);
-    for (let it = 0; it < 500; it++) {
-      const sols = solve(reg, N, 2);
-      if (sols.length === 1) return { N, reg, solution: planted, attempts: attempt + 1, repairs: it };
-      const other = sols.find((s) => s.some((c, r) => c !== planted[r])) || sols[0];
-      const diff = []; other.forEach((c, r) => { if (c !== planted[r]) diff.push(r * N + c); });
-      shuffle(diff);
-      let changed = false;
-      for (const cell of diff) {
-        const R = reg[cell], r = Math.floor(cell / N), c = cell % N;
-        const ns = [r > 0 ? cell - N : -1, r < N - 1 ? cell + N : -1, c > 0 ? cell - 1 : -1, c < N - 1 ? cell + 1 : -1].filter((j) => j >= 0 && reg[j] !== R);
-        if (!ns.length || !stillConnected(reg, N, R, cell)) continue;
-        reg[cell] = reg[ns[rint(ns.length)]]; changed = true; break;
-      }
-      if (!changed) break;
-    }
-  }
-  throw new Error("generator failed " + N);
-}
-
-// ---- game state ---------------------------------------------------------------------------------
-const store = {
-  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } },
-  set(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) {} },
-};
-let level = Math.max(1, Number(store.get("lab.queens.level", 1)) || 1);
-let sizeCfg = Number(store.get("lab.queens.size", 4)) || 4;   // 4 = auto
-let puz = null, cells = [], conflicts = new Set(), solved = false, hints = 0, elapsed = 0, startedAt = 0, running = false;
-let cellEls = [], hintCell = -1;
-
-const sizeForLevel = (l) => Math.min(9, 5 + Math.floor((l - 1) / 2));
-const curSize = () => (sizeCfg > 4 ? sizeCfg : sizeForLevel(level));
-const best = (N) => Number(store.get("lab.best.queens." + N, 0)) || 0;
-const fmt = (s) => Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
-
-const OM_SVG = '<svg viewBox="0 0 100 100"><g stroke="#1f5a10" stroke-width="6" stroke-linecap="round"><path d="M14 58 L4 46 M86 58 L96 46"/><path d="M38 86 L36 96 M62 86 L64 96"/></g>' +
-  '<circle cx="50" cy="52" r="36" fill="#6bd13f" stroke="#1f5a10" stroke-width="6"/>' +
-  '<circle cx="37" cy="44" r="10" fill="#fff"/><circle cx="63" cy="44" r="10" fill="#fff"/><circle cx="39" cy="45" r="4.5" fill="#222"/><circle cx="61" cy="45" r="4.5" fill="#222"/>' +
-  '<path d="M33 62 Q50 80 67 62 Z" fill="#3b1d10" stroke="#3b1d10" stroke-width="3" stroke-linejoin="round"/></svg>';
-
-function newPuzzle(keepLevelUi) {
-  const N = curSize();
-  const g = generate(N);
-  // shuffle colors per puzzle so neighbours differ between levels
-  const pal = shuffle(PALETTE.slice());
-  puz = { N, reg: g.reg, solution: g.solution, colors: pal };
-  buildBoard();
-  restart();
-}
-function buildBoard() {
-  const N = puz.N, b = $("board");
-  b.innerHTML = ""; cellEls = [];
-  b.style.gridTemplateColumns = `repeat(${N}, 1fr)`; b.style.gridTemplateRows = `repeat(${N}, 1fr)`;
-  for (let i = 0; i < N * N; i++) {
-    const r = Math.floor(i / N), c = i % N, el = document.createElement("div");
-    el.className = "cell"; el.style.background = puz.colors[puz.reg[i]];
-    const diff = (rr, cc) => rr < 0 || cc < 0 || rr >= N || cc >= N ? false : puz.reg[rr * N + cc] !== puz.reg[i];
-    // thick border between regions, thin inside a region
-    el.style.borderRightWidth = c < N - 1 ? (diff(r, c + 1) ? "3px" : "1px") : "0";
-    el.style.borderBottomWidth = r < N - 1 ? (diff(r + 1, c) ? "3px" : "1px") : "0";
-    el.style.borderLeftColor = el.style.borderRightColor = el.style.borderBottomColor = "var(--ink)";
-    el.style.borderRightColor = el.style.borderBottomColor = diff(r, c + 1) || diff(r + 1, c) ? "var(--ink)" : "rgba(42,33,64,.35)";
-    if (c < N - 1 && !diff(r, c + 1)) el.style.borderRightColor = "rgba(42,33,64,.35)"; else el.style.borderRightColor = "var(--ink)";
-    if (r < N - 1 && !diff(r + 1, c)) el.style.borderBottomColor = "rgba(42,33,64,.35)"; else el.style.borderBottomColor = "var(--ink)";
-    el.addEventListener("click", () => tap(r, c));
-    b.appendChild(el); cellEls.push(el);
-  }
-  fit();
-}
-function fit() {
-  const w = $("wrap"), b = $("board");
-  const s = Math.floor(Math.min(w.clientWidth - 16, w.clientHeight - 12));
-  if (s <= 0) return;
-  b.style.width = b.style.height = s + "px";
-  b.style.setProperty("--cs", (s / (puz ? puz.N : 7)) + "px");
-}
-new ResizeObserver(fit).observe($("wrap"));
-
-function restart() {
-  cells = new Array(puz.N * puz.N).fill(0); solved = false; hints = 0; elapsed = 0; startedAt = performance.now(); running = true; hintCell = -1;
-  $("win").style.display = "none";
-  render();
-}
-function tap(r, c) {
-  if (solved) return;
-  const i = r * puz.N + c;
-  cells[i] = (cells[i] + 1) % 3;
-  if (hintCell === i) hintCell = -1;
-  render(); checkWin();
-}
-function computeConflicts() {
-  const N = puz.N, q = [];
-  cells.forEach((v, i) => { if (v === 2) q.push(i); });
-  const bad = new Set();
-  for (let a = 0; a < q.length; a++) for (let b = a + 1; b < q.length; b++) {
-    const ra = Math.floor(q[a] / N), ca = q[a] % N, rb = Math.floor(q[b] / N), cb = q[b] % N;
-    if (ra === rb || ca === cb || puz.reg[q[a]] === puz.reg[q[b]] || (Math.abs(ra - rb) <= 1 && Math.abs(ca - cb) <= 1)) { bad.add(q[a]); bad.add(q[b]); }
-  }
-  return bad;
-}
-function checkWin() {
-  const N = puz.N, q = cells.filter((v) => v === 2).length;
-  if (q === N && conflicts.size === 0) {
-    solved = true; running = false; elapsed = (performance.now() - startedAt) / 1000;
-    const prev = best(N); let msg = fmt(elapsed) + (hints ? " · " + hints + " hint" + (hints > 1 ? "s" : "") : "");
-    if (!hints && (!prev || elapsed < prev)) { store.set("lab.best.queens." + N, elapsed.toFixed(1)); msg += " · new record!"; }
-    else if (prev) msg += " · best " + fmt(prev);
-    $("winT").textContent = msg;
-    if (sizeCfg <= 4 || true) { level++; store.set("lab.queens.level", level); }
-    setTimeout(() => { if (solved) $("win").style.display = "flex"; }, 450);
-    updateTitle();
-  }
-}
-function render() {
-  conflicts = computeConflicts();
-  const N = puz.N;
-  cellEls.forEach((el, i) => {
-    const v = cells[i];
-    el.classList.toggle("bad", conflicts.has(i));
-    el.classList.toggle("hint", i === hintCell);
-    const has = el.dataset.v;
-    if (has !== String(v)) { el.dataset.v = v; el.innerHTML = v === 2 ? OM_SVG : v === 1 ? '<span class="x">&times;</span>' : ""; }
-  });
-  updateTitle();
-}
-function updateTitle() { $("title").textContent = "Level " + Math.max(1, solved ? level - 1 : level) + " · " + puz.N + "×" + puz.N; }
-setInterval(() => { if (running) $("timer").textContent = fmt((performance.now() - startedAt) / 1000); else if (solved) $("timer").textContent = fmt(elapsed); }, 200);
-
-function hint() {
-  if (solved) return;
-  const N = puz.N, sol = new Set(puz.solution.map((c, r) => r * N + c));
-  const wrongQ = [], wrongX = [], freeSol = [], freeNon = [];
-  cells.forEach((v, i) => {
-    if (v === 2 && !sol.has(i)) wrongQ.push(i);
-    if (v === 1 && sol.has(i)) wrongX.push(i);
-    if (v !== 2 && sol.has(i)) freeSol.push(i);
-    if (v === 0 && !sol.has(i)) freeNon.push(i);
-  });
-  let i, to;
-  if (wrongQ.length) { i = wrongQ[rint(wrongQ.length)]; to = 1; }          // an Om Nom in the wrong place -> a cross
-  else if (wrongX.length) { i = wrongX[rint(wrongX.length)]; to = 2; }     // a cross on a right cell -> the Om Nom
-  else if (freeSol.length && (!freeNon.length || Math.random() < 0.4)) { i = freeSol[rint(freeSol.length)]; to = 2; }
-  else if (freeNon.length) { i = freeNon[rint(freeNon.length)]; to = 1; }
-  else return;
-  cells[i] = to; hintCell = i; hints++;
-  render(); checkWin();
-}
-$("hintBtn").addEventListener("click", hint);
-$("restartBtn").addEventListener("click", restart);
-$("play").addEventListener("click", () => { $("start").style.display = "none"; newPuzzle(); });
-$("next").addEventListener("click", () => { newPuzzle(); });
-$("replay").addEventListener("click", () => { $("win").style.display = "none"; showStart(); });
-function showStart() {
-  running = false;
-  $("recs").textContent = "Level " + level + " · best: " + [5, 6, 7, 8, 9].map((n) => n + "×" + n + " " + (best(n) ? fmt(best(n)) : "–")).join(" · ");
-  $("start").style.display = "flex";
-}
-$("gear").addEventListener("click", () => { const p = $("panel"); p.style.display = p.style.display === "block" ? "none" : "block"; });
-$("szr").value = sizeCfg; $("szv").textContent = sizeCfg > 4 ? sizeCfg : "auto";
-$("szr").addEventListener("input", () => {
-  sizeCfg = Number($("szr").value); $("szv").textContent = sizeCfg > 4 ? sizeCfg : "auto"; store.set("lab.queens.size", sizeCfg);
-  if ($("start").style.display === "none") { newPuzzle(); }
-});
-
-// ---- test hooks ---------------------------------------------------------------------------------
-window.__game = {
-  getState: () => puz && ({ level, size: puz.N, regions: puz.reg.slice(), solution: puz.solution.slice(), cells: cells.slice(), conflicts: [...conflicts], solved, hints, elapsed, running }),
-  act(a, v) {
-    if (a === "tap") tap(v.r, v.c);
-    else if (a === "hint") hint();
-    else if (a === "restart") restart();
-    else if (a === "new") { if (v && v.size) { sizeCfg = v.size; } $("start").style.display = "none"; newPuzzle(); }
-    else if (a === "next") newPuzzle();
-  },
-  // generator stats: n puzzles of size N -> verified unique, ms each
-  gen(N, n) {
-    let t = performance.now(), bad = 0, maxMs = 0, rep = 0;
-    for (let k = 0; k < n; k++) {
-      const t0 = performance.now(), g = generate(N);
-      maxMs = Math.max(maxMs, performance.now() - t0); rep += g.repairs + g.attempts - 1;
-      if (solve(g.reg, N, 3).length !== 1) bad++;
-      const sizes = new Set(g.reg); if (sizes.size !== N) bad++;
-    }
-    return { N, n, bad, avgMs: (performance.now() - t) / n, maxMs, avgFixes: rep / n };
-  },
-};
-showStart();
-</script>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <button id="gear" title="Settings">&#9881;</button>
+  <div id="panel"><div class="r"><span>Board size</span><input type="range" id="szr" min="4" max="9" step="1"><b id="szv"></b></div>
+    <div style="font-size:11px;opacity:.7">4 = auto (grows with level)</div></div>
+  <div class="ov on" id="menu"><div class="card">
+    <h1>Om Nom Queens</h1>
+    <p>One Om Nom per row, column and color. No touching!</p>
+    <div class="col"><button class="big" id="play">Play</button></div>
+    <small>Tap: &times; mark &rarr; Om Nom &rarr; empty. Drag: &times; marks.</small>
+    <small id="recs"></small>
+    <small><a href="index.html">&larr; Lab</a></small>
+  </div></div>
+  <div class="ov" id="pause"><div class="card">
+    <h1>Paused</h1>
+    <div class="col"><button class="big" id="resume">Resume</button><button id="pRestart">Restart</button><button id="pQuit">Quit (no reward)</button></div>
+  </div></div>
+  <div class="ov" id="result"><div class="card">
+    <h1>Solved!</h1>
+    <div class="stars" id="rStars"></div>
+    <p id="rInfo"></p>
+    <div class="rew" id="rRew"></div>
+    <div class="col"><button class="big" id="next">Next level</button><button id="rMenu">Menu</button></div>
+  </div></div>
+</div>
 </body>
 </html>
