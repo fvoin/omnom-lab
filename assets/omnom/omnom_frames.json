@@ -61,14 +61,14 @@
   "neutral": {
    "layer": "neutral_pupils",
    "center": [
-    -7.3,
-    -43.69
+    -8.46,
+    -43.77
    ],
    "maxOffset": {
-    "left": 1.93,
-    "right": 0.69,
-    "up": 2.01,
-    "down": 1.44
+    "left": 1.23,
+    "right": 1.23,
+    "up": 2.82,
+    "down": 2.82
    },
    "legacyNote": "shared layer kept for the old code path: offsets clamped to this box keep each pupil in its own eye (smaller than before)",
    "previous": {
@@ -129,11 +129,11 @@
        -7
       ],
       "restPx": [
-       192.5,
+       190.5,
        206.0
       ],
       "rest": [
-       -13.93,
+       -14.24,
        -44.86
       ],
       "radiiPx": [
@@ -143,27 +143,59 @@
       "radii": [
        3.98,
        5.31
+      ],
+      "previous": {
+       "restPx": [
+        192.5,
+        206.0
+       ],
+       "rest": [
+        -13.93,
+        -44.86
+       ]
+      },
+      "shiftAD55Px": [
+       -2,
+       0
       ]
      },
      "travel": {
       "centerPx": [
-       175,
-       203
+       190.5,
+       206.0
       ],
       "radiiPx": [
-       25.0,
-       25.5
+       7.9,
+       18.1
       ],
       "center": [
-       -16.67,
-       -45.33
+       -14.24,
+       -44.86
       ],
       "radii": [
-       3.91,
-       3.98
+       1.23,
+       2.82
       ],
       "restInside": true,
-      "restNorm": 0.504
+      "restNorm": 0.0,
+      "previous": {
+       "centerPx": [
+        175,
+        203
+       ],
+       "radiiPx": [
+        25.0,
+        25.5
+       ],
+       "center": [
+        -16.67,
+        -45.33
+       ],
+       "radii": [
+        3.91,
+        3.98
+       ]
+      }
      }
     },
     "r": {
@@ -192,11 +224,11 @@
        0
       ],
       "restPx": [
-       276.5,
+       264.5,
        220.0
       ],
       "rest": [
-       -0.81,
+       -2.68,
        -42.67
       ],
       "radiiPx": [
@@ -206,42 +238,87 @@
       "radii": [
        4.14,
        5.47
+      ],
+      "previous": {
+       "restPx": [
+        276.5,
+        220.0
+       ],
+       "rest": [
+        -0.81,
+        -42.67
+       ]
+      },
+      "shiftAD55Px": [
+       -12,
+       0
       ]
      },
      "travel": {
       "centerPx": [
-       296,
-       220
+       264.5,
+       220.0
       ],
       "radiiPx": [
-       39.8,
-       40.9
+       8.2,
+       18.4
       ],
       "center": [
-       2.23,
+       -2.68,
        -42.67
       ],
       "radii": [
-       6.22,
-       6.39
+       1.28,
+       2.87
       ],
       "restInside": true,
-      "restNorm": 0.24
+      "restNorm": 0.0,
+      "previous": {
+       "centerPx": [
+        296,
+        220
+       ],
+       "radiiPx": [
+        39.8,
+        40.9
+       ],
+       "center": [
+        2.23,
+        -42.67
+       ],
+       "radii": [
+        6.22,
+        6.39
+       ]
+      }
      }
+    }
+   },
+   "ad55Note": "art-director-55 (2026-10-04): pupils closer together, spacing 68% of eye-centre spacing (rule <= 72%). rest = travel.center (no look = the art rest); travel.radii: l = the room BOTH eyes share for one shift, r = own room. Old values: pupil.previous, travel.previous.",
+   "previousAD55": {
+    "center": [
+     -7.3,
+     -43.69
+    ],
+    "maxOffset": {
+     "left": 1.93,
+     "right": 0.69,
+     "up": 2.01,
+     "down": 1.44
     }
    }
   },
   "wide": {
    "layer": "wide_pupils",
    "center": [
-    -7.22,
-    -49.86
+    -8.2,
+    -49.97
    ],
    "maxOffset": {
-    "left": 1.59,
-    "right": 0.33,
-    "up": 0.78,
-    "down": 0.5
+    "left": 0.77,
+    "right": 0.77,
+    "up": 1.39,
+    "down": 1.39
    },
    "legacyNote": "shared layer kept for the old code path: offsets clamped to this box keep each pupil in its own eye (smaller than before)",
    "previous": {
@@ -302,11 +379,11 @@
        -4
       ],
       "restPx": [
-       196.0,
+       194.0,
        165.5
       ],
       "rest": [
-       -13.39,
+       -13.7,
        -51.18
       ],
       "radiiPx": [
@@ -316,27 +393,59 @@
       "radii": [
        4.37,
        4.92
+      ],
+      "previous": {
+       "restPx": [
+        196.0,
+        165.5
+       ],
+       "rest": [
+        -13.39,
+        -51.18
+       ]
+      },
+      "shiftAD55Px": [
+       -2,
+       0
       ]
      },
      "travel": {
       "centerPx": [
-       187,
-       164
+       194.0,
+       165.5
       ],
       "radiiPx": [
-       12.7,
-       9.8
+       4.9,
+       8.9
       ],
       "center": [
-       -14.79,
-       -51.42
+       -13.7,
+       -51.18
       ],
       "radii": [
-       1.98,
-       1.54
+       0.77,
+       1.39
       ],
       "restInside": true,
-      "restNorm": 0.527
+      "restNorm": 0.0,
+      "previous": {
+       "centerPx": [
+        187,
+        164
+       ],
+       "radiiPx": [
+        12.7,
+        9.8
+       ],
+       "center": [
+        -14.79,
+        -51.42
+       ],
+       "radii": [
+        1.98,
+        1.54
+       ]
+      }
      }
     },
     "r": {
@@ -365,11 +474,11 @@
        0
       ],
       "restPx": [
-       274.5,
+       264.5,
        181.0
       ],
       "rest": [
-       -1.13,
+       -2.69,
        -48.76
       ],
       "radiiPx": [
@@ -379,42 +488,87 @@
       "radii": [
        4.45,
        5.15
+      ],
+      "previous": {
+       "restPx": [
+        274.5,
+        181.0
+       ],
+       "rest": [
+        -1.13,
+        -48.76
+       ]
+      },
+      "shiftAD55Px": [
+       -10,
+       0
       ]
      },
      "travel": {
       "centerPx": [
-       288,
-       199
+       264.5,
+       181.0
       ],
       "radiiPx": [
-       36.7,
-       32.4
+       5.2,
+       9.2
       ],
       "center": [
-       0.98,
-       -45.95
+       -2.69,
+       -48.76
       ],
       "radii": [
-       5.73,
-       5.06
+       0.82,
+       1.44
       ],
       "restInside": true,
-      "restNorm": 0.444
+      "restNorm": 0.0,
+      "previous": {
+       "centerPx": [
+        288,
+        199
+       ],
+       "radiiPx": [
+        36.7,
+        32.4
+       ],
+       "center": [
+        0.98,
+        -45.95
+       ],
+       "radii": [
+        5.73,
+        5.06
+       ]
+      }
      }
+    }
+   },
+   "ad55Note": "art-director-55 (2026-10-04): pupils closer together, spacing 68% of eye-centre spacing (rule <= 72%). rest = travel.center (no look = the art rest); travel.radii: l = the room BOTH eyes share for one shift, r = own room. Old values: pupil.previous, travel.previous.",
+   "previousAD55": {
+    "center": [
+     -7.22,
+     -49.86
+    ],
+    "maxOffset": {
+     "left": 1.59,
+     "right": 0.33,
+     "up": 0.78,
+     "down": 0.5
     }
    }
   },
   "ajar": {
    "layer": "ajar_pupils",
    "center": [
-    -7.69,
-    -46.5
+    -8.28,
+    -46.54
    ],
    "maxOffset": {
-    "left": 1.13,
-    "right": 0.47,
-    "up": 1.36,
-    "down": 0.76
+    "left": 1.05,
+    "right": 1.05,
+    "up": 2.42,
+    "down": 2.42
    },
    "legacyNote": "shared layer kept for the old code path: offsets clamped to this box keep each pupil in its own eye (smaller than before)",
    "previous": {
@@ -475,11 +629,11 @@
        -3
       ],
       "restPx": [
-       194.0,
+       192.0,
        187.5
       ],
       "rest": [
-       -13.7,
+       -14.01,
        -47.75
       ],
       "radiiPx": [
@@ -489,27 +643,59 @@
       "radii": [
        4.53,
        5.23
+      ],
+      "previous": {
+       "restPx": [
+        194.0,
+        187.5
+       ],
+       "rest": [
+        -13.7,
+        -47.75
+       ]
+      },
+      "shiftAD55Px": [
+       -2,
+       0
       ]
      },
      "travel": {
       "centerPx": [
-       183,
-       184
+       192.0,
+       187.5
       ],
       "radiiPx": [
-       16.7,
-       16.1
+       6.7,
+       15.5
       ],
       "center": [
-       -15.42,
-       -48.29
+       -14.01,
+       -47.75
       ],
       "radii": [
-       2.61,
-       2.51
+       1.05,
+       2.42
       ],
       "restInside": true,
-      "restNorm": 0.481
+      "restNorm": 0.0,
+      "previous": {
+       "centerPx": [
+        183,
+        184
+       ],
+       "radiiPx": [
+        16.7,
+        16.1
+       ],
+       "center": [
+        -15.42,
+        -48.29
+       ],
+       "radii": [
+        2.61,
+        2.51
+       ]
+      }
      }
     },
     "r": {
@@ -538,11 +724,11 @@
        2
       ],
       "restPx": [
-       271.5,
+       265.5,
        203.0
       ],
       "rest": [
-       -1.6,
+       -2.54,
        -45.33
       ],
       "radiiPx": [
@@ -552,42 +738,87 @@
       "radii": [
        4.45,
        5.31
+      ],
+      "previous": {
+       "restPx": [
+        271.5,
+        203.0
+       ],
+       "rest": [
+        -1.6,
+        -45.33
+       ]
+      },
+      "shiftAD55Px": [
+       -6,
+       0
       ]
      },
      "travel": {
       "centerPx": [
-       294,
-       219
+       265.5,
+       203.0
       ],
       "radiiPx": [
-       38.8,
-       38.5
+       7.0,
+       15.8
       ],
       "center": [
-       1.92,
-       -42.83
+       -2.54,
+       -45.33
       ],
       "radii": [
-       6.06,
-       6.01
+       1.1,
+       2.47
       ],
       "restInside": true,
-      "restNorm": 0.509
+      "restNorm": 0.0,
+      "previous": {
+       "centerPx": [
+        294,
+        219
+       ],
+       "radiiPx": [
+        38.8,
+        38.5
+       ],
+       "center": [
+        1.92,
+        -42.83
+       ],
+       "radii": [
+        6.06,
+        6.01
+       ]
+      }
      }
+    }
+   },
+   "ad55Note": "art-director-55 (2026-10-04): pupils closer together, spacing 68% of eye-centre spacing (rule <= 72%). rest = travel.center (no look = the art rest); travel.radii: l = the room BOTH eyes share for one shift, r = own room. Old values: pupil.previous, travel.previous.",
+   "previousAD55": {
+    "center": [
+     -7.69,
+     -46.5
+    ],
+    "maxOffset": {
+     "left": 1.13,
+     "right": 0.47,
+     "up": 1.36,
+     "down": 0.76
     }
    }
   },
   "wide2": {
    "layer": "wide2_pupils",
    "center": [
-    -7.77,
-    -50.87
+    -8.66,
+    -50.91
    ],
    "maxOffset": {
-    "left": 1.46,
-    "right": 0.32,
-    "up": 0.83,
-    "down": 0.37
+    "left": 0.85,
+    "right": 0.85,
+    "up": 1.3,
+    "down": 1.3
    },
    "legacyNote": "shared layer kept for the old code path: offsets clamped to this box keep each pupil in its own eye (smaller than before)",
    "previous": {
@@ -648,11 +879,11 @@
        -5
       ],
       "restPx": [
-       192.5,
+       190.5,
        158.5
       ],
       "rest": [
-       -13.93,
+       -14.24,
        -52.28
       ],
       "radiiPx": [
@@ -662,27 +893,59 @@
       "radii": [
        4.45,
        5.08
+      ],
+      "previous": {
+       "restPx": [
+        192.5,
+        158.5
+       ],
+       "rest": [
+        -13.93,
+        -52.28
+       ]
+      },
+      "shiftAD55Px": [
+       -2,
+       0
       ]
      },
      "travel": {
       "centerPx": [
-       186,
-       156
+       190.5,
+       158.5
       ],
       "radiiPx": [
-       10.5,
-       8.4
+       5.4,
+       8.3
       ],
       "center": [
-       -14.95,
-       -52.67
+       -14.24,
+       -52.28
       ],
       "radii": [
-       1.64,
-       1.31
+       0.85,
+       1.3
       ],
       "restInside": true,
-      "restNorm": 0.473
+      "restNorm": 0.0,
+      "previous": {
+       "centerPx": [
+        186,
+        156
+       ],
+       "radiiPx": [
+        10.5,
+        8.4
+       ],
+       "center": [
+        -14.95,
+        -52.67
+       ],
+       "radii": [
+        1.64,
+        1.31
+       ]
+      }
      }
     },
     "r": {
@@ -711,11 +974,11 @@
        1
       ],
       "restPx": [
-       272.0,
+       262.0,
        176.0
       ],
       "rest": [
-       -1.52,
+       -3.08,
        -49.54
       ],
       "radiiPx": [
@@ -725,33 +988,78 @@
       "radii": [
        4.37,
        5.15
+      ],
+      "previous": {
+       "restPx": [
+        272.0,
+        176.0
+       ],
+       "rest": [
+        -1.52,
+        -49.54
+       ]
+      },
+      "shiftAD55Px": [
+       -10,
+       0
       ]
      },
      "travel": {
       "centerPx": [
-       287,
-       195
+       262.0,
+       176.0
       ],
       "radiiPx": [
-       37.5,
-       33.6
+       5.8,
+       8.6
       ],
       "center": [
-       0.83,
-       -46.58
+       -3.08,
+       -49.54
       ],
       "radii": [
-       5.85,
-       5.25
+       0.9,
+       1.35
       ],
       "restInside": true,
-      "restNorm": 0.48
+      "restNorm": 0.0,
+      "previous": {
+       "centerPx": [
+        287,
+        195
+       ],
+       "radiiPx": [
+        37.5,
+        33.6
+       ],
+       "center": [
+        0.83,
+        -46.58
+       ],
+       "radii": [
+        5.85,
+        5.25
+       ]
+      }
      }
+    }
+   },
+   "ad55Note": "art-director-55 (2026-10-04): pupils closer together, spacing 68% of eye-centre spacing (rule <= 72%). rest = travel.center (no look = the art rest); travel.radii: l = the room BOTH eyes share for one shift, r = own room. Old values: pupil.previous, travel.previous.",
+   "previousAD55": {
+    "center": [
+     -7.77,
+     -50.87
+    ],
+    "maxOffset": {
+     "left": 1.46,
+     "right": 0.32,
+     "up": 0.83,
+     "down": 0.37
     }
    }
   }
  },
- "pupilsNote": "Frames with pupils as layers (neutral, ajar, wide, wide2): NEW - one layer per eye, <frame>_pupils_l / _pupils_r (viewer's left/right in the unmirrored file). Draw <frame>, then both eye layers at the same point; move each by the same look offset (dx, dy) from its own rest, then clamp the pupil CENTRE into that eye's travel ellipse: p = rest + d; q = (p - c) / radii; if |q| > 1: p = c + (q / |q|) * radii. All values in logical units from the feet (x right, y down, unmirrored; mirror/ceiling flips apply as for the frame) and in px of the 525x506 frame. whiteEllipse = fitted eye white; seam = the line between the eyes (no pupil pixel ever crosses it). The far (left) eye has a smaller travel - the 3/4 view. Left pupils rest moved off the seam (pupil.shiftFromOldPx). Other frames have the pupils baked in.",
+ "pupilsNote": "Frames with pupils as layers (neutral, ajar, wide, wide2): NEW - one layer per eye, <frame>_pupils_l / _pupils_r (viewer's left/right in the unmirrored file). Draw <frame>, then both eye layers at the same point; move each by the same look offset (dx, dy) from its own rest, then clamp the pupil CENTRE into that eye's travel ellipse: p = rest + d; q = (p - c) / radii; if |q| > 1: p = c + (q / |q|) * radii. All values in logical units from the feet (x right, y down, unmirrored; mirror/ceiling flips apply as for the frame) and in px of the 525x506 frame. whiteEllipse = fitted eye white; seam = the line between the eyes (no pupil pixel ever crosses it). The far (left) eye has a smaller travel - the 3/4 view. Left pupils rest moved off the seam (pupil.shiftFromOldPx). Other frames have the pupils baked in. | art-director-55 (2026-10-04): the rest of each pupil is now also the centre of its travel ellipse (pupils closer together: spacing 67-68% of the eye spacing); the code moves both pupils by ONE shift s = q * min(radii) from travel.center, so the spacing never changes with the look. l radii = the ellipse both eyes share (0.05 less), r radii = the same shared ellipse.",
  "frames": {
   "neutral": {
    "x6": "omnom_c/x6/neutral.webp",
@@ -1055,7 +1363,15 @@
    "neutral_pupils": "unity/neutral_pupils.png",
    "wide_pupils": "unity/wide_pupils.png",
    "ajar_pupils": "unity/ajar_pupils.png",
-   "wide2_pupils": "unity/wide2_pupils.png"
+   "wide2_pupils": "unity/wide2_pupils.png",
+   "hang": "unity/hang.png",
+   "fly": "unity/fly.png",
+   "fly_wide": "unity/fly_wide.png",
+   "reach": "unity/reach.png",
+   "run": "unity/run.png",
+   "run2": "unity/run2.png",
+   "hit": "unity/hit.png",
+   "fall": "unity/fall.png"
   },
   "shadow": {
    "file": "unity/shadow.png",
@@ -1086,6 +1402,74 @@
     "unity/wide2_pupils_l.png",
     "unity/wide2_pupils_r.png"
    ]
+  },
+  "poseFrames": {
+   "note": "D-27 action poses (art-director-28, 2026-10-01): hang, fly, fly_wide, reach. Bigger canvas than the v2 frames (dangling feet and wide arms): 640x608 px = the v2 canvas with 64 columns added on the left, 51 on the right and 102 rows below. SAME px per logical (6.4024) and SAME feet pixel relative to the v2 content, so every logical anchor (head, mouth, pupils of other frames) keeps its formula; only the sprite pivot differs. Pupils are BAKED in (no _pupils layers): each pupil sits in its own eye. Mirror and ceiling flip as for the other frames. Generated with --ref to the v2 frames, eye size matched to neutral.",
+   "frames": [
+    "hang",
+    "fly",
+    "fly_wide",
+    "reach",
+    "hit",
+    "fall"
+   ],
+   "canvasPx": [
+    640,
+    608
+   ],
+   "pivot": [
+    0.5402,
+    0.1888
+   ],
+   "pivotNote": "Unity sprite pivot (y up from the bottom) = feet point (345.7, 493.2 px from the top-left). Import these 4 with THIS pivot, the 12 v2 frames keep (0.5366, 0.0253).",
+   "bodyCentre": [
+    0,
+    -30
+   ],
+   "bodyCentreNote": "hook: the physics point (body centre) is 30 u above the feet point in every pose, as for neutral; place the frame by feet = centre + (0, 30) and rotate (hang tilt) around the body centre",
+   "grip": {
+    "hang": [
+     -37.1,
+     -61.4
+    ]
+   },
+   "gripNote": "hang: centre of the raised fist (the rope end). Draw the last rope node at this point (after mirror and tilt); physics keeps the rope on the body centre",
+   "reachPaw": {
+    "reach": [
+     -52.8,
+     -32.9
+    ]
+   },
+   "states": {
+    "hang": "on the rope (mouth closed)",
+    "fly": "flying, mouth ajar",
+    "fly_wide": "flying, candy within 75 u: mouth open",
+    "reach": "leans and reaches toward the next spot (slide) / waiting lean",
+    "hit": "hook D-112: bumped into an obstacle (\"Oy!\"): fly body, eyes squeezed shut (><), clenched grimace; stars = separate fx sprite",
+    "fall": "hook D-112: falling after the hit: fly_wide body, eyes wide with small pupils looking down, mouth open \"Aaah\""
+   },
+   "pupilsNote": "baked pupils were lowered 9 px in hang/fly/fly_wide so the hat cuff never covers them"
+  },
+  "runFrames": {
+   "note": "Run (slide.md §9, D-27; art-director-45, 2026-10-02): run = stride, run2 = hop, mouth wide, pupils baked looking ahead (toward the viewer's LEFT like every frame; mirror for running right). 1 generation (art/m4/slide/gen/g1_run.png, edit of fly_wide+reach on magenta), eye whites scaled and centred to neutral as the D-27 poses.",
+   "frames": [
+    "run",
+    "run2"
+   ],
+   "canvasPx": [
+    640,
+    608
+   ],
+   "pivot": [
+    0.5402,
+    0.097
+   ],
+   "pivotNote": "Pivot = the FLOOR contact point (the lowest foot), not the v2 feet point: the stride legs reach 8.6 u below the v2 feet line, so the body is 8.6 u higher than standing. Place the frame by floor = om feet point. Head anchors below are relative to this pivot.",
+   "cycle": "run, run2 alternate every 0.1 s (2 steps per 0.4 s); hop y = -4 u * |sin(pi * t / 0.2)| on top; lean/rotation none (baked)",
+   "states": {
+    "run": "run, stride (feet apart)",
+    "run2": "run, hop (feet tucked)"
+   }
   }
  },
  "head": {
@@ -1138,6 +1522,38 @@
    "wave2": [
     -0.42,
     -54.05
+   ],
+   "hang": [
+    -0.89,
+    -54.2
+   ],
+   "fly": [
+    -0.89,
+    -54.2
+   ],
+   "fly_wide": [
+    -0.89,
+    -53.57
+   ],
+   "reach": [
+    -0.89,
+    -54.2
+   ],
+   "run": [
+    -0.89,
+    -62.92
+   ],
+   "run2": [
+    -0.89,
+    -62.61
+   ],
+   "hit": [
+    -0.89,
+    -54.2
+   ],
+   "fall": [
+    -0.89,
+    -53.57
    ]
   },
   "headTop": {
@@ -1188,6 +1604,38 @@
    "wave2": [
     -0.42,
     -60.95
+   ],
+   "hang": [
+    -0.89,
+    -61.1
+   ],
+   "fly": [
+    -0.89,
+    -61.1
+   ],
+   "fly_wide": [
+    -0.89,
+    -60.47
+   ],
+   "reach": [
+    -0.89,
+    -61.1
+   ],
+   "run": [
+    -0.89,
+    -69.82
+   ],
+   "run2": [
+    -0.89,
+    -69.51
+   ],
+   "hit": [
+    -0.89,
+    -61.1
+   ],
+   "fall": [
+    -0.89,
+    -60.47
    ]
   }
  },
@@ -1308,5 +1756,6 @@
    "deepShade": "#4D8017",
    "outline": "#0B2608"
   }
- }
+ },
+ "pupilsRule": "art-director-55 (2026-10-04): Om Nom pupils sit close to the middle of the face. Horizontal spacing of the pupil centres <= 72% of the spacing of the eye-white centres (fitted ellipses), target 65-70% (reference 62%); one look shift for both eyes keeps it."
 }

@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<link rel="icon" href="data:,">
+<title>Jelly Duel</title>
+<style>:root{--ink:#2a2140;--cream:#fff6e0;--pink:#ff5fa8;--pink2:#b8326f;--sky:#9fdcf5}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{background:var(--sky);height:100%;color:var(--ink);-webkit-user-select:none;user-select:none;margin:0;font:800 14px/1.25 ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{flex-direction:column;height:100dvh;display:flex}#stage{touch-action:none;flex:1;min-height:0;position:relative}canvas{touch-action:none;width:100%;height:100%;display:block;position:absolute;inset:0}button{font:inherit;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;border-radius:999px;padding:6px 12px;font-weight:800;box-shadow:0 3px #2a214059}button:active{transform:translateY(2px);box-shadow:0 1px #2a214059}button:disabled{opacity:.4}#bar{background:#5b3a1e;justify-content:center;align-items:center;gap:8px;padding:8px 52px 10px 8px;display:flex}#bar button{flex-direction:column;flex:1;align-items:center;gap:3px;max-width:130px;padding:9px 4px;font-size:13px;display:flex}#bar button i{border:2px solid var(--ink);border-radius:50%;width:16px;height:16px;display:block}#bar button.sel{background:#ffd23f;box-shadow:0 3px #b88a00}#menuBtn{z-index:3;padding:3px 10px;font-size:12px;position:absolute;top:78px;left:8px}#gear{z-index:6;width:38px;height:38px;padding:0;font-size:20px;position:fixed;bottom:12px;right:8px}#panel{background:var(--cream);border:2px solid var(--ink);z-index:6;border-radius:16px;width:250px;padding:10px 12px;display:none;position:fixed;bottom:56px;right:8px;box-shadow:0 6px 18px #2a214066}#panel .r{grid-template-columns:86px 1fr 38px;align-items:center;gap:6px;margin:6px 0;font-size:12px;display:grid}#panel input{width:100%;margin:0}#panel b{text-align:right;font-variant-numeric:tabular-nums}#panel .t{justify-content:space-between;align-items:center;display:flex}.ov{z-index:5;background:#2a214073;justify-content:center;align-items:center;display:none;position:absolute;inset:0}.card{background:var(--cream);border:3px solid var(--ink);text-align:center;border-radius:24px;width:min(86%,320px);padding:18px 22px 20px;box-shadow:0 6px #2a214059}.card h1{color:var(--pink2);margin:0 0 6px;font-size:30px}.card p{margin:6px 0 14px;font-size:14px;font-weight:700}.card .col{flex-direction:column;gap:10px;display:flex}.card button.big{background:var(--pink);color:#fff;border-color:var(--ink);text-shadow:0 1px 0 var(--ink);padding:12px;font-size:20px}.card small{opacity:.7;margin-top:12px;font-weight:700;display:block}.card a{color:var(--pink2);text-decoration:none}</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <button id="menuBtn">Menu</button>
+  <div class="ov" id="start" style="display:flex"><div class="card">
+    <h1>Jelly Duel</h1>
+    <p>Drag back, let go, fling the jelly. 3 hits win.</p>
+    <div class="col"><button class="big" id="b1">1 Player</button><button class="big" id="b2">2 Players</button></div>
+    <small id="rec"></small>
+    <small><a href="index.html">&larr; Lab</a></small>
+  </div></div>
+  <div class="ov" id="end"><div class="card">
+    <h1 id="endT">You win!</h1>
+    <p id="endS"></p>
+    <div class="col"><button class="big" id="again">Again</button><button id="toMenu">Menu</button></div>
+  </div></div>
+</div>
+<div id="bar">
+  <button data-w="0"><i style="background:#ff5fa8"></i>Jelly</button>
+  <button data-w="1"><i style="background:#ffd23f"></i>Triple</button>
+  <button data-w="2"><i style="background:#3fd0ff"></i>Bounce</button>
+</div>
+<button id="gear" title="Settings">&#9881;</button>
+<div id="panel"><div class="t"><b>Tuning</b><button id="reset" style="padding:2px 8px;font-size:11px">Reset</button></div><div id="sl"></div></div>
+<script>
+"use strict";
+// ---- constants (world: 400 wide, height adapts to the screen) ---------------------------------
+const W = 400, BODY = 17, WIND_K = 20, MAXPULL = 110, DT = 1 / 120, WIN_HITS = 3, LEG = 22;
+const $ = (id) => document.getElementById(id);
+const cv = $("cv"), ctx = cv.getContext("2d"), stage = $("stage");
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const gauss = () => { let s = 0; for (let i = 0; i < 6; i++) s += Math.random(); return (s - 3) * Math.SQRT2; }; // ~N(0,1)
+
+// ---- tuning (the gear) ------------------------------------------------------------------------
+const CFG_DEF = { gravity: 600, power: 600, wind: 3, bot: 0.5 };
+const SLIDERS = [["gravity", "Gravity", 300, 1200, 25], ["power", "Max power", 350, 900, 25], ["wind", "Wind max", 0, 6, 0.5], ["bot", "Bot error", 0, 1, 0.05]];
+let cfg = Object.assign({}, CFG_DEF);
+try { Object.assign(cfg, JSON.parse(localStorage.getItem("lab.duel.cfg") || "{}")); } catch (e) {}
+function saveCfg() { try { localStorage.setItem("lab.duel.cfg", JSON.stringify(cfg)); } catch (e) {} }
+function winsVsBot() { try { return Number(localStorage.getItem("lab.best.duel")) || 0; } catch (e) { return 0; } }
+function addWin() { try { localStorage.setItem("lab.best.duel", String(winsVsBot() + 1)); } catch (e) {} }
+
+// ---- state ------------------------------------------------------------------------------------
+let H = 640, scale = 1, offX = 0, offY = 0, dpr = 1, sw = 390, sh = 700;
+let pts = new Float32Array(W + 1), terrainPath = null;
+const players = [
+  { x: 42, y: 0, name: "GREEN", body: "#6bd13f", edge: "#2f7d1a", dir: 1 },
+  { x: 358, y: 0, name: "ORANGE", body: "#ff9a2e", edge: "#b25a00", dir: -1 },
+];
+let mode = 0, phase = "menu", turn = 0, hits = [0, 0], weapon = [0, 0], wind = 0;
+let projs = [], splats = [], parts = [], pops = [];
+let pull = null;          // {vx, vy, pw} — what the band looks like right now
+let drag = null;          // {ax, ay, cx, cy, id}
+let botPlan = null, botT = 0, botDur = 1.0, settleT = 0, flyT = 0, turnHit = false, acc = 0, tAnim = 0, hitFlash = [-9, -9];
+let manual = false;
+
+const ty = (x) => pts[clamp(Math.round(x), 0, W)];
+
+function buildTerrain() {
+  const gy = H - 110, hL = rnd(55, 90), hR = rnd(55, 90), hM = rnd(110, 170), mx = 200 + rnd(-14, 14), ms = rnd(30, 40);
+  for (let x = 0; x <= W; x++) {
+    const l = hL / (1 + Math.exp((x - 85) / 16)), r = hR / (1 + Math.exp(-(x - 315) / 16)), m = hM * Math.exp(-(((x - mx) / ms) ** 2));
+    pts[x] = gy - Math.max(l, r, m);
+  }
+  const p = new Path2D();
+  p.moveTo(-400, H + 800); p.lineTo(-400, pts[0]);
+  for (let x = 0; x <= W; x += 2) p.lineTo(x, pts[x]);
+  p.lineTo(W + 400, pts[W]); p.lineTo(W + 400, H + 800); p.closePath();
+  terrainPath = p;
+  for (const pl of players) pl.y = ty(pl.x);
+}
+
+function computeLayout(rebuildH) {
+  const r = stage.getBoundingClientRect();
+  sw = r.width; sh = r.height; dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(sw * dpr); cv.height = Math.round(sh * dpr);
+  if (rebuildH) H = clamp(Math.round(sh / (sw / W)), 480, 600);
+  scale = Math.min(sw / W, sh / H);
+  offX = (sw - W * scale) / 2; offY = sh - H * scale; // world sits on the bottom edge, extra sky above
+}
+
+// ---- shots ------------------------------------------------------------------------------------
+const WEAPONS = [
+  { name: "Jelly", n: 1, r: 7, col: "#ff5fa8", bounce: 0 },
+  { name: "Triple", n: 3, r: 4.5, col: "#ffd23f", bounce: 0, spread: 8 * Math.PI / 180 },
+  { name: "Bounce", n: 1, r: 7, col: "#3fd0ff", bounce: 1 },
+];
+function spawnShot(i, vx, vy, w) {
+  const W_ = WEAPONS[w], pl = players[i], out = [];
+  for (let k = 0; k < W_.n; k++) {
+    const rot = W_.n === 3 ? (k - 1) * W_.spread : 0, c = Math.cos(rot), s = Math.sin(rot);
+    const ux = vx * c - vy * s, uy = vx * s + vy * c, len = Math.hypot(ux, uy) || 1;
+    out.push({ x: pl.x + ux / len * 20, y: pl.y - LEG - 6 + uy / len * 20, vx: ux, vy: uy, r: W_.r, col: W_.col, maxB: W_.bounce, b: 0, alive: true, owner: i, trail: [] });
+  }
+  return out;
+}
+// one fixed step; returns null | "hit" | "ground" | "out"
+function stepProj(p, dt) {
+  p.vx += wind * WIND_K * dt; p.vy += cfg.gravity * dt;
+  p.x += p.vx * dt; p.y += p.vy * dt;
+  if (p.x < -30 || p.x > W + 30 || p.y > H + 40) return "out";
+  const t = players[1 - p.owner];
+  if (Math.hypot(p.x - t.x, p.y - (t.y - LEG)) < p.r + BODY) return "hit";
+  if (p.x >= 0 && p.x <= W && p.y + p.r * 0.3 >= ty(p.x)) {
+    if (p.b < p.maxB) {
+      const s = (ty(p.x + 3) - ty(p.x - 3)) / 6, nl = Math.hypot(s, 1), nx = s / nl, ny = -1 / nl;
+      const d = p.vx * nx + p.vy * ny;
+      if (d < 0) { p.vx -= 1.6 * d * nx; p.vy -= 1.6 * d * ny; }
+      p.y = ty(p.x) - p.r * 0.3 - 0.5; p.b++;
+      return null;
+    }
+    return "ground";
+  }
+  return null;
+}
+// closest approach (gap between pellet edge and body edge) of a planned shot
+function simulate(i, vx, vy, w) {
+  const t = players[1 - i], tc = t.y - LEG;
+  let best = 1e9;
+  for (const p of spawnShot(i, vx, vy, w)) {
+    for (let n = 0; n < 1500; n++) {
+      const r = stepProj(p, DT);
+      const d = Math.hypot(p.x - t.x, p.y - tc) - p.r - BODY;
+      if (d < best) best = d;
+      if (r) break;
+    }
+  }
+  return best;
+}
+
+function fire(i, vx, vy, w) {
+  projs = spawnShot(i, vx, vy, w);
+  phase = "fly"; turnHit = false; flyT = 0; acc = 0;
+}
+
+// ---- bot --------------------------------------------------------------------------------------
+function planBot() {
+  const i = 1, rr = Math.random();
+  const w = rr < 0.5 ? 0 : rr < 0.8 ? 1 : 2;
+  let best = null;
+  for (let a = 18; a <= 86; a += 1.5) for (let pw = 0.3; pw <= 1.0001; pw += 0.025) {
+    const ar = a * Math.PI / 180, sp = pw * cfg.power;
+    const d = simulate(i, -Math.cos(ar) * sp, -Math.sin(ar) * sp, w);
+    if (!best || d < best.d) best = { a, pw, d };
+  }
+  const e = cfg.bot;
+  const a = clamp(best.a + gauss() * e * 7, 10, 89), pw = clamp(best.pw * (1 + gauss() * e * 0.10), 0.2, 1);
+  const ar = a * Math.PI / 180;
+  botPlan = { w, pw, vx: -Math.cos(ar) * pw * cfg.power, vy: -Math.sin(ar) * pw * cfg.power, ideal: best };
+}
+
+// ---- turn flow --------------------------------------------------------------------------------
+function beginTurn() {
+  wind = Math.round(rnd(-cfg.wind, cfg.wind) * 2) / 2;
+  pull = null; drag = null; projs = [];
+  if (mode === 1 && turn === 1) {
+    phase = "bot"; botT = 0; planBot(); weapon[1] = botPlan.w; refreshBar();
+  } else { phase = "aim"; refreshBar(); }
+}
+function startMatch(m) {
+  mode = m; hits = [0, 0]; weapon = [0, 0]; turn = 0;
+  computeLayout(true); buildTerrain();
+  splats = []; parts = []; pops = [];
+  $("start").style.display = "none"; $("end").style.display = "none";
+  beginTurn();
+}
+function toMenu() {
+  phase = "menu"; $("end").style.display = "none"; $("start").style.display = "flex"; $("panel").style.display = "none";
+  $("rec").textContent = "Wins vs bot: " + winsVsBot();
+  refreshBar();
+}
+function onShotEnd() {
+  const tgt = 1 - turn;
+  if (hits[tgt] >= WIN_HITS) {
+    phase = "over";
+    const youWin = mode === 1 ? turn === 0 : true;
+    $("endT").textContent = mode === 1 ? (turn === 0 ? "You win!" : "Orange wins!") : players[turn].name[0] + players[turn].name.slice(1).toLowerCase() + " wins!";
+    $("endS").textContent = "Hits: " + hits[1] + " : " + hits[0];
+    if (mode === 1 && turn === 0) addWin();
+    $("end").style.display = "flex";
+    return;
+  }
+  turn = 1 - turn; beginTurn();
+}
+
+function update(dt) {
+  tAnim += dt;
+  if (phase === "bot") {
+    botT += dt;
+    const k = clamp(botT / botDur, 0, 1), e = k * k * (3 - 2 * k);
+    pull = { vx: botPlan.vx, vy: botPlan.vy, pw: botPlan.pw * e, ghost: true };
+    if (botT >= botDur) { const b = botPlan; pull = null; fire(1, b.vx, b.vy, b.w); }
+  } else if (phase === "fly") {
+    acc += dt; flyT += dt;
+    while (acc >= DT) {
+      acc -= DT;
+      for (const p of projs) {
+        if (!p.alive) continue;
+        const r = stepProj(p, DT);
+        if (p.trail.length === 0 || Math.hypot(p.x - p.trail[p.trail.length - 1][0], p.y - p.trail[p.trail.length - 1][1]) > 9) p.trail.push([p.x, p.y]);
+        if (p.trail.length > 12) p.trail.shift();
+        if (!r) continue;
+        p.alive = false;
+        if (r === "hit") {
+          if (!turnHit) {
+            turnHit = true; const tgt = 1 - p.owner; hits[tgt]++; hitFlash[tgt] = tAnim;
+            const t = players[tgt];
+            for (let k = 0; k < 14; k++) parts.push({ x: t.x, y: t.y - LEG, vx: rnd(-140, 140), vy: rnd(-260, -40), life: rnd(0.5, 0.9), col: WEAPONS[0].col, r: rnd(2, 5) });
+            pops.push({ x: t.x, y: t.y - 60, t: 0, txt: hits[tgt] >= WIN_HITS ? "Jelly!!!" : "Splat!" });
+          }
+        } else if (r === "ground" && p.x >= 0 && p.x <= W) splats.push({ x: p.x, y: ty(p.x), r: p.r * 1.3, col: p.col, t: 0 });
+      }
+    }
+    if (flyT > 8) for (const p of projs) p.alive = false;
+    if (!projs.some((p) => p.alive)) { phase = "settle"; settleT = turnHit ? 1.1 : 0.55; }
+  } else if (phase === "settle") {
+    settleT -= dt;
+    if (settleT <= 0) onShotEnd();
+  }
+  for (const q of parts) { q.vy += 700 * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.life -= dt; }
+  parts = parts.filter((q) => q.life > 0);
+  for (const s of splats) s.t += dt;
+  if (splats.length > 40) splats.shift();
+  for (const q of pops) q.t += dt;
+  pops = pops.filter((q) => q.t < 1.1);
+}
+
+// ---- input ------------------------------------------------------------------------------------
+const humanTurn = () => phase === "aim";
+function toWorld(e) { const r = stage.getBoundingClientRect(); return [(e.clientX - r.left - offX) / scale, (e.clientY - r.top - offY) / scale]; }
+function pullFromDrag() {
+  if (!drag) return null;
+  const dx = drag.ax - drag.cx, dy = drag.ay - drag.cy, len = Math.hypot(dx, dy);
+  if (len < 12) return null;
+  const pw = clamp(len / MAXPULL, 0, 1);
+  return { vx: dx / len * pw * cfg.power, vy: dy / len * pw * cfg.power, pw };
+}
+stage.addEventListener("pointerdown", (e) => {
+  if (!humanTurn() || e.target.closest("button")) return;
+  const [x, y] = toWorld(e);
+  drag = { ax: x, ay: y, cx: x, cy: y, id: e.pointerId };
+  try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  e.preventDefault();
+});
+stage.addEventListener("pointermove", (e) => {
+  if (!drag || e.pointerId !== drag.id) return;
+  [drag.cx, drag.cy] = toWorld(e); pull = pullFromDrag();
+});
+function endDrag(e, doFire) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const pu = pullFromDrag(); drag = null; pull = null;
+  if (doFire && pu && humanTurn()) fire(turn, pu.vx, pu.vy, weapon[turn]);
+}
+stage.addEventListener("pointerup", (e) => endDrag(e, true));
+stage.addEventListener("pointercancel", (e) => endDrag(e, false));
+
+function refreshBar() {
+  document.querySelectorAll("#bar button").forEach((b) => {
+    b.classList.toggle("sel", Number(b.dataset.w) === weapon[turn]);
+    b.disabled = phase !== "aim";
+  });
+  $("menuBtn").style.display = phase === "menu" ? "none" : "block";
+}
+function selectWeapon(w) { if (phase !== "aim") return; weapon[turn] = w; refreshBar(); }
+document.querySelectorAll("#bar button").forEach((b) => b.addEventListener("click", () => selectWeapon(Number(b.dataset.w))));
+$("b1").addEventListener("click", () => startMatch(1));
+$("b2").addEventListener("click", () => startMatch(2));
+$("again").addEventListener("click", () => startMatch(mode));
+$("toMenu").addEventListener("click", toMenu);
+$("menuBtn").addEventListener("click", toMenu);
+$("gear").addEventListener("click", () => { const p = $("panel"); p.style.display = p.style.display === "block" ? "none" : "block"; });
+$("reset").addEventListener("click", () => { Object.assign(cfg, CFG_DEF); saveCfg(); buildSliders(); });
+function buildSliders() {
+  const host = $("sl"); host.innerHTML = "";
+  for (const [key, label, min, max, step] of SLIDERS) {
+    const row = document.createElement("div"); row.className = "r";
+    row.innerHTML = "<span></span><input type=range><b></b>";
+    const [sp, inp, val] = row.children;
+    sp.textContent = label; inp.min = min; inp.max = max; inp.step = step; inp.value = cfg[key]; val.textContent = cfg[key];
+    inp.addEventListener("input", () => { cfg[key] = Number(inp.value); val.textContent = cfg[key]; saveCfg(); });
+    host.appendChild(row);
+  }
+}
+buildSliders();
+
+// ---- drawing ----------------------------------------------------------------------------------
+function drawOm(i, t) {
+  const pl = players[i], cx = pl.x, base = pl.y, cy = base - LEG;
+  const bob = (phase === "aim" || phase === "bot") && turn === i ? Math.sin(t * 6) * 1.5 : 0;
+  const n = hits[i], fresh = t - hitFlash[i] < 0.8;
+  ctx.save(); ctx.translate(cx, cy + bob);
+  ctx.lineCap = "round"; ctx.strokeStyle = pl.edge; ctx.lineWidth = 4;
+  ctx.beginPath(); // 2 legs
+  ctx.moveTo(-6, BODY - 4); ctx.lineTo(-7, LEG + 1); ctx.moveTo(6, BODY - 4); ctx.lineTo(7, LEG + 1); ctx.stroke();
+  ctx.beginPath(); // 2 arms
+  const up = turn === i && (phase === "aim" || phase === "bot") ? -9 : 4;
+  ctx.moveTo(-BODY + 2, 2); ctx.lineTo(-BODY - 8, up); ctx.moveTo(BODY - 2, 2); ctx.lineTo(BODY + 8, up); ctx.stroke();
+  ctx.fillStyle = pl.body; ctx.strokeStyle = pl.edge; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0, 0, BODY - 1, 0, 7); ctx.fill(); ctx.stroke();
+  // eyes
+  const lx = pl.dir * 1.6;
+  for (const ex of [-6, 6]) {
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(ex, -5, 5, 0, 7); ctx.fill();
+    ctx.fillStyle = "#222"; ctx.beginPath(); ctx.arc(ex + lx, -5.5, 2.4, 0, 7); ctx.fill();
+  }
+  // mouth
+  ctx.strokeStyle = "#3b1d10"; ctx.fillStyle = "#3b1d10"; ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  if (fresh) { ctx.arc(0, 7, 3.5, 0, 7); ctx.fill(); }
+  else if (turn === i && (phase === "aim" || phase === "bot")) { ctx.arc(0, 4, 6, 0.05 * Math.PI, 0.95 * Math.PI); ctx.fill(); }
+  else { ctx.arc(0, 3, 5.5, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke(); }
+  // jelly: more coating per hit
+  if (n > 0) {
+    const wob = Math.sin(t * 9 + i) * (fresh ? 2.5 : 0.8);
+    ctx.fillStyle = `rgba(255,95,168,${0.22 + 0.17 * n})`; ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(0, n >= 3 ? 2 : 5, BODY + 3 + n * 2 + wob, BODY + 1 + n * 2.5 - wob * 0.6, 0, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.6)"; ctx.beginPath(); ctx.ellipse(-8, -8, 4, 2.5, -0.6, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+  if (turn === i && (phase === "aim" || phase === "bot")) { // active marker
+    ctx.fillStyle = "#fff"; ctx.strokeStyle = "#2a2140"; ctx.lineWidth = 2;
+    const my = cy - 44 + Math.sin(t * 6) * 3;
+    ctx.beginPath(); ctx.moveTo(cx - 7, my - 8); ctx.lineTo(cx + 7, my - 8); ctx.lineTo(cx, my); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+}
+
+function previewDots(i, vx, vy, w) {
+  const p = spawnShot(i, vx, vy, w)[Math.floor(WEAPONS[w].n / 2)];
+  const out = []; let tt = 0; const q = { ...p, maxB: 0 };
+  for (let n = 0; n < 80; n++) {
+    q.vx += wind * WIND_K * DT; q.vy += cfg.gravity * DT; q.x += q.vx * DT; q.y += q.vy * DT; tt += DT;
+    if (q.y + 2 >= ty(q.x) && q.x >= 0 && q.x <= W) break;
+    if (n % 6 === 5) out.push([q.x, q.y]);
+  }
+  return out;
+}
+
+function hud(t) {
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  const label = (i) => mode === 1 ? (i === 0 ? "YOU" : "BOT") : "P" + (i + 1);
+  for (let i = 0; i < 2; i++) {
+    const x0 = i === 0 ? 12 : W - 12 - 3 * 28 + 4;
+    ctx.fillStyle = players[i].body; ctx.strokeStyle = "#2a2140"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(i === 0 ? 20 : W - 20, 22, 9, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#2a2140"; ctx.font = "800 12px system-ui,sans-serif";
+    ctx.fillText(label(i), i === 0 ? 20 : W - 20, 40);
+    const bx = i === 0 ? 38 : W - 38 - 3 * 28 + 4;
+    for (let k = 0; k < 3; k++) {
+      ctx.fillStyle = k < hits[i] ? "#ff5fa8" : "rgba(255,255,255,.55)"; ctx.strokeStyle = "#2a2140"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(bx + k * 28, 14, 24, 14, 7); ctx.fill(); ctx.stroke();
+    }
+  }
+  // wind
+  const cx = W / 2; ctx.fillStyle = "#2a2140"; ctx.font = "800 11px system-ui,sans-serif"; ctx.fillText("WIND", cx, 14);
+  const L = Math.abs(wind) / 6 * 50;
+  ctx.strokeStyle = "#2a2140"; ctx.fillStyle = "#2a2140"; ctx.lineWidth = 4; ctx.lineCap = "round";
+  if (L > 0) {
+    const s = Math.sign(wind);
+    ctx.beginPath(); ctx.moveTo(cx - s * L / 2, 28); ctx.lineTo(cx + s * L / 2, 28); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + s * L / 2 + s * 8, 28); ctx.lineTo(cx + s * L / 2 - s * 2, 22); ctx.lineTo(cx + s * L / 2 - s * 2, 34); ctx.fill();
+  } else { ctx.beginPath(); ctx.arc(cx, 28, 3, 0, 7); ctx.fill(); }
+  ctx.font = "800 11px system-ui,sans-serif"; ctx.fillText(Math.abs(wind).toFixed(1), cx, 46);
+  // turn pill
+  if (phase !== "menu" && phase !== "over") {
+    const txt = mode === 1 ? (turn === 0 ? "Your turn" : "Bot aims...") : players[turn].name[0] + players[turn].name.slice(1).toLowerCase() + "'s turn";
+    ctx.font = "800 14px system-ui,sans-serif";
+    const w = ctx.measureText(txt).width + 24;
+    ctx.fillStyle = players[turn].body; ctx.strokeStyle = "#2a2140"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(cx - w / 2, 56, w, 22, 11); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#2a2140"; ctx.fillText(txt, cx, 67.5);
+  }
+}
+
+function draw() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = "#9fdcf5"; ctx.fillRect(0, 0, sw, sh);
+  ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * offX, dpr * offY);
+  const t = tAnim;
+  // clouds
+  ctx.fillStyle = "rgba(255,255,255,.75)";
+  for (const [x, y, s] of [[70, 130, 1], [250, 100, 1.3], [340, 190, 0.8]]) {
+    const dx = Math.sin(t * 0.1 + x) * 6;
+    ctx.beginPath(); ctx.ellipse(x + dx, y + 40, 34 * s, 12 * s, 0, 0, 7); ctx.ellipse(x + dx - 14 * s, y + 32, 18 * s, 14 * s, 0, 0, 7); ctx.ellipse(x + dx + 14 * s, y + 30, 20 * s, 16 * s, 0, 0, 7); ctx.fill();
+  }
+  // terrain
+  if (terrainPath) {
+    ctx.fillStyle = "#7a4a22"; ctx.fill(terrainPath);
+    ctx.strokeStyle = "#5fbf3a"; ctx.lineWidth = 8; ctx.lineJoin = "round"; ctx.beginPath();
+    ctx.moveTo(-400, pts[0]); for (let x = 0; x <= W; x += 2) ctx.lineTo(x, pts[x]); ctx.lineTo(W + 400, pts[W]); ctx.stroke();
+  }
+  // splats
+  for (const s of splats) {
+    ctx.globalAlpha = Math.max(0, 1 - s.t / 5); ctx.fillStyle = s.col;
+    ctx.beginPath(); ctx.ellipse(s.x, s.y - 1, s.r * 1.6, s.r * 0.7, 0, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  drawOm(0, t); drawOm(1, t);
+  // pull band + preview
+  if (pull && (phase === "aim" || phase === "bot")) {
+    const pl = players[turn], len = Math.hypot(pull.vx, pull.vy) || 1, ux = pull.vx / len, uy = pull.vy / len;
+    const px = pl.x, py = pl.y - LEG - 4, back = pull.pw * 56;
+    ctx.strokeStyle = "rgba(42,33,64,.8)"; ctx.lineWidth = 4; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(px - 8, py + 2); ctx.lineTo(px - ux * back, py - uy * back); ctx.lineTo(px + 8, py + 2); ctx.stroke();
+    ctx.fillStyle = WEAPONS[weapon[turn]].col; ctx.strokeStyle = "#2a2140"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(px - ux * back, py - uy * back, WEAPONS[weapon[turn]].r + 1, 0, 7); ctx.fill(); ctx.stroke();
+    if (!pull.ghost) {
+      const dots = previewDots(turn, pull.vx, pull.vy, weapon[turn]);
+      dots.forEach(([x, y], k) => { ctx.fillStyle = `rgba(42,33,64,${0.85 - k * 0.07})`; ctx.beginPath(); ctx.arc(x, y, 3.2, 0, 7); ctx.fill(); });
+      ctx.fillStyle = "rgba(42,33,64,.8)"; ctx.font = "800 11px system-ui,sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(Math.round(pull.pw * 100) + "%", pl.x, pl.y - LEG - 62);
+    }
+  }
+  // projectiles
+  for (const p of projs) {
+    for (let k = 0; k < p.trail.length; k++) { ctx.globalAlpha = (k / p.trail.length) * 0.5; ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(p.trail[k][0], p.trail[k][1], p.r * 0.6, 0, 7); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    if (!p.alive) continue;
+    ctx.fillStyle = p.col; ctx.strokeStyle = "#2a2140"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.beginPath(); ctx.arc(p.x - p.r * 0.35, p.y - p.r * 0.35, p.r * 0.3, 0, 7); ctx.fill();
+  }
+  for (const q of parts) { ctx.globalAlpha = clamp(q.life * 2, 0, 1); ctx.fillStyle = q.col; ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, 7); ctx.fill(); }
+  ctx.globalAlpha = 1;
+  for (const q of pops) {
+    ctx.globalAlpha = clamp(1.1 - q.t, 0, 1); ctx.font = "900 22px system-ui,sans-serif"; ctx.textAlign = "center";
+    ctx.lineWidth = 4; ctx.strokeStyle = "#2a2140"; ctx.fillStyle = "#fff";
+    ctx.strokeText(q.txt, q.x, q.y - q.t * 30); ctx.fillText(q.txt, q.x, q.y - q.t * 30);
+  }
+  ctx.globalAlpha = 1;
+  ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * offX, 0); // HUD hangs from the screen top
+  hud(t);
+}
+
+// ---- main loop + test hooks -------------------------------------------------------------------
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (!manual) update(dt);
+  draw();
+  requestAnimationFrame(frame);
+}
+new ResizeObserver(() => { if (stage.clientWidth > 0 && stage.clientHeight > 0) computeLayout(phase === "menu"); if (phase === "menu") { buildTerrain(); } }).observe(stage);
+window.addEventListener("orientationchange", () => computeLayout(false));
+window.__game = {
+  getState: () => ({ mode, phase, turn, hits: hits.slice(), weapon: weapon.slice(), wind, cfg: { ...cfg }, projs: projs.filter((p) => p.alive).length, H, players: players.map((p) => ({ x: p.x, y: p.y })), botPlan: botPlan && { w: botPlan.w, ideal: botPlan.ideal } }),
+  act(a, v) {
+    if (a === "start") startMatch(v && v.mode || 1);
+    else if (a === "weapon") selectWeapon(v);
+    else if (a === "shoot") { // angle in degrees up from horizontal toward the rival, power 0..1
+      if (!humanTurn()) return; const ar = v.angle * Math.PI / 180, sp = v.power * cfg.power;
+      if (v.weapon != null) weapon[turn] = v.weapon;
+      fire(turn, players[turn].dir * Math.cos(ar) * sp, -Math.sin(ar) * sp, weapon[turn]);
+    } else if (a === "menu") toMenu();
+    else if (a === "clock") manual = !!(v && v.manual);
+    else if (a === "step") { for (let i = 0; i < (v || 1); i++) update(1 / 60); }
+    else if (a === "cfg") { Object.assign(cfg, v); buildSliders(); }
+  },
+};
+computeLayout(true); buildTerrain(); refreshBar(); $("rec").textContent = "Wins vs bot: " + winsVsBot();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

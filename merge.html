@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<link rel="icon" href="data:,">
+<title>Candy Merge</title>
+<style>:root{--bg:#2b1f4a;--panel:#3d2d66;--ink:#fff;--soft:#b9a9e6;--act:#ff5fa2}*{box-sizing:border-box}html,body{background:var(--bg);height:100%;color:var(--ink);margin:0;font:700 14px/1.3 ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{-webkit-user-select:none;user-select:none;overscroll-behavior:none;flex-direction:column;height:100dvh;display:flex}header{flex:none;align-items:center;gap:8px;height:46px;padding:0 8px;display:flex}a.back{color:var(--soft);padding:0 6px;font-size:24px;text-decoration:none}.box{background:var(--panel);text-align:center;border-radius:10px;flex:1;min-width:0;padding:3px 8px}.box small{color:var(--soft);letter-spacing:.06em;text-transform:uppercase;font-size:10px;display:block}.box b{font-size:17px}button{font:inherit;background:var(--panel);color:#fff;cursor:pointer;border:0;border-radius:999px;padding:8px 14px;font-weight:800}button.big{background:var(--act);padding:12px 30px;font-size:18px;box-shadow:0 4px #b03a73}#stage{touch-action:none;flex:1;min-height:0;position:relative}canvas{touch-action:none;width:100%;height:100%;display:block;position:absolute;inset:0}.ov{text-align:center;background:#191032d1;flex-direction:column;justify-content:center;align-items:center;gap:10px;padding:20px;display:none;position:absolute;inset:0}.ov h2{margin:0;font-size:30px}.ov p{color:var(--soft);max-width:300px;margin:0}#gear{opacity:.8;z-index:5;width:36px;height:36px;padding:0;font-size:18px;position:fixed;bottom:8px;left:8px}#panel{background:var(--panel);z-index:5;border-radius:14px;width:230px;padding:10px 12px;display:none;position:fixed;bottom:52px;left:8px}#panel label{color:var(--soft);margin:6px 0 0;font-size:12px;display:block}#panel input{width:100%}</style>
+</head>
+<body>
+<header>
+  <a class="back" href="index.html" title="Lab">&larr;</a>
+  <div class="box"><small>Score</small><b id="score">0</b></div>
+  <div class="box"><small>Best</small><b id="best">0</b></div>
+  <button id="restart">Restart</button>
+</header>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div class="ov" id="start" style="display:flex">
+    <h2>Candy Merge</h2>
+    <p>Swipe to merge equal candies. Reach the cake and Om Nom eats it!</p>
+    <button class="big" id="play">Play</button>
+  </div>
+  <div class="ov" id="over">
+    <h2>No moves!</h2>
+    <p id="overScore"></p>
+    <button class="big" id="again">Again</button>
+  </div>
+</div>
+<button id="gear">&#9881;</button>
+<div id="panel">
+  <label>Eat tier: <b id="vEat"></b><input id="sEat" type="range" min="3" max="9" step="1"></label>
+  <label>Eat bonus: <b id="vBonus"></b><input id="sBonus" type="range" min="0" max="2000" step="50"></label>
+  <label>Chance of tier 2 (the "4"): <b id="vChance"></b>%<input id="sChance" type="range" min="0" max="60" step="1"></label>
+  <label>Animation speed: <b id="vSpeed"></b>x<input id="sSpeed" type="range" min="0.5" max="2.5" step="0.1"></label>
+</div>
+<script>
+"use strict";
+const N = 4;
+const COLORS = ["#FF5E78", "#FF9A3C", "#FFD23F", "#7ED957", "#3FD0D4", "#4F8CFF", "#A66BFF", "#FF6FD8", "#C98A4B"];
+const DARK   = ["#B8344E", "#C5701B", "#C79A12", "#4FA32E", "#1E9DA1", "#2C5FC9", "#7440CC", "#C23FA0", "#8F5427"];
+const cfg = { eat: 7, bonus: 500, chance: 10, speed: 1 };
+try { Object.assign(cfg, JSON.parse(localStorage.getItem("lab.cfg.merge") || "{}")); } catch (e) {}
+const saveCfg = () => { try { localStorage.setItem("lab.cfg.merge", JSON.stringify(cfg)); } catch (e) {} };
+
+// ---------- state ----------
+let grid, score, best = 0, over, started = false, eaten = 0, nextId = 1;
+try { best = Number(localStorage.getItem("lab.best.merge")) || 0; } catch (e) {}
+let anims = [];      // sliding sprites {tier,fx,fy,tx,ty,t0,dur}
+let eats = [];       // flying cakes {tier,r,c,t0}
+let floats = [];     // "+500" labels
+let chewUntil = 0, overAt = 0, lastMoveDir = null;
+const now = () => performance.now();
+
+function newTile(tier) { return { id: nextId++, tier, hideUntil: 0, appear: 0, kind: "" }; }
+function emptyCells() { const a = []; for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (!grid[r][c]) a.push([r, c]); return a; }
+function spawn(hideUntil) {
+  const e = emptyCells(); if (!e.length) return null;
+  const [r, c] = e[Math.floor(Math.random() * e.length)];
+  const t = newTile(Math.random() * 100 < cfg.chance && cfg.eat > 2 ? 2 : 1);
+  t.hideUntil = hideUntil; t.appear = hideUntil; t.kind = "spawn";
+  grid[r][c] = t; return t;
+}
+function reset() {
+  grid = Array.from({ length: N }, () => Array(N).fill(null));
+  score = 0; eaten = 0; over = false; anims = []; eats = []; floats = []; chewUntil = 0; overAt = 0;
+  spawn(0); spawn(0);
+  document.getElementById("over").style.display = "none";
+  updHud();
+}
+function updHud() {
+  document.getElementById("score").textContent = score;
+  document.getElementById("best").textContent = best;
+}
+function canMove() {
+  if (emptyCells().length) return true;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const t = grid[r][c].tier;
+    if (c + 1 < N && grid[r][c + 1].tier === t) return true;
+    if (r + 1 < N && grid[r + 1][c].tier === t) return true;
+  }
+  return false;
+}
+function finishAnims() { anims = []; for (const row of grid) for (const t of row) if (t) { t.hideUntil = 0; t.appear = 0; } }
+const SLIDE = 130, POP = 150, FLY = 420;
+const dur = (ms) => ms / cfg.speed;
+
+function pos(dir, line, k) {
+  switch (dir) {
+    case "left": return [line, k];
+    case "right": return [line, N - 1 - k];
+    case "up": return [k, line];
+    default: return [N - 1 - k, line];
+  }
+}
+function move(dir) {
+  if (!started || over) return false;
+  finishAnims();
+  const t0 = now(), slideEnd = t0 + dur(SLIDE);
+  let moved = false;
+  const next = Array.from({ length: N }, () => Array(N).fill(null));
+  const newAnims = [], newEats = [], newFloats = [];
+  for (let line = 0; line < N; line++) {
+    const tiles = [];
+    for (let k = 0; k < N; k++) { const [r, c] = pos(dir, line, k); if (grid[r][c]) tiles.push({ t: grid[r][c], r, c }); }
+    let slot = 0, i = 0;
+    while (i < tiles.length) {
+      const [tr, tc] = pos(dir, line, slot);
+      const a = tiles[i], b = tiles[i + 1];
+      if (b && a.t.tier === b.t.tier) {
+        const tier = a.t.tier + 1;
+        newAnims.push({ tier: a.t.tier, fx: a.c, fy: a.r, tx: tc, ty: tr, t0, dur: dur(SLIDE) });
+        newAnims.push({ tier: b.t.tier, fx: b.c, fy: b.r, tx: tc, ty: tr, t0, dur: dur(SLIDE) });
+        score += Math.pow(2, tier);
+        if (tier >= cfg.eat) {
+          score += cfg.bonus; eaten++;
+          newEats.push({ tier, r: tr, c: tc, t0: slideEnd });
+          newFloats.push({ txt: "+" + (cfg.bonus + Math.pow(2, tier)), t0: slideEnd + dur(POP), c: tc, r: tr });
+        } else {
+          const m = newTile(tier); m.hideUntil = slideEnd; m.appear = slideEnd; m.kind = "pop";
+          next[tr][tc] = m;
+        }
+        moved = true; i += 2;
+      } else {
+        if (a.r !== tr || a.c !== tc) {
+          moved = true;
+          newAnims.push({ tier: a.t.tier, fx: a.c, fy: a.r, tx: tc, ty: tr, t0, dur: dur(SLIDE) });
+          a.t.hideUntil = slideEnd;
+        }
+        next[tr][tc] = a.t; i += 1;
+      }
+      slot++;
+    }
+  }
+  if (!moved) return false;
+  grid = next; anims = newAnims; eats = eats.concat(newEats); floats = floats.concat(newFloats);
+  if (newEats.length) chewUntil = slideEnd + dur(POP + FLY) + 700 / cfg.speed;
+  spawn(slideEnd + dur(60));
+  lastMoveDir = dir;
+  if (score > best) { best = score; try { localStorage.setItem("lab.best.merge", String(best)); } catch (e) {} }
+  updHud();
+  if (!canMove()) { over = true; overAt = now() + 700; }
+  return true;
+}
+
+// ---------- layout ----------
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+let W = 0, H = 0, DPR = 1, L = {};
+function layout() {
+  const r = cv.getBoundingClientRect();
+  if (r.width < 2 || r.height < 2) return;
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = r.width; H = r.height;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  const gap = 8;
+  let size = Math.min(W - 24, H - 150);
+  size = Math.max(160, size);
+  const omR = Math.max(22, Math.min(40, size * 0.13));
+  const legs = omR * 0.45;
+  const group = 2 * omR + legs - 8 + size;
+  const y0 = Math.max(4, (H - group - 30) / 2);
+  const bx = (W - size) / 2, by = y0 + 2 * omR + legs - 8;
+  L = { size, gap, cell: (size - gap * (N + 1)) / N, bx, by, omR, omX: W / 2, omY: y0 + omR, hintY: by + size + 22 };
+}
+window.addEventListener("resize", layout);
+new ResizeObserver(layout).observe(document.getElementById("stage"));
+const cellXY = (c, r) => [L.bx + L.gap + c * (L.cell + L.gap) + L.cell / 2, L.by + L.gap + r * (L.cell + L.gap) + L.cell / 2];
+
+// ---------- drawing ----------
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function drawCandy(x, y, tier, scale, extra) {
+  const R = L.cell * 0.44 * scale; if (R < 1) return;
+  const i = Math.min(tier - 1, COLORS.length - 1);
+  ctx.save();
+  ctx.fillStyle = DARK[i]; ctx.beginPath(); ctx.arc(x, y + R * 0.1, R, 0, 7); ctx.fill();
+  ctx.fillStyle = COLORS[i]; ctx.beginPath(); ctx.arc(x, y - R * 0.04, R * 0.95, 0, 7); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.beginPath(); ctx.ellipse(x - R * 0.3, y - R * 0.45, R * 0.35, R * 0.18, -0.5, 0, 7); ctx.fill();
+  ctx.fillStyle = "#fff"; ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = Math.max(2, R * 0.12); ctx.lineJoin = "round";
+  ctx.font = "900 " + Math.round(R * 1.0) + "px ui-rounded, system-ui, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.strokeText(String(tier), x, y); ctx.fillText(String(tier), x, y + 1);
+  if (extra) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, R + 4, 0, 7); ctx.stroke(); }
+  ctx.restore();
+}
+function drawOm(t) {
+  const { omX: x, omY: y, omR: R } = L;
+  const chewing = t < chewUntil;
+  const sq = chewing ? 1 + 0.04 * Math.sin(t / 55) : 1;
+  // mouth target (flying cake) -> eyes + open
+  let look = [0, 1], open = 0.12;
+  const fl = eats.find((e) => t >= e.t0);
+  if (fl) {
+    const p = Math.min(1, (t - fl.t0 - dur(POP)) / dur(FLY));
+    const [fx, fy] = cellXY(fl.c, fl.r);
+    look = [fx - x, fy - y];
+    if (p > 0.3) open = 1;
+  } else if (chewing) { open = 0.35 + 0.3 * Math.abs(Math.sin(t / 90)); look = [0, 0.3]; }
+  else if (lastMoveDir) { const d = { left: [-1, 0.4], right: [1, 0.4], up: [0, -0.4], down: [0, 1] }[lastMoveDir]; look = d; }
+  const ln = Math.hypot(look[0], look[1]) || 1; look = [look[0] / ln, look[1] / ln];
+  ctx.save();
+  ctx.translate(x, y + R * (1 - sq)); ctx.scale(1 / sq, sq);
+  ctx.fillStyle = "#2E9E3D"; ctx.strokeStyle = "#1B6B27"; ctx.lineWidth = 3;
+  // legs (exactly 2)
+  for (const s of [-1, 1]) { rr(s * R * 0.42 - R * 0.17, R * 0.8, R * 0.34, R * 0.5, R * 0.17); ctx.fill(); ctx.stroke(); }
+  // arms (exactly 2)
+  for (const s of [-1, 1]) {
+    ctx.save(); ctx.translate(s * R * 0.92, R * 0.1); ctx.rotate(s * (chewing ? -0.9 + 0.2 * Math.sin(t / 90) : -0.5));
+    rr(-R * 0.14, -R * 0.1, R * 0.28, R * 0.7, R * 0.14); ctx.fill(); ctx.stroke(); ctx.restore();
+  }
+  // body
+  ctx.fillStyle = "#4FD15F"; ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.fill(); ctx.stroke();
+  // eyes
+  for (const s of [-1, 1]) {
+    const ex = s * R * 0.36, ey = -R * 0.28, er = R * 0.3;
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(ex, ey, er, 0, 7); ctx.fill(); ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(ex + look[0] * er * 0.38, ey + look[1] * er * 0.38, er * 0.42, 0, 7); ctx.fill();
+  }
+  // mouth
+  const mw = R * (0.45 + 0.4 * open), mh = R * (0.06 + 0.5 * open);
+  ctx.fillStyle = "#6B1620"; ctx.beginPath(); ctx.ellipse(0, R * 0.42, mw, mh, 0, 0, 7); ctx.fill();
+  if (open > 0.5) { ctx.fillStyle = "#FF7C8A"; ctx.beginPath(); ctx.ellipse(0, R * 0.42 + mh * 0.5, mw * 0.5, mh * 0.4, 0, 0, 7); ctx.fill(); }
+  ctx.restore();
+}
+function frame() {
+  const t = now();
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  if (!L.size) { requestAnimationFrame(frame); return; }
+  // board
+  ctx.fillStyle = "#4A3880"; rr(L.bx, L.by, L.size, L.size, 16); ctx.fill();
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const [x, y] = cellXY(c, r);
+    ctx.fillStyle = "#5B48A0"; rr(x - L.cell / 2, y - L.cell / 2, L.cell, L.cell, 12); ctx.fill();
+  }
+  drawOm(t);
+  // tiles at rest
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const tl = grid[r][c]; if (!tl || t < tl.hideUntil) continue;
+    let s = 1;
+    if (tl.appear) {
+      const p = Math.min(1, (t - tl.appear) / dur(tl.kind === "pop" ? POP : 170));
+      s = tl.kind === "pop" ? 1 + 0.28 * Math.sin(p * Math.PI) : p;
+      if (p >= 1) tl.appear = 0;
+    }
+    const [x, y] = cellXY(c, r);
+    drawCandy(x, y, tl.tier, s);
+  }
+  // sliding sprites
+  anims = anims.filter((a) => t < a.t0 + a.dur);
+  for (const a of anims) {
+    const p = Math.min(1, (t - a.t0) / a.dur), e = 1 - (1 - p) * (1 - p);
+    const [x0, y0] = cellXY(a.fx, a.fy), [x1, y1] = cellXY(a.tx, a.ty);
+    drawCandy(x0 + (x1 - x0) * e, y0 + (y1 - y0) * e, a.tier, 1);
+  }
+  // cakes jumping into Om Nom's mouth
+  eats = eats.filter((e) => t < e.t0 + dur(POP + FLY));
+  for (const e of eats) {
+    const [x0, y0] = cellXY(e.c, e.r);
+    const tp = t - e.t0;
+    if (tp < dur(POP)) { const p = tp / dur(POP); drawCandy(x0, y0, e.tier, 1 + 0.35 * Math.sin(p * Math.PI) + 0.1, true); continue; }
+    const p = Math.min(1, (tp - dur(POP)) / dur(FLY));
+    const mx = L.omX, my = L.omY + L.omR * 0.42;
+    const x = x0 + (mx - x0) * p, y = y0 + (my - y0) * p - Math.sin(p * Math.PI) * L.cell * 0.9;
+    drawCandy(x, y, e.tier, 1 - 0.7 * p * p, true);
+  }
+  // floating labels
+  floats = floats.filter((f) => t < f.t0 + 900);
+  for (const f of floats) {
+    if (t < f.t0) continue;
+    const p = (t - f.t0) / 900; const [x, y] = cellXY(f.c, f.r);
+    ctx.save(); ctx.globalAlpha = 1 - p; ctx.fillStyle = "#FFD23F"; ctx.strokeStyle = "#5A3A00"; ctx.lineWidth = 4;
+    ctx.font = "900 22px ui-rounded, system-ui, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.strokeText(f.txt, x, y - 20 - p * 50); ctx.fillText(f.txt, x, y - 20 - p * 50); ctx.restore();
+  }
+  // hint
+  ctx.fillStyle = "#B9A9E6"; ctx.font = "700 13px system-ui, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("Cake = candy of tier " + cfg.eat + ". Feed Om Nom!  Eaten: " + eaten, W / 2, L.hintY);
+  if (over && started && t > overAt) { document.getElementById("overScore").textContent = "Score " + score + "  ·  Best " + best; document.getElementById("over").style.display = "flex"; }
+  requestAnimationFrame(frame);
+}
+
+// ---------- input (Pointer Events: swipe) ----------
+let down = null;
+const TH = 22;
+cv.addEventListener("pointerdown", (e) => { down = { x: e.clientX, y: e.clientY, id: e.pointerId, fired: false }; try { cv.setPointerCapture(e.pointerId); } catch (_) {} });
+cv.addEventListener("pointermove", (e) => {
+  if (!down || down.fired || e.pointerId !== down.id) return;
+  const dx = e.clientX - down.x, dy = e.clientY - down.y;
+  if (Math.hypot(dx, dy) < TH) return;
+  down.fired = true;
+  move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
+});
+const endDown = () => { down = null; };
+cv.addEventListener("pointerup", endDown); cv.addEventListener("pointercancel", endDown);
+window.addEventListener("keydown", (e) => {
+  const m = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" }[e.key];
+  if (m) { e.preventDefault(); move(m); }
+});
+
+// ---------- UI ----------
+const $ = (id) => document.getElementById(id);
+function startGame() { started = true; reset(); $("start").style.display = "none"; }
+$("play").addEventListener("click", startGame);
+$("again").addEventListener("click", () => { reset(); });
+$("restart").addEventListener("click", () => { if (started) reset(); });
+$("gear").addEventListener("click", () => { const p = $("panel"); p.style.display = p.style.display === "block" ? "none" : "block"; });
+function bind(sl, key, vEl) {
+  const s = $(sl), v = $(vEl);
+  s.value = cfg[key]; v.textContent = cfg[key];
+  s.addEventListener("input", () => { cfg[key] = Number(s.value); v.textContent = cfg[key]; saveCfg(); });
+}
+bind("sEat", "eat", "vEat"); bind("sBonus", "bonus", "vBonus"); bind("sChance", "chance", "vChance"); bind("sSpeed", "speed", "vSpeed");
+
+// ---------- test API ----------
+reset();
+window.__game = {
+  ready: true,
+  getState: () => ({ scene: !started ? "start" : over ? "over" : "play", grid: grid.map((r) => r.map((t) => (t ? t.tier : 0))), score, best, eaten, cfg: { ...cfg } }),
+  act(a, p) {
+    if (a === "start") startGame();
+    else if (a === "move") return move(p);
+    else if (a === "restart") reset();
+    else if (a === "set") { Object.assign(cfg, p); saveCfg(); }
+    else if (a === "setGrid") { // p: 4x4 array of tiers (0 = empty)
+      grid = p.map((row) => row.map((v) => (v ? newTile(v) : null))); over = !canMove(); overAt = now() + 100; finishAnims();
+    }
+  },
+  metrics: () => ({ fps: 60, frameMsP95: 16, drawCalls: -1 }),
+};
+layout();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
