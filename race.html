@@ -51,8 +51,8 @@ const CFG_DEF = { vmax: 150, turn: 2.6, grip: 6, bot: 0.6, rotate: false, bots2:
 const SLIDERS = [["vmax", "Max speed", 100, 300, 5], ["turn", "Steering", 1.2, 4.5, 0.1], ["grip", "Grip (low = drift)", 2, 12, 0.5], ["bot", "Bot skill", 0, 1, 0.05]];
 const CHECKS = [["rotate", "Rotate map with car (1 P)"], ["bots2", "2 bots in 2-player race"]];
 const cfg = Object.assign({}, CFG_DEF);
-try { Object.assign(cfg, JSON.parse(localStorage.getItem("lab.race.cfg") || "{}")); } catch (e) {}
-function saveCfg() { try { localStorage.setItem("lab.race.cfg", JSON.stringify(cfg)); } catch (e) {} }
+try { Object.assign(cfg, JSON.parse(localStorage.getItem("lab.race.cfg2") || "{}")); } catch (e) {}
+function saveCfg() { try { localStorage.setItem("lab.race.cfg2", JSON.stringify(cfg)); } catch (e) {} }
 function getBest(i) { try { return Number(localStorage.getItem("lab.race.best." + i)) || 0; } catch (e) { return 0; } }
 function setBest(i, v) { try { localStorage.setItem("lab.race.best." + i, String(v)); } catch (e) {} }
 function fmt(t) { if (!(t > 0)) return "-:--.--"; const m = Math.floor(t / 60); return m + ":" + (t - m * 60).toFixed(2).padStart(5, "0"); }
