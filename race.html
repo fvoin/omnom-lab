@@ -40,14 +40,15 @@ const TAU = Math.PI * 2;
 const angDiff = (a, b) => { let d = (a - b) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return d; };
 
 // ---- constants ---------------------------------------------------------------------------------
-const BOX = { w: 330, h: 560 };   // world box the 2-player view fits on screen
-const RW = 22, GW = 12;            // road half width, grass half width (beyond the road edge)
-const DT = 1 / 60, LAPS = 3, DS = 6;
-const CAR_L = 17, CAR_W = 9.5, CAR_R = 8;
+const K = 1.5;                     // everything below is the original 330x560 layout scaled by K
+const BOX = { w: 330 * K, h: 560 * K };   // world box the 2-player view fits on screen
+const RW = 34, GW = 16;            // road half width, grass half width (beyond the road edge)
+const DT = 1 / 60, LAPS = 3, DS = 8;
+const CS = 1.76, CAR_L = 17 * CS, CAR_W = 9.5 * CS, CAR_R = 13;  // car drawn in old 17x9.5 units and scaled by CS
 
 // ---- tuning (the gear) -------------------------------------------------------------------------
-const CFG_DEF = { vmax: 100, turn: 2.6, grip: 6, bot: 0.6, rotate: false, bots2: false };
-const SLIDERS = [["vmax", "Max speed", 70, 200, 5], ["turn", "Steering", 1.2, 4.5, 0.1], ["grip", "Grip (low = drift)", 2, 12, 0.5], ["bot", "Bot skill", 0, 1, 0.05]];
+const CFG_DEF = { vmax: 150, turn: 2.6, grip: 6, bot: 0.6, rotate: false, bots2: false };
+const SLIDERS = [["vmax", "Max speed", 100, 300, 5], ["turn", "Steering", 1.2, 4.5, 0.1], ["grip", "Grip (low = drift)", 2, 12, 0.5], ["bot", "Bot skill", 0, 1, 0.05]];
 const CHECKS = [["rotate", "Rotate map with car (1 P)"], ["bots2", "2 bots in 2-player race"]];
 const cfg = Object.assign({}, CFG_DEF);
 try { Object.assign(cfg, JSON.parse(localStorage.getItem("lab.race.cfg") || "{}")); } catch (e) {}
@@ -90,11 +91,11 @@ const TRACK_DEFS = [
     poly: () => { const o = []; for (let i = 0; i < 360; i++) { const t = Math.PI / 2 + (i / 360) * TAU; o.push([165 + 125 * Math.sin(2 * t), 280 + 235 * Math.sin(t)]); } return o; },
     bridge: true, boosts: [[0.10, 8], [0.60, -8]] },
   { name: "Twisty", info: "Lots of turns",
-    poly: () => catmull([[70, 512], [165, 512], [250, 508], [292, 470], [288, 405], [235, 365], [172, 392], [118, 345], [140, 285], [218, 272], [283, 235], [282, 165], [248, 100], [190, 62], [130, 70], [108, 118], [128, 168], [92, 208], [48, 245], [42, 320], [40, 400], [40, 462]], 10),
+    poly: () => catmull([[120, 516], [200, 514], [262, 500], [294, 462], [290, 402], [245, 372], [190, 382], [135, 352], [118, 305], [150, 266], [220, 262], [276, 236], [288, 172], [252, 106], [190, 72], [128, 82], [88, 135], [62, 200], [44, 265], [40, 335], [40, 405], [44, 470], [70, 508]], 10),
     boosts: [[0.06, 8], [0.40, -8], [0.72, 8]] },
 ];
 function buildTrack(def) {
-  const r = resample(def.poly(), DS), N = r.N, T = { name: def.name, info: def.info, N, ds: r.ds, L: r.L };
+  const r = resample(def.poly().map((q) => [q[0] * K, q[1] * K]), DS), N = r.N, T = { name: def.name, info: def.info, N, ds: r.ds, L: r.L };
   T.cx = new Float32Array(N); T.cy = new Float32Array(N); T.tx = new Float32Array(N); T.ty = new Float32Array(N);
   T.nx = new Float32Array(N); T.ny = new Float32Array(N); T.ideal = new Float32Array(N); T.br = new Uint8Array(N);
   for (let i = 0; i < N; i++) { T.cx[i] = r.pts[i][0]; T.cy[i] = r.pts[i][1]; }
@@ -104,7 +105,7 @@ function buildTrack(def) {
     T.tx[i] = dx; T.ty[i] = dy; T.nx[i] = -dy; T.ny[i] = dx;
   }
   // racing line for the bots: smooth the offset path inside the road
-  const lim = RW - 9, k = 3;
+  const lim = RW - 14, k = 3;
   for (let it = 0; it < 260; it++) {
     for (let i = 0; i < N; i++) {
       const a = (i + N - k) % N, b = (i + k) % N;
@@ -121,10 +122,11 @@ function buildTrack(def) {
       const gap = Math.min(j - i, N - (j - i)); if (gap < N * 0.15) continue;
       const d = Math.hypot(T.cx[i] - T.cx[j], T.cy[i] - T.cy[j]); if (d < best) { best = d; bi = i; bj = j; }
     }
-    const B = Math.ceil(54 / T.ds); T.bridgeIdx = bj; T.bridgeLen = B;
+    const B = Math.ceil(80 / T.ds); T.bridgeIdx = bj; T.bridgeLen = B;
     for (let d = -B; d <= B; d++) T.br[(bj + d + N) % N] = 1;
   }
-  T.boosts = (def.boosts || []).map(([f, off]) => {
+  T.boosts = (def.boosts || []).map(([f, off0]) => {
+    const off = off0 * 1.5;
     const i = Math.floor(f * N) % N;
     return { i, off, x: T.cx[i] + T.nx[i] * off, y: T.cy[i] + T.ny[i] * off, tx: T.tx[i], ty: T.ty[i] };
   });
@@ -147,7 +149,7 @@ function nearestGlobal(T, x, y) {
 // nearest index close to the previous one (continuous progress, correct at the crossing)
 function nearestLocal(T, x, y, prev) {
   let bi = prev, bd = 1e18;
-  for (let k = -24; k <= 24; k++) {
+  for (let k = -20; k <= 20; k++) {
     const i = (prev + k + T.N) % T.N, dx = x - T.cx[i], dy = y - T.cy[i], d = dx * dx + dy * dy;
     if (d < bd) { bd = d; bi = i; }
   }
@@ -168,20 +170,20 @@ function makeCar(kind, idx, behind, lane, color, skill) {
   const x = T.cx[i0] + T.nx[i0] * lane, y = T.cy[i0] + T.ny[i0] * lane;
   return { kind, idx, color, x, y, a: Math.atan2(T.ty[i0], T.tx[i0]), vx: 0, vy: 0, steer: 0, in: 0, boost: 0, lvl: 0,
     ip: i0, prog: -nb, lapIdx: -1, tcross: [], laps: [], best: 0, finishT: 0, finished: false,
-    skill: skill == null ? 0.5 : skill, lane, noise: 0, wob: 0, wobT: 0, surf: "road", skid: null, hits: 0, slip: 0, pk: { x: 0, y: 0 } };
+    slowT: 0, wall: 0, skill: skill == null ? 0.5 : skill, lane, noise: 0, wob: 0, wobT: 0, surf: "road", skid: null, hits: 0, slip: 0, pk: { x: 0, y: 0 } };
 }
 function startRace(m, ti) {
   mode = m; trackIdx = ti; T = TRACKS[ti]; cars = []; finishOrder = []; raceT = 0; cd = 3; ended = false; newRecord = false; boostFx = [];
   bestLap = getBest(ti); skClear();
   const s = cfg.bot;
   if (m === 1) {
-    cars.push(makeCar("p1", 0, 32, -11, "#3b8cff"),
-      makeCar("bot", 1, 8, -11, "#ff4b4b", clamp(s + 0.15, 0, 1)),
-      makeCar("bot", 2, 8, 11, "#a24bff", clamp(s, 0, 1)),
-      makeCar("bot", 3, 32, 11, "#ffd23f", clamp(s - 0.15, 0, 1)));
+    cars.push(makeCar("p1", 0, 54, -17, "#3b8cff"),
+      makeCar("bot", 1, 12, -17, "#ff4b4b", clamp(s + 0.15, 0, 1)),
+      makeCar("bot", 2, 12, 17, "#a24bff", clamp(s, 0, 1)),
+      makeCar("bot", 3, 54, 17, "#ffd23f", clamp(s - 0.15, 0, 1)));
   } else {
-    cars.push(makeCar("p1", 0, 8, -11, "#3b8cff"), makeCar("p2", 1, 8, 11, "#ff8a1f"));
-    if (cfg.bots2) { cars.push(makeCar("bot", 2, 32, -11, "#ff4b4b", clamp(s, 0, 1)), makeCar("bot", 3, 32, 11, "#a24bff", clamp(s - 0.1, 0, 1))); }
+    cars.push(makeCar("p1", 0, 12, -17, "#3b8cff"), makeCar("p2", 1, 12, 17, "#ff8a1f"));
+    if (cfg.bots2) { cars.push(makeCar("bot", 2, 54, -17, "#ff4b4b", clamp(s, 0, 1)), makeCar("bot", 3, 54, 17, "#a24bff", clamp(s - 0.1, 0, 1))); }
   }
   scene = "race";
   document.body.classList.add("race"); document.body.classList.toggle("two", m === 2);
@@ -196,15 +198,15 @@ function toMenu() {
 // ---- physics -----------------------------------------------------------------------------------
 function botInput(c, digital) {
   const N = T.N, sp = Math.hypot(c.vx, c.vy);
-  let look = Math.round((20 + sp * 0.24) / T.ds);
+  const look = Math.max(2, Math.round((30 + sp * 0.22) / T.ds));
   const j = (c.ip + look) % N;
   // lane: chase a boost strip a little ahead when skilled enough
   let off = T.ideal[j] + c.lane * 0.25 + c.noise;
   for (const b of T.boosts) {
     const di = (b.i - c.ip + N) % N;
-    if (di > 2 && di < 22 && c.skill > 0.3) off = off * 0.2 + b.off * 0.8;
+    if (di > 2 && di < 16 && c.skill > 0.3) off = off * 0.2 + b.off * 0.8;
   }
-  off = clamp(off, -RW + 7, RW - 7);
+  off = clamp(off, -RW + 12, RW - 12);
   const qx = T.cx[j] + T.nx[j] * off, qy = T.cy[j] + T.ny[j] * off;
   const err = angDiff(Math.atan2(qy - c.y, qx - c.x), c.a);
   if (c.wobT > 0) return c.wob;
@@ -214,9 +216,10 @@ function botInput(c, digital) {
 function stepCar(c, dt) {
   const sk = c.kind === "bot" ? c.skill : auto.skill;
   const isBot = c.kind === "bot", isAuto = (c.kind === "p1" && auto.p1) || (c.kind === "p2" && auto.p2) || c.finished;
+  const machine = isBot || isAuto;
   // bot noise / mistakes
-  if (isBot || isAuto) {
-    c.noise += -c.noise * 1.2 * dt + gauss() * (1 - sk) * 12 * Math.sqrt(dt) * 1.3;
+  if (machine) {
+    c.noise += -c.noise * 1.2 * dt + gauss() * (1 - sk) * 18 * Math.sqrt(dt) * 1.3;
     if (c.wobT > 0) c.wobT -= dt; else if (Math.random() < (1 - sk) * 0.12 * dt * 2 * (c.finished ? 0.1 : 1)) { c.wobT = 0.25 + Math.random() * 0.2; c.wob = Math.random() < 0.5 ? -1 : 1; }
     c.in = botInput(c, isAuto && !isBot ? auto.digital : false);
     if (isAuto && !isBot && auto.delay) { (c.hist || (c.hist = [])).push(c.in); c.in = c.hist.length > auto.delay ? c.hist.shift() : 0; }
@@ -226,36 +229,49 @@ function stepCar(c, dt) {
   c.surf = surf;
   c.steer += clamp(c.in - c.steer, -8 * dt, 8 * dt);
   const speed = Math.hypot(c.vx, c.vy);
-  // steering first: the heading turns, the velocity does not (that is the slide)
-  const omega = cfg.turn * c.steer * clamp(speed / 45, 0, 1);
+  // slow-car rescue (machines only): after 1 s below 20 % speed ease the car back onto the line
+  if (speed < 0.2 * cfg.vmax) c.slowT += dt; else c.slowT = 0;
+  if (machine && c.slowT > 1) {
+    const l0 = nearestLocal(T, c.x, c.y, c.ip), i = (l0.i + 2) % T.N;
+    const tx = T.cx[i] + T.nx[i] * T.ideal[i] * 0.5, ty = T.cy[i] + T.ny[i] * T.ideal[i] * 0.5, k = Math.min(1, 2.2 * dt);
+    c.x += (tx - c.x) * k * 0.6; c.y += (ty - c.y) * k * 0.6;
+    c.a += clamp(angDiff(Math.atan2(T.ty[i], T.tx[i]), c.a), -4 * dt, 4 * dt);
+  }
+  // steering first: the heading turns, the velocity does not (that is the slide). A little authority even at rest.
+  const omega = cfg.turn * c.steer * Math.max(0.3, clamp(speed / 68, 0, 1));
   c.a += omega * dt;
   const fx = Math.cos(c.a), fy = Math.sin(c.a);
   let vl = c.vx * fx + c.vy * fy, vs = -c.vx * fy + c.vy * fx;
   const vscale = isBot ? 0.8 + 0.22 * c.skill : 1;
   if (c.boost > 0) c.boost -= dt;
   let tgt = cfg.vmax * vscale * (1 - 0.22 * Math.abs(c.steer));
-  if (surf !== "road") tgt = cfg.vmax * 0.3;
+  if (surf !== "road") tgt = cfg.vmax * 0.55;                       // grass slows, but the gas is not lost
   if (c.boost > 0) tgt = Math.max(tgt, cfg.vmax * 1.4);
-  if (vl < tgt) vl = Math.min(tgt, vl + cfg.vmax * 1.1 * dt); else vl += (tgt - vl) * Math.min(1, (surf === "road" ? 1.6 : 4.5) * dt);
+  if (vl < tgt) vl = Math.min(tgt, vl + cfg.vmax * 1.3 * dt); else vl += (tgt - vl) * Math.min(1, (surf === "road" ? 1.6 : 3) * dt);
   // lateral grip with a cap: asking for more than the tyres give makes the car slide
   const hard = clamp((Math.abs(c.steer) - 0.55) / 0.45, 0, 1) * clamp(speed / (cfg.vmax * 0.8), 0, 1);
-  const gEff = cfg.grip * (1 - 0.4 * hard) * (surf === "road" ? 1 : 0.6);
-  const want = gEff * vs * dt, cap = gEff * 40 * dt;
+  const gEff = cfg.grip * (1 - 0.4 * hard) * (surf === "road" ? 1 : 0.8);
+  const want = gEff * vs * dt, cap = gEff * 60 * dt;
   vs -= clamp(want, -cap, cap);
   c.slip = vs;
   c.vx = fx * vl - fy * vs; c.vy = fy * vl + fx * vs;
   c.x += c.vx * dt; c.y += c.vy * dt;
-  // wall
+  // wall: slide. Only the normal part of the velocity is reflected, the tangent part is kept,
+  // and the heading is nudged along the wall so the car never sits nose-on.
   const g2 = nearestGlobal(T, c.x, c.y);
   if (g2.d > RW + GW) {
     const nx = (c.x - T.cx[g2.i]) / g2.d, ny = (c.y - T.cy[g2.i]) / g2.d;
-    c.x = T.cx[g2.i] + nx * (RW + GW); c.y = T.cy[g2.i] + ny * (RW + GW);
+    c.x = T.cx[g2.i] + nx * (RW + GW - 0.5); c.y = T.cy[g2.i] + ny * (RW + GW - 0.5);
     const vn = c.vx * nx + c.vy * ny;
     if (vn > 0) {
-      c.vx -= 1.35 * vn * nx; c.vy -= 1.35 * vn * ny;
-      const tx = -ny, ty = nx, vt = c.vx * tx + c.vy * ty; c.vx -= vt * 0.12 * tx; c.vy -= vt * 0.12 * ty;
-      if (vn > 20) c.hits++;
+      c.vx -= (1 + 0.25) * vn * nx; c.vy -= (1 + 0.25) * vn * ny;
+      if (vn > 30) c.hits++;
     }
+    // turn toward the wall tangent that is closest to the current heading
+    const tA = Math.atan2(nx, -ny), tB = tA + Math.PI;
+    const dA = angDiff(tA, c.a), dB = angDiff(tB, c.a), d = Math.abs(dA) < Math.abs(dB) ? dA : dB;
+    c.a += clamp(d, -3.5 * dt, 3.5 * dt);
+    c.wall = 0.2;
   }
   // progress
   const l = nearestLocal(T, c.x, c.y, c.ip);
@@ -278,19 +294,20 @@ function stepCar(c, dt) {
     if (lap >= LAPS && !c.finished) { c.finished = true; c.finishT = raceT; finishOrder.push(c); }
   }
   // boosters
+  const fxx = Math.cos(c.a), fyy = Math.sin(c.a);
   for (const b of T.boosts) {
     const dx = c.x - b.x, dy = c.y - b.y, al = dx * b.tx + dy * b.ty, la = -dx * b.ty + dy * b.tx;
-    if (Math.abs(al) < 9 && Math.abs(la) < 12 && c.boost < 0.3) { c.boost = 0.65; const sp = Math.hypot(c.vx, c.vy); c.vx += fx * 25; c.vy += fy * 25; void sp; }
+    if (Math.abs(al) < 16 && Math.abs(la) < 20 && c.boost < 0.3) { c.boost = 0.65; c.vx += fxx * 38; c.vy += fyy * 38; }
   }
   // skid marks
-  const slipping = Math.abs(vs) > 14 + speed * 0.12 && speed > 35;
-  const rx = c.x - fx * 6, ry = c.y - fy * 6;
-  const w1 = [rx - fy * 3.6, ry + fx * 3.6], w2 = [rx + fy * 3.6, ry - fx * 3.6];
+  const slipping = Math.abs(vs) > 21 + speed * 0.12 && speed > 52;
+  const rx = c.x - fxx * 10, ry = c.y - fyy * 10;
+  const w1 = [rx - fyy * 6, ry + fxx * 6], w2 = [rx + fyy * 6, ry - fxx * 6];
   if (slipping) {
     if (c.skid) skLine(c.skid[0], c.skid[1], w1, w2);
     c.skid = [w1, w2];
   } else c.skid = null;
-  if (c.boost > 0 && frameN % 2 === 0) boostFx.push({ x: c.x - fx * 9, y: c.y - fy * 9, t: 0 });
+  if (c.boost > 0 && frameN % 2 === 0) boostFx.push({ x: c.x - fxx * 16, y: c.y - fyy * 16, t: 0 });
 }
 function collide() {
   for (let i = 0; i < cars.length; i++) for (let j = i + 1; j < cars.length; j++) {
@@ -299,8 +316,10 @@ function collide() {
     if (d >= CAR_R * 2 || d < 1e-4) continue;
     const nx = dx / d, ny = dy / d, ov = CAR_R * 2 - d;
     a.x -= nx * ov / 2; a.y -= ny * ov / 2; b.x += nx * ov / 2; b.y += ny * ov / 2;
-    const vr = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-    if (vr < 0) { const j2 = -(1 + 0.35) * vr / 2; a.vx -= j2 * nx; a.vy -= j2 * ny; b.vx += j2 * nx; b.vy += j2 * ny; }
+    // push apart: cancel the closing speed and add a small separating speed, so cars never stay glued
+    const vr = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny, sep = 12;
+    const dv = (vr < 0 ? -(1 + 0.3) * vr / 2 : 0) + sep * Math.min(1, ov / 5);
+    a.vx -= dv * nx; a.vy -= dv * ny; b.vx += dv * nx; b.vy += dv * ny;
   }
 }
 function ranking() {
@@ -346,12 +365,12 @@ function showEnd() {
 }
 
 // ---- skid canvas -------------------------------------------------------------------------------
-const SKS = 3, sk = document.createElement("canvas"); sk.width = BOX.w * SKS; sk.height = BOX.h * SKS;
+const SKS = 2, sk = document.createElement("canvas"); sk.width = BOX.w * SKS; sk.height = BOX.h * SKS;
 const skc = sk.getContext("2d"); skc.scale(SKS, SKS); skc.lineCap = "round";
 function skClear() { skc.clearRect(0, 0, BOX.w, BOX.h); }
 function skFade() { skc.save(); skc.globalCompositeOperation = "destination-out"; skc.fillStyle = "rgba(0,0,0,0.035)"; skc.fillRect(0, 0, BOX.w, BOX.h); skc.restore(); }
 function skLine(a1, a2, b1, b2) {
-  skc.strokeStyle = "rgba(25,25,30,0.5)"; skc.lineWidth = 1.7; skc.beginPath();
+  skc.strokeStyle = "rgba(25,25,30,0.5)"; skc.lineWidth = 2.8; skc.beginPath();
   skc.moveTo(a1[0], a1[1]); skc.lineTo(b1[0], b1[1]); skc.moveTo(a2[0], a2[1]); skc.lineTo(b2[0], b2[1]); skc.stroke();
 }
 
@@ -366,20 +385,47 @@ function resize() {
   cv.width = Math.round(VW * dpr); cv.height = Math.round(VH * dpr);
 }
 new ResizeObserver(resize).observe(cv); window.addEventListener("resize", resize); resize();
-function camInit() { const c = cars[0]; cam.x = c.x; cam.y = c.y; cam.a = c.a; }
+function camInit() { const c = cars[0]; cam.x = c.x; cam.y = c.y; cam.a = c.a; cam2.s = 0; const t = cam2Target(); cam2.x = t.x; cam2.y = t.y; cam2.s = t.s; }
+const cam2 = { x: BOX.w / 2, y: BOX.h / 2, s: 0 };
+function sFit() { return Math.min(VW / BOX.w, (VH - 2 * zoneH()) / BOX.h); }
+function cam2Target() {
+  // 2 players: whole track when the cars are far apart, closer in when they are near, both always in frame
+  const hum = cars.filter((c) => c.kind !== "bot"), f = sFit(), midH = VH - 2 * zoneH(), pad = 85;
+  if (hum.length < 2) return { x: BOX.w / 2, y: BOX.h / 2, s: f };
+  const dx = Math.abs(hum[0].x - hum[1].x), dy = Math.abs(hum[0].y - hum[1].y);
+  const need = Math.min(VW / (dx + 2 * pad), midH / (dy + 2 * pad));
+  const s = clamp(need, f, f * 1.9), t = clamp((s / f - 1) / 0.9, 0, 1);
+  const mx = (hum[0].x + hum[1].x) / 2, my = (hum[0].y + hum[1].y) / 2;
+  return { x: BOX.w / 2 + (mx - BOX.w / 2) * t, y: BOX.h / 2 + (my - BOX.h / 2) * t, s };
+}
 function camStep(dt) {
+  if (mode === 2 && cars.length) {
+    const t = cam2Target(), k = cam2.s ? 1 - Math.exp(-dt * 5) : 1;
+    if (!cam2.s || t.s < cam2.s) cam2.s = t.s; else cam2.s += (t.s - cam2.s) * k;   // zoom out at once, zoom in softly
+    cam2.x += (t.x - cam2.x) * k; cam2.y += (t.y - cam2.y) * k;
+    // hard guarantee: both human cars stay inside the frame
+    const hum = cars.filter((c) => c.kind !== "bot"), hw = VW / (2 * cam2.s) - 45, hh = (VH - 2 * zoneH()) / (2 * cam2.s) - 45;
+    if (hum.length) {
+      const x0 = Math.max(...hum.map((c) => c.x)) - hw, x1 = Math.min(...hum.map((c) => c.x)) + hw, y0 = Math.max(...hum.map((c) => c.y)) - hh, y1 = Math.min(...hum.map((c) => c.y)) + hh;
+      if (x0 <= x1) cam2.x = clamp(cam2.x, x0, x1);
+      if (y0 <= y1) cam2.y = clamp(cam2.y, y0, y1);
+    }
+    return;
+  }
   if (mode !== 1 || !cars.length) return;
   const c = cars[0], k = 1 - Math.exp(-dt * 6);
   cam.x += (c.x + c.vx * 0.25 - cam.x) * k; cam.y += (c.y + c.vy * 0.25 - cam.y) * k;
   cam.a += angDiff(c.a, cam.a) * (1 - Math.exp(-dt * 4));
 }
-const ZOOM1 = 1.55;
+const ZOOM1 = 1.4;
 function applyView() {
   // returns nothing; sets ctx transform for the world
   const D = dpr;
   if (mode === 2 || scene === "menu") {
-    const zh = scene === "menu" ? 0 : zoneH(), s = Math.min(VW / BOX.w, (VH - 2 * zh) / BOX.h);
-    ctx.setTransform(D * s, 0, 0, D * s, D * (VW / 2 - BOX.w / 2 * s), D * (VH / 2 - BOX.h / 2 * s));
+    if (scene === "menu") { const s = Math.min(VW / BOX.w, VH / BOX.h); ctx.setTransform(D * s, 0, 0, D * s, D * (VW / 2 - BOX.w / 2 * s), D * (VH / 2 - BOX.h / 2 * s)); return s; }
+    const s = cam2.s || sFit(), halfW = VW / (2 * s), halfH = (VH - 2 * zoneH()) / (2 * s);
+    const cx = cam2.x, cy = cam2.y; void halfW; void halfH;
+    ctx.setTransform(D * s, 0, 0, D * s, D * (VW / 2 - cx * s), D * (VH / 2 - cy * s));
     return s;
   }
   const s = ZOOM1;
@@ -395,20 +441,20 @@ function applyView() {
 function drawTrack() {
   ctx.lineJoin = "round"; ctx.lineCap = "butt"; ctx.setLineDash([]);
   const P = T.path;
-  ctx.strokeStyle = "#2e2e38"; ctx.lineWidth = 2 * (RW + GW) + 7; ctx.stroke(P);
-  ctx.strokeStyle = "#f4f1e6"; ctx.lineWidth = 2 * (RW + GW) + 3.5; ctx.stroke(P);
+  ctx.strokeStyle = "#2e2e38"; ctx.lineWidth = 2 * (RW + GW) + 10; ctx.stroke(P);
+  ctx.strokeStyle = "#f4f1e6"; ctx.lineWidth = 2 * (RW + GW) + 5; ctx.stroke(P);
   ctx.strokeStyle = "#6dbb4d"; ctx.lineWidth = 2 * (RW + GW); ctx.stroke(P);
-  ctx.strokeStyle = "#d9363e"; ctx.lineWidth = 2 * RW + 7; ctx.stroke(P);
-  ctx.strokeStyle = "#fff"; ctx.setLineDash([9, 9]); ctx.stroke(P); ctx.setLineDash([]);
+  ctx.strokeStyle = "#d9363e"; ctx.lineWidth = 2 * RW + 10; ctx.stroke(P);
+  ctx.strokeStyle = "#fff"; ctx.setLineDash([14, 14]); ctx.stroke(P); ctx.setLineDash([]);
   ctx.strokeStyle = "#5a5e68"; ctx.lineWidth = 2 * RW; ctx.stroke(P);
-  ctx.strokeStyle = "rgba(255,255,255,.4)"; ctx.lineWidth = 1.5; ctx.setLineDash([8, 10]); ctx.stroke(P); ctx.setLineDash([]);
+  ctx.strokeStyle = "rgba(255,255,255,.4)"; ctx.lineWidth = 2.2; ctx.setLineDash([12, 15]); ctx.stroke(P); ctx.setLineDash([]);
   // start line
   ctx.save(); ctx.translate(T.cx[0], T.cy[0]); ctx.rotate(Math.atan2(T.ty[0], T.tx[0]));
-  for (let r = 0; r < 2; r++) for (let k = -4; k < 4; k++) { ctx.fillStyle = (k + r) & 1 ? "#fff" : "#222"; ctx.fillRect(-4 + r * 4, k * (RW / 4), 4, RW / 4); }
+  for (let r = 0; r < 2; r++) for (let k = -4; k < 4; k++) { ctx.fillStyle = (k + r) & 1 ? "#fff" : "#222"; ctx.fillRect(-6 + r * 6, k * (RW / 4), 6, RW / 4); }
   ctx.restore();
   // boost strips
   for (const b of T.boosts) {
-    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(Math.atan2(b.ty, b.tx));
+    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(Math.atan2(b.ty, b.tx)); ctx.scale(1.7, 1.7);
     ctx.fillStyle = "#ffcf2e"; ctx.fillRect(-9, -12, 18, 24);
     ctx.fillStyle = "#e07a00";
     for (let k = -1; k <= 1; k += 1) { ctx.beginPath(); ctx.moveTo(k * 5 - 3, -8); ctx.lineTo(k * 5 + 3, 0); ctx.lineTo(k * 5 - 3, 8); ctx.lineTo(k * 5 - 1, 8); ctx.lineTo(k * 5 + 5, 0); ctx.lineTo(k * 5 - 1, -8); ctx.fill(); }
@@ -419,20 +465,20 @@ function drawBridge() {
   if (!T.bridgePath) return;
   ctx.lineJoin = "round"; ctx.lineCap = "butt"; ctx.setLineDash([]);
   const P = T.bridgePath;
-  ctx.save(); ctx.translate(3, 4); ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 2 * RW + 10; ctx.stroke(P); ctx.restore();
-  ctx.strokeStyle = "#2e2e38"; ctx.lineWidth = 2 * RW + 10; ctx.stroke(P);
-  ctx.strokeStyle = "#e8e2c8"; ctx.lineWidth = 2 * RW + 6; ctx.stroke(P);
+  ctx.save(); ctx.translate(4, 6); ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 2 * RW + 14; ctx.stroke(P); ctx.restore();
+  ctx.strokeStyle = "#2e2e38"; ctx.lineWidth = 2 * RW + 14; ctx.stroke(P);
+  ctx.strokeStyle = "#e8e2c8"; ctx.lineWidth = 2 * RW + 9; ctx.stroke(P);
   ctx.strokeStyle = "#8a8f9c"; ctx.lineWidth = 2 * RW; ctx.stroke(P);
-  ctx.strokeStyle = "rgba(255,255,255,.4)"; ctx.lineWidth = 1.5; ctx.setLineDash([8, 10]); ctx.stroke(P); ctx.setLineDash([]);
+  ctx.strokeStyle = "rgba(255,255,255,.4)"; ctx.lineWidth = 2.2; ctx.setLineDash([12, 15]); ctx.stroke(P); ctx.setLineDash([]);
 }
 function drawCar(c) {
-  ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.a);
-  if (c.boost > 0) { ctx.fillStyle = "#ff9d1c"; const fl = 7 + Math.random() * 5; ctx.beginPath(); ctx.moveTo(-CAR_L / 2, -3); ctx.lineTo(-CAR_L / 2 - fl, 0); ctx.lineTo(-CAR_L / 2, 3); ctx.fill(); }
-  ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.fillRect(-CAR_L / 2 + 1.5, -CAR_W / 2 + 2, CAR_L, CAR_W);
-  ctx.fillStyle = "#1b1b22"; ctx.fillRect(-CAR_L / 2 + 2, -CAR_W / 2 - 1.1, 4.5, 1.6); ctx.fillRect(-CAR_L / 2 + 2, CAR_W / 2 - 0.5, 4.5, 1.6); ctx.fillRect(CAR_L / 2 - 6.5, -CAR_W / 2 - 1.1, 4.5, 1.6); ctx.fillRect(CAR_L / 2 - 6.5, CAR_W / 2 - 0.5, 4.5, 1.6);
+  ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.a); ctx.scale(CS, CS);
+  if (c.boost > 0) { ctx.fillStyle = "#ff9d1c"; const fl = 7 + Math.random() * 5; ctx.beginPath(); ctx.moveTo(-17 / 2, -3); ctx.lineTo(-17 / 2 - fl, 0); ctx.lineTo(-17 / 2, 3); ctx.fill(); }
+  ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.fillRect(-17 / 2 + 1.5, -9.5 / 2 + 2, 17, 9.5);
+  ctx.fillStyle = "#1b1b22"; ctx.fillRect(-17 / 2 + 2, -9.5 / 2 - 1.1, 4.5, 1.6); ctx.fillRect(-17 / 2 + 2, 9.5 / 2 - 0.5, 4.5, 1.6); ctx.fillRect(17 / 2 - 6.5, -9.5 / 2 - 1.1, 4.5, 1.6); ctx.fillRect(17 / 2 - 6.5, 9.5 / 2 - 0.5, 4.5, 1.6);
   ctx.fillStyle = c.color; ctx.strokeStyle = "#1b1b22"; ctx.lineWidth = 1.1;
-  ctx.beginPath(); ctx.rect(-CAR_L / 2, -CAR_W / 2, CAR_L, CAR_W); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.fillRect(CAR_L / 2 - 4, -CAR_W / 2 + 1.2, 2.2, CAR_W - 2.4);
+  ctx.beginPath(); ctx.rect(-17 / 2, -9.5 / 2, 17, 9.5); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.fillRect(17 / 2 - 4, -9.5 / 2 + 1.2, 2.2, 9.5 - 2.4);
   if (c.kind !== "bot") {
     ctx.fillStyle = "#7ed321"; ctx.strokeStyle = "#2f6b0a"; ctx.lineWidth = 0.9;
     ctx.beginPath(); ctx.arc(-1.4, 0, 3.7, 0, TAU); ctx.fill(); ctx.stroke();
@@ -504,13 +550,13 @@ function draw() {
   ctx.fillStyle = "#2c5a2c"; ctx.fillRect(0, 0, VW, VH);
   if (scene === "menu" || !cars.length) { applyView(); drawTrack(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); return; }
   const zh = mode === 2 ? zoneH() : 0;
-  applyView();
   ctx.save();
-  if (mode === 2) { ctx.beginPath(); ctx.rect(-1000, -1000, 4000, 4000); }
+  if (mode === 2) { ctx.beginPath(); ctx.rect(0, zh, VW, VH - 2 * zh); ctx.clip(); }
+  applyView();
   drawTrack();
   ctx.drawImage(sk, 0, 0, BOX.w, BOX.h);
   const byOrder = cars.slice().sort((a, b) => (a.kind === "bot" ? 0 : 1) - (b.kind === "bot" ? 0 : 1));
-  for (const f of boostFx) { ctx.fillStyle = "rgba(255,170,40," + (0.8 - f.t * 2.2).toFixed(2) + ")"; ctx.beginPath(); ctx.arc(f.x, f.y, 3.4 - f.t * 7, 0, TAU); ctx.fill(); }
+  for (const f of boostFx) { ctx.fillStyle = "rgba(255,170,40," + (0.8 - f.t * 2.2).toFixed(2) + ")"; ctx.beginPath(); ctx.arc(f.x, f.y, 6 - f.t * 12, 0, TAU); ctx.fill(); }
   for (const c of byOrder) if (c.lvl === 0) drawCar(c);
   drawBridge();
   for (const c of byOrder) if (c.lvl === 1) drawCar(c);
@@ -566,7 +612,7 @@ function buildTracks() {
     b.innerHTML = '<canvas width="128" height="192"></canvas><span>' + t.name + '</span><small></small>';
     const c = b.querySelector("canvas").getContext("2d"), s = Math.min(128 / (BOX.w + 20), 192 / (BOX.h + 20));
     c.setTransform(s, 0, 0, s, (128 - BOX.w * s) / 2, (192 - BOX.h * s) / 2);
-    c.lineJoin = "round"; c.strokeStyle = "#2e2e38"; c.lineWidth = 2 * RW + 6; c.stroke(t.path);
+    c.lineJoin = "round"; c.strokeStyle = "#2e2e38"; c.lineWidth = 2 * RW + 10; c.stroke(t.path);
     c.strokeStyle = "#8a8f9c"; c.lineWidth = 2 * RW; c.stroke(t.path);
     b.addEventListener("click", () => { selTrack = i; refreshTracks(); });
     host.appendChild(b);
@@ -624,6 +670,8 @@ requestAnimationFrame(frame);
 function stateOf(c) { return { kind: c.kind, x: +c.x.toFixed(1), y: +c.y.toFixed(1), a: +c.a.toFixed(3), speed: +Math.hypot(c.vx, c.vy).toFixed(1), slip: +c.slip.toFixed(1), surf: c.surf, lvl: c.lvl, lap: c.lapIdx + 1, prog: +(c.prog / T.N).toFixed(3), boost: +c.boost.toFixed(2), laps: c.laps.map((v) => +v.toFixed(2)), best: +c.best.toFixed(2), finished: c.finished, finishT: +c.finishT.toFixed(2), hits: c.hits, steer: +c.steer.toFixed(2) }; }
 window.__game = {
   ready: true,
+  proj() { applyView(); const m = ctx.getTransform(), o = cars.map((c) => [(m.a * c.x + m.c * c.y + m.e) / dpr, (m.b * c.x + m.d * c.y + m.f) / dpr]); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); return { zh: zoneH(), VW, VH, s: Math.hypot(m.a, m.b) / dpr, pts: o }; },
+  get raw() { return cars; }, get vmax() { return cfg.vmax; },
   tracks: TRACKS, W: RW, G: GW,
   getState() { return { scene, mode, track: trackIdx, cd: +cd.toFixed(2), raceT: +raceT.toFixed(2), laps: LAPS, ended, newRecord, bestLap, cfg: Object.assign({}, cfg), inp: Object.assign({}, inp), cars: cars.map(stateOf), rank: ranking().map((c) => cars.indexOf(c)) }; },
   metrics() { const s = meter.slice().sort((a, b) => a - b); const m = s.reduce((a, b) => a + b, 0) / (s.length || 1); return { fps: m ? Math.round(1000 / m) : 0, frameMsP95: s.length ? s[Math.floor(s.length * 0.95)] : 0, drawCalls: -1 }; },
