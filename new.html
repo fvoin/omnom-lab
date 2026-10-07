@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Новые игры</title>
+<link rel="icon" href="data:,">
+<style>:root{--bg:#1d2333;--fg:#f3f5fa;--muted:#a9b1c6;--card:#2a3148;--card2:#323b57;--best:#ffd166}*{box-sizing:border-box}html,body{background:var(--bg);color:var(--fg);margin:0;font:16px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}main{max-width:520px;margin:0 auto;padding:20px 16px 32px}h1{margin:4px 0;font-size:26px}.lead{color:var(--muted);margin:0 0 18px;font-size:14px}a.game{color:inherit;background:var(--card);border-radius:16px;align-items:center;gap:12px;min-height:76px;margin:0 0 12px;padding:16px 18px;text-decoration:none;display:flex}a.game:active{background:var(--card2)}.txt{flex:1;min-width:0}.name{font-size:19px;font-weight:700}.rule{color:var(--muted);margin-top:3px;font-size:14px}.best{text-align:right;color:var(--best);font-variant-numeric:tabular-nums;flex:none;font-size:18px;font-weight:700}.best small{color:var(--muted);font-size:11px;font-weight:400;display:block}a.back{color:var(--muted);margin:0 0 6px;padding:6px 0;font-size:14px;text-decoration:none;display:inline-block}</style>
+</head>
+<body>
+<main>
+  <a class="back" href="index.html">‹ Лаборатория</a>
+  <h1>Новые игры (7)</h1>
+  <p class="lead">Сырые прототипы без арта и звука. ⚙ внизу — крутить ощущение. Поиграй в каждый минуту-две.</p>
+  <div id="list"></div>
+</main>
+<script>
+"use strict";
+const GAMES = [
+  ["merge",  "Candy Merge (2048)", "Свайпы: одинаковые конфеты сливаются; торт Ом Ном съедает"],
+  ["sort",   "Candy Sort", "Леденцы-кольца на палочках: собери 4 одного цвета — Ом Ном съест"],
+  ["duel",   "Jelly Duel", "Рогатка-дуэль: оттяни и стреляй желе с учётом ветра — с ботом или вдвоём"],
+  ["trial",  "Om Nom Trial", "Мотоцикл: газ, тормоз, наклон — не упади головой, крути сальто"],
+  ["race",   "Candy Race", "Гонки вид сверху: держи лево/право — с ботами или вдвоём напротив"],
+  ["smash",  "Candy Smash", "Пушка: оттяни и выстрели — разбей все банки, лучше одним выстрелом"],
+  ["queens", "Om Nom Queens", "По одному Ому Ному в строке, столбце и цвете — и не касаются"],
+];
+function best(slug) { try { const v = localStorage.getItem("lab.best." + slug); return v === null ? null : Number(v); } catch (e) { return null; } }
+const list = document.getElementById("list");
+for (const [slug, name, rule] of GAMES) {
+  const a = document.createElement("a");
+  a.className = "game"; a.href = slug + ".html";
+  const b = best(slug);
+  a.innerHTML = `<div class="txt"><div class="name"></div><div class="rule"></div></div>` +
+    (b !== null && !isNaN(b) ? `<div class="best"><small>рекорд</small>${b}</div>` : "");
+  a.querySelector(".name").textContent = name;
+  a.querySelector(".rule").textContent = rule;
+  list.appendChild(a);
+}
+</script>
+</body>
+</html>
