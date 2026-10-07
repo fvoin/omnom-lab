@@ -28,7 +28,7 @@ const GAMES = [
 ];
 function best(slug) { try { const v = localStorage.getItem("lab.best." + slug); return v === null ? null : Number(v); } catch (e) { return null; } }
 const MORE = [
-  ["hop",     "Nom Hop", "Прыгай через дороги, реки и рельсы — доберись до торта"],
+  ["hop",     "Nom Hop", "Беги без конца: ешь конфеты, лови пузырь"],
   ["paint",   "Nom Paint", "Загоняй мармеладных мишек петлёй к своей земле — кто съел больше"],
   ["arrows",  "Nom Arrows", "Тапай стрелку — она улетает; упёрлась в другую — минус сердце"],
   ["sumo",    "Sumo Nom", "Желейные бойцы крутятся на торте: тап — рывок туда, куда смотришь; последний на торте берёт очко"],
