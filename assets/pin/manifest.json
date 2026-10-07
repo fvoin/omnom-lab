@@ -1,0 +1,303 @@
+{
+ "game": "pin",
+ "field": [
+  1080,
+  1920
+ ],
+ "unit": "u (1080 = ширина экрана, y вниз); anchor — доля размера",
+ "naming": "без states: file как есть. Со states: <file без .png>_<state>.png, а если кадров больше 1 — <file без .png>_<state>_<кадр с 0>.png (пример: ant_idle_0.png, ant_grab.png, steam_puff_3.png)",
+ "art": "art:false — рисуется заглушка-фигура того же размера и якоря. После того как файлы положены в эту папку: node games/lab/view-src/sync-manifest.mjs pin (выставит art:true)",
+ "codeDrawn": "черта и счётчик над банкой, крошки от штыря, «−1», «✓», текст HUD, стартовый экран — кодом/DOM, не слоты",
+ "sprites": [
+  {
+   "name": "bg_pin",
+   "file": "bg_pin.png",
+   "w": 1080,
+   "h": 1920,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "фон; лишняя высота экрана закрашивается цветом фона"
+  },
+  {
+   "name": "pin",
+   "file": "pin.png",
+   "w": 200,
+   "h": 28,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "glint": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "штырь; тянется по длине (9-срез по краям 20 u), повёрнут вдоль оси; glint — блик, пока палец на штыре",
+   "slice": [
+    20,
+    0,
+    20,
+    0
+   ]
+  },
+  {
+   "name": "pin_handle",
+   "file": "pin_handle.png",
+   "w": 70,
+   "h": 70,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "glint": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "кольцо-ручка на конце штыря (со стороны, куда он выезжает)"
+  },
+  {
+   "name": "candy_ball_pink",
+   "file": "candy_ball_pink.png",
+   "w": 32,
+   "h": 32,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "розовая конфета-шарик, узор — полоски (различимость без цвета)"
+  },
+  {
+   "name": "candy_ball_mint",
+   "file": "candy_ball_mint.png",
+   "w": 32,
+   "h": 32,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "мятная конфета-шарик, узор — точки"
+  },
+  {
+   "name": "water_ball",
+   "file": "water_ball.png",
+   "w": 28,
+   "h": 28,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "капля воды"
+  },
+  {
+   "name": "choc_ball",
+   "file": "choc_ball.png",
+   "w": 28,
+   "h": 28,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "glow": 2
+   },
+   "fps": 6,
+   "art": false,
+   "note": "горячий шоколад, светится (2 кадра мерцания)"
+  },
+  {
+   "name": "choc_tile",
+   "file": "choc_tile.png",
+   "w": 28,
+   "h": 28,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "плитка: застывшие вода+шоколад, неподвижна"
+  },
+  {
+   "name": "ant",
+   "file": "ant.png",
+   "w": 90,
+   "h": 70,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {
+    "idle": 2,
+    "grab": 1,
+    "run": 2
+   },
+   "fps": 6,
+   "art": false,
+   "note": "муравей-воришка; якорь — ноги; run — убегает кувырком"
+  },
+  {
+   "name": "jar",
+   "file": "jar.png",
+   "w": 260,
+   "h": 300,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {
+    "normal": 1,
+    "full": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "банка (стекло), якорь — низ; черта рисуется кодом поверх; full — черта достигнута"
+  },
+  {
+   "name": "jar_lid",
+   "file": "jar_lid.png",
+   "w": 270,
+   "h": 60,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "крышка банки (падает при победе)"
+  },
+  {
+   "name": "jar_mark",
+   "file": "jar_mark.png",
+   "w": 80,
+   "h": 80,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "pink": 1,
+    "mint": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "метка цвета на банке (уровни 13–15)"
+  },
+  {
+   "name": "wall",
+   "file": "wall.png",
+   "w": 100,
+   "h": 20,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "стенка отсека, тянется по длине (9-срез 10 u)",
+   "slice": [
+    10,
+    0,
+    10,
+    0
+   ]
+  },
+  {
+   "name": "sieve",
+   "file": "sieve.png",
+   "w": 100,
+   "h": 20,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "сито-решётка, тянется по длине (9-срез 10 u)",
+   "slice": [
+    10,
+    0,
+    10,
+    0
+   ]
+  },
+  {
+   "name": "steam",
+   "file": "steam.png",
+   "w": 60,
+   "h": 60,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "puff": 4
+   },
+   "fps": 12,
+   "art": false,
+   "note": "облачко пара (таяние, плитка)"
+  },
+  {
+   "name": "shelf",
+   "file": "shelf.png",
+   "w": 1000,
+   "h": 200,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "полка-коллекция на итоге; якорь — низ"
+  },
+  {
+   "name": "btn_pause",
+   "file": "btn_pause.png",
+   "w": 150,
+   "h": 150,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "кнопка паузы в HUD (не из таблицы §9.7, общий HUD)"
+  },
+  {
+   "name": "btn_restart",
+   "file": "btn_restart.png",
+   "w": 150,
+   "h": 150,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "кнопка «Заново» в HUD (§9.2)"
+  }
+ ]
+}

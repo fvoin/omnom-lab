@@ -1,0 +1,267 @@
+{
+ "game": "dash",
+ "field": [
+  1080,
+  1920
+ ],
+ "unit": "u (1080 = ширина экрана, y вниз); клетка = 80 u; anchor — доля размера",
+ "naming": "без states: file как есть. Со states: <file без .png>_<состояние>.png, а если кадров больше 1 — <file без .png>_<состояние>_<кадр с 0>.png (пример: cube_run.png, cube_shard_piece_0.png … _7.png, om_chew_0.png)",
+ "art": "art:false — рисуется заглушка-фигура того же размера и якоря. После того как файлы положены в эту папку: node games/lab/view-src/sync-manifest.mjs dash (выставит art:true)",
+ "codeDrawn": "полоса пола и потолка, финишные ворота, полоса прогресса, HUD-текст, след из 4 кружков, вспышки и текст «N %» — рисуются кодом, не слоты",
+ "sprites": [
+  {
+   "name": "cube",
+   "file": "cube.png",
+   "w": 80,
+   "h": 80,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "run": 1,
+    "jump": 1,
+    "land": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "желейный кубик; сплющивание/колыхание — масштабом в коде; при перевёрнутой гравитации спрайт отражается по вертикали"
+  },
+  {
+   "name": "cube_shard",
+   "file": "cube_shard.png",
+   "w": 40,
+   "h": 40,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "piece": 8
+   },
+   "fps": 0,
+   "art": false,
+   "note": "8 кусочков желе для смерти (разные формы), разлетаются 0,3 с"
+  },
+  {
+   "name": "spike",
+   "file": "spike.png",
+   "w": 80,
+   "h": 80,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "шип-леденец остриём вверх; на потолке поворачивается на 180° кодом; смертельная часть 0,4×0,55 клетки в центре низа"
+  },
+  {
+   "name": "block",
+   "file": "block.png",
+   "w": 80,
+   "h": 80,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "a": 1,
+    "b": 1,
+    "c": 1
+   },
+   "fps": 0,
+   "art": false,
+   "slice": [
+    20,
+    20,
+    20,
+    20
+   ],
+   "note": "блок 80×80, 3 вида; для длинных/высоких — 9-срез (срез 20 u), вид выбирается по номеру клетки"
+  },
+  {
+   "name": "pad",
+   "file": "pad.png",
+   "w": 80,
+   "h": 30,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {
+    "idle": 1,
+    "fire": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "батут, стоит на полу (на потолке — отражён)"
+  },
+  {
+   "name": "orb",
+   "file": "orb.png",
+   "w": 70,
+   "h": 70,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "idle": 1,
+    "used": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "кольцо-прыгалка"
+  },
+  {
+   "name": "portal_grav",
+   "file": "portal_grav.png",
+   "w": 80,
+   "h": 240,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "портал гравитации, 3 клетки высотой"
+  },
+  {
+   "name": "portal_speed",
+   "file": "portal_speed.png",
+   "w": 80,
+   "h": 240,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "портал скорости ×1,25, 3 клетки высотой"
+  },
+  {
+   "name": "coin",
+   "file": "coin.png",
+   "w": 60,
+   "h": 60,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "idle": 1,
+    "taken": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "конфета уровня; taken — вспышка при сборе"
+  },
+  {
+   "name": "flag",
+   "file": "flag.png",
+   "w": 40,
+   "h": 80,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "флажок-чекпойнт"
+  },
+  {
+   "name": "bg_dash_1",
+   "file": "bg_dash_1.png",
+   "w": 1080,
+   "h": 1920,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "фон фабрики, ширина кратна повтору по горизонтали (параллакс ×0,25)"
+  },
+  {
+   "name": "bg_dash_2",
+   "file": "bg_dash_2.png",
+   "w": 1080,
+   "h": 1920,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false
+  },
+  {
+   "name": "bg_dash_3",
+   "file": "bg_dash_3.png",
+   "w": 1080,
+   "h": 1920,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false
+  },
+  {
+   "name": "bg_dash_4",
+   "file": "bg_dash_4.png",
+   "w": 1080,
+   "h": 1920,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false
+  },
+  {
+   "name": "om",
+   "file": "om.png",
+   "w": 300,
+   "h": 300,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {
+    "idle": 2,
+    "want": 1,
+    "open": 1,
+    "chew": 3,
+    "happy": 1,
+    "sad": 1,
+    "oops": 1
+   },
+   "fps": 8,
+   "art": false,
+   "note": "Ом Ном на финише (new7-a §0.3, D-56: 2 руки и 2 ноги)"
+  },
+  {
+   "name": "cake",
+   "file": "cake.png",
+   "w": 200,
+   "h": 160,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "торт, который привёз кубик; стоит рядом с Омом Номом, потом исчезает в рот"
+  }
+ ]
+}

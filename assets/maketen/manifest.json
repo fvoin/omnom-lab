@@ -1,0 +1,265 @@
+{
+ "slug": "maketen",
+ "frame": [
+  1080,
+  1920
+ ],
+ "readme": "Манифест слотов под арт (new10-b §7.7, new7-a §0.2). Кадр 1080x1920 u. w,h — размер в u; anchor — якорь в долях. Спрайт-лист: PNG, строки = состояния в порядке ключей states, столбцы = кадры. Нет файла или have=false — рисуется заглушка того же размера и якоря. Положил PNG рядом — поставь have:true (или открой страницу с ?art=1).",
+ "sprites": [
+  {
+   "name": "cell",
+   "file": "cell.png",
+   "w": 120,
+   "h": 120,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "empty": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "подложка клетки"
+  },
+  {
+   "name": "candy_d1",
+   "file": "candy_d1.png",
+   "w": 104,
+   "h": 104,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "selected": 1,
+    "hint": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "конфета с цифрой 1: свой цвет и форма (круг); цифра ≥ 64 u с чёрной обводкой — на конфете"
+  },
+  {
+   "name": "candy_d2",
+   "file": "candy_d2.png",
+   "w": 104,
+   "h": 104,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "selected": 1,
+    "hint": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "конфета с цифрой 2: свой цвет и форма (квадрат со скруглением); цифра ≥ 64 u с чёрной обводкой — на конфете"
+  },
+  {
+   "name": "candy_d3",
+   "file": "candy_d3.png",
+   "w": 104,
+   "h": 104,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "selected": 1,
+    "hint": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "конфета с цифрой 3: свой цвет и форма (треугольник); цифра ≥ 64 u с чёрной обводкой — на конфете"
+  },
+  {
+   "name": "candy_d4",
+   "file": "candy_d4.png",
+   "w": 104,
+   "h": 104,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "selected": 1,
+    "hint": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "конфета с цифрой 4: свой цвет и форма (ромб); цифра ≥ 64 u с чёрной обводкой — на конфете"
+  },
+  {
+   "name": "candy_d5",
+   "file": "candy_d5.png",
+   "w": 104,
+   "h": 104,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "selected": 1,
+    "hint": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "конфета с цифрой 5: свой цвет и форма (звезда); цифра ≥ 64 u с чёрной обводкой — на конфете"
+  },
+  {
+   "name": "candy_d6",
+   "file": "candy_d6.png",
+   "w": 104,
+   "h": 104,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "selected": 1,
+    "hint": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "конфета с цифрой 6: свой цвет и форма (шестиугольник); цифра ≥ 64 u с чёрной обводкой — на конфете"
+  },
+  {
+   "name": "candy_d7",
+   "file": "candy_d7.png",
+   "w": 104,
+   "h": 104,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "selected": 1,
+    "hint": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "конфета с цифрой 7: свой цвет и форма (сердце); цифра ≥ 64 u с чёрной обводкой — на конфете"
+  },
+  {
+   "name": "candy_d8",
+   "file": "candy_d8.png",
+   "w": 104,
+   "h": 104,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "selected": 1,
+    "hint": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "конфета с цифрой 8: свой цвет и форма (восьмиугольник); цифра ≥ 64 u с чёрной обводкой — на конфете"
+  },
+  {
+   "name": "candy_d9",
+   "file": "candy_d9.png",
+   "w": 104,
+   "h": 104,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "selected": 1,
+    "hint": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "конфета с цифрой 9: свой цвет и форма (овал); цифра ≥ 64 u с чёрной обводкой — на конфете"
+  },
+  {
+   "name": "om",
+   "file": "om.png",
+   "w": 300,
+   "h": 300,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {
+    "idle": 2,
+    "want": 1,
+    "open": 1,
+    "chew": 3,
+    "happy": 1,
+    "sad": 1,
+    "oops": 1
+   },
+   "fps": 6,
+   "have": false,
+   "hot": {
+    "mouth": [
+     0.5,
+     0.653
+    ]
+   },
+   "note": "набор om.* (new7-a §0.3), якорь — низ по центру"
+  },
+  {
+   "name": "btn_plus",
+   "file": "btn_plus.png",
+   "w": 150,
+   "h": 150,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "pulse": 2,
+    "off": 1
+   },
+   "fps": 4,
+   "have": false,
+   "note": "«+»; число оставшихся рисует код"
+  },
+  {
+   "name": "btn_hint",
+   "file": "btn_hint.png",
+   "w": 150,
+   "h": 150,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "«?»"
+  },
+  {
+   "name": "bg_maketen",
+   "file": "bg_maketen.png",
+   "w": 1080,
+   "h": 1920,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "have": false,
+   "note": "фон"
+  }
+ ]
+}

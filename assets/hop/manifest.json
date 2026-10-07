@@ -1,0 +1,334 @@
+{
+ "game": "hop",
+ "field": [
+  1080,
+  1920
+ ],
+ "unit": "u (1080 = ширина экрана, y вниз); anchor — доля размера; 1 клетка = 120 u, 9 столбцов, 16 рядов на экране",
+ "naming": "без states: file как есть. Со states: <file без .png>_<state>.png, а если кадров больше 1 — <file без .png>_<state>_<кадр с 0>.png (пример: om_idle_0.png, car_1_c2.png, lily_sink_1.png)",
+ "art": "art:false — рисуется заглушка того же размера и якоря. После того как файлы положены в эту папку: node games/lab/view-src/sync-manifest.mjs hop (выставит art:true)",
+ "codeDrawn": "пыль приземления, брызги, плюс-один, тряска, плашки HUD, мигание фонаря, рябь воды — рисуются кодом, не слоты",
+ "sprites": [
+  {
+   "name": "tile_grass",
+   "file": "tile_grass.png",
+   "w": 120,
+   "h": 120,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "v0": 1,
+    "v1": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "плитка травы, 2 варианта; 120x120 u, центр = центр клетки"
+  },
+  {
+   "name": "tile_road",
+   "file": "tile_road.png",
+   "w": 120,
+   "h": 120,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "асфальт; разметка по нижнему краю, чтобы соседние дороги разделялись"
+  },
+  {
+   "name": "tile_water",
+   "file": "tile_water.png",
+   "w": 120,
+   "h": 120,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "вода; рябь рисует код (поверх)"
+  },
+  {
+   "name": "tile_rail",
+   "file": "tile_rail.png",
+   "w": 120,
+   "h": 120,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "рельсы"
+  },
+  {
+   "name": "tree",
+   "file": "tree.png",
+   "w": 120,
+   "h": 150,
+   "anchor": [
+    0.5,
+    0.8
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "конфетное дерево; якорь — основание в центре клетки (y центра клетки + 20)"
+  },
+  {
+   "name": "rock",
+   "file": "rock.png",
+   "w": 120,
+   "h": 150,
+   "anchor": [
+    0.5,
+    0.8
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "камень-карамель"
+  },
+  {
+   "name": "car_1",
+   "file": "car_1.png",
+   "w": 120,
+   "h": 120,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "c0": 1,
+    "c1": 1,
+    "c2": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "машинка 1 клетка, смотрит вправо (влево — зеркалит код); 3 цвета"
+  },
+  {
+   "name": "car_2",
+   "file": "car_2.png",
+   "w": 240,
+   "h": 120,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "c0": 1,
+    "c1": 1,
+    "c2": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "автобус 2 клетки"
+  },
+  {
+   "name": "car_3",
+   "file": "car_3.png",
+   "w": 360,
+   "h": 120,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "c0": 1,
+    "c1": 1,
+    "c2": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "автобус 3 клетки"
+  },
+  {
+   "name": "log_2",
+   "file": "log_2.png",
+   "w": 240,
+   "h": 110,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "вафельное бревно, 2 клетки"
+  },
+  {
+   "name": "log_3",
+   "file": "log_3.png",
+   "w": 360,
+   "h": 110,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "бревно, 3 клетки"
+  },
+  {
+   "name": "log_4",
+   "file": "log_4.png",
+   "w": 480,
+   "h": 110,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "бревно, 4 клетки"
+  },
+  {
+   "name": "lily",
+   "file": "lily.png",
+   "w": 110,
+   "h": 110,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "idle": 1,
+    "sink": 3
+   },
+   "fps": 6,
+   "art": false,
+   "note": "кувшинка: idle, sink (3 кадра: качается, уходит, под водой)"
+  },
+  {
+   "name": "train",
+   "file": "train.png",
+   "w": 120,
+   "h": 120,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "head": 1,
+    "body": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "поезд: 120x120 на клетку; голова смотрит вправо (зеркалит код), вагоны подряд"
+  },
+  {
+   "name": "rail_light",
+   "file": "rail_light.png",
+   "w": 60,
+   "h": 120,
+   "anchor": [
+    0.5,
+    0.85
+   ],
+   "states": {
+    "off": 1,
+    "on": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "фонарь у рельсов (мигает за 1 с до поезда)"
+  },
+  {
+   "name": "candy",
+   "file": "candy.png",
+   "w": 70,
+   "h": 70,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "конфета на поле"
+  },
+  {
+   "name": "flag",
+   "file": "flag.png",
+   "w": 80,
+   "h": 120,
+   "anchor": [
+    0.5,
+    0.85
+   ],
+   "states": {
+    "idle": 1,
+    "passed": 1
+   },
+   "fps": 0,
+   "art": false,
+   "note": "флажок середины"
+  },
+  {
+   "name": "cake",
+   "file": "cake.png",
+   "w": 240,
+   "h": 200,
+   "anchor": [
+    0.5,
+    0.75
+   ],
+   "states": {},
+   "fps": 0,
+   "art": false,
+   "note": "торт на финише (центр ряда, 2 клетки в ширину)"
+  },
+  {
+   "name": "crow",
+   "file": "crow.png",
+   "w": 240,
+   "h": 200,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "fly": 2
+   },
+   "fps": 8,
+   "art": false,
+   "note": "ворона (пикирует сверху и уносит)"
+  },
+  {
+   "name": "om",
+   "file": "om.png",
+   "w": 130,
+   "h": 130,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {
+    "idle": 2,
+    "want": 1,
+    "open": 1,
+    "chew": 3,
+    "happy": 1,
+    "sad": 1,
+    "oops": 1,
+    "hop_squat": 1,
+    "hop_jump": 1,
+    "hop_flat": 1,
+    "hop_splash": 1
+   },
+   "fps": 8,
+   "art": false,
+   "note": "Ом Ном (§0.3, 2 руки и 2 ноги) + hop_squat (присел), hop_jump (в прыжке), hop_flat (сплющен машиной), hop_splash (тонет, голова над водой); якорь — низ по центру"
+  }
+ ]
+}

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<link rel="icon" href="data:,">
+<title>Nom Clash</title>
+<style>:root{--ink:#2b1d12;--cream:#fbebd0;--cream2:#e9cfa3;--act:#e8458a;--act2:#a82060;--go:#8ccb3e;--go2:#5e9a22;--star:#ffd23f}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;color:var(--ink);overscroll-behavior:none;background:#2c5a2a;margin:0;font:800 14px/1.25 ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}#stage{touch-action:none;-webkit-user-select:none;user-select:none;position:absolute;inset:0}canvas{touch-action:none;width:100%;height:100%;display:block;position:absolute;top:0;left:0}button{font:inherit;color:inherit;touch-action:manipulation;-webkit-user-select:none;user-select:none}.link{color:var(--ink);opacity:.7;margin-top:10px;font-size:13px;text-decoration:none;display:block}.ov{z-index:5;background:#0f28148c;justify-content:center;align-items:center;display:none;position:absolute;inset:0}.ov.on{display:flex}.card{background:var(--cream);border:3px solid var(--ink);text-align:center;width:min(92vw,360px);box-shadow:0 6px 0 var(--cream2), 0 10px 26px #0006;border-radius:24px;max-height:96vh;padding:16px 18px 18px;overflow:auto}.card h1{margin:6px 0 4px;font-size:26px;font-weight:900}.card p{margin:4px 0 10px;font-weight:700}.btn{border:3px solid var(--ink);background:var(--act);color:#fff;width:100%;box-shadow:0 4px 0 var(--act2);cursor:pointer;text-shadow:0 1px #0006;border-radius:999px;margin:8px 0 0;padding:12px 10px;font-size:19px;font-weight:900;display:block}.btn.alt{background:var(--cream);color:var(--ink);box-shadow:0 4px 0 var(--cream2);text-shadow:none;padding:9px 10px;font-size:16px}.row{gap:8px;display:flex}.row .btn{margin-top:8px}.lv{grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0 4px;display:grid}.lv button{border:3px solid var(--ink);cursor:pointer;color:var(--ink);background:#fff7e6;border-radius:12px;padding:4px 0;font-size:11px;font-weight:800;line-height:1.15}.lv button.sel{background:var(--go);box-shadow:0 3px 0 var(--go2)}.lv button.lock{opacity:.38;cursor:default}.lv button.done{background:#f1ffd9}.lv b{font-size:15px;display:block}.lv i{letter-spacing:-1px;font-size:10px;font-style:normal;display:block}.stars{letter-spacing:3px;margin:4px 0;font-size:40px;line-height:1}.stars span{color:#d9cfb8}.stars span.on{color:var(--star);-webkit-text-stroke:2px var(--ink)}.stat{justify-content:space-between;padding:1px 6px;font-size:16px;display:flex}.rew{color:var(--act2);border-top:2px dashed var(--cream2);margin:6px 0 4px;padding-top:6px;font-size:22px;font-weight:900}.rew s{color:var(--ink);opacity:.7;margin-top:2px;font-size:12px;font-weight:700;text-decoration:none;display:block}.hint{opacity:.75;margin:2px 0 0;font-size:12px;font-weight:700}</style>
+  <script type="module" crossorigin src="./assets/clash-BR79xurB.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-P2Xu9kJm.js">
+  <link rel="modulepreload" crossorigin href="./assets/layer-CHPe9y9m.js">
+  <link rel="modulepreload" crossorigin href="./assets/tint-B8pLp1Sl.js">
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div class="ov on" id="menu"><div class="card">
+    <h1>Nom Clash</h1>
+    <p>Drag from your house to another: half of your Nommies go. Capture every house!</p>
+    <div class="lv" id="lv"></div>
+    <button class="btn" id="b1">Play</button>
+    <a class="link" href="index.html">&larr; Lab</a>
+  </div></div>
+  <div class="ov" id="pause"><div class="card">
+    <h1>Paused</h1>
+    <button class="btn" id="resume">Resume</button><button class="btn alt" id="pRestart">Restart level</button><button class="btn alt" id="pQuit">Quit (no reward)</button>
+  </div></div>
+  <div class="ov" id="end"><div class="card" id="endCard"></div></div>
+</div>
+</body>
+</html>

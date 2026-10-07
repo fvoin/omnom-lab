@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<link rel="icon" href="data:,">
+<title>Nom Paint</title>
+<style>:root{--ink:#2a2140;--cream:#fff6e0;--bg:#2b2250;--act:#ff5fa8}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{background:var(--bg);height:100%;color:var(--ink);overscroll-behavior:none;-webkit-user-select:none;user-select:none;touch-action:none;margin:0;font:800 14px/1.25 ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}#stage{position:absolute;inset:0}canvas{touch-action:none;width:100%;height:100%;display:block;position:absolute;top:0;left:0}button{font:inherit;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;touch-action:manipulation;border-radius:999px;padding:10px 18px;font-size:16px;font-weight:800;box-shadow:0 3px #00000059}button:active{transform:translateY(2px);box-shadow:0 1px #00000059}button.big{background:var(--act);color:#fff;text-shadow:0 1px 0 var(--ink);padding:12px 26px;font-size:20px}button.opt.on{background:#ffd23f}#gear{z-index:6;opacity:.7;width:34px;height:34px;padding:0;font-size:18px;position:absolute;bottom:8px;right:8px}#panel{background:var(--cream);border:2px solid var(--ink);z-index:6;border-radius:16px;width:250px;padding:10px 12px;font-size:13px;display:none;position:absolute;bottom:48px;right:8px;box-shadow:0 6px 18px #0006}#panel label{align-items:center;gap:8px;margin:6px 0;display:flex}#panel input[type=range]{flex:1;margin:0}.ov{z-index:5;background:#2a21408c;justify-content:center;align-items:center;display:none;position:absolute;inset:0}.ov.on{display:flex}.card{background:var(--cream);border:3px solid var(--ink);text-align:center;border-radius:24px;width:min(88%,340px);padding:18px 22px 20px;box-shadow:0 6px #00000059}.card h1{color:#a8205f;margin:0 0 6px;font-size:28px}.card h3{opacity:.8;margin:10px 0 6px;font-size:14px}.card p{margin:6px 0 12px;font-size:14px;font-weight:700}.card small{opacity:.7;margin-top:12px;font-weight:700;display:block}.card a{color:#a8205f;text-decoration:none}.card .col{flex-direction:column;align-items:stretch;gap:10px;display:flex}.card .row{flex-wrap:wrap;justify-content:center;gap:8px;display:flex}.card .row button{flex:1;min-width:70px;padding:10px 8px}.stars{letter-spacing:4px;margin:4px 0 8px;font-size:44px;line-height:1}.stars span{color:#d9cfe6}.stars span.on{color:#ffc928;-webkit-text-stroke:2px var(--ink)}.rew{color:#a8205f;margin:4px 0 12px;font-size:22px;font-weight:900}.rew s{color:var(--ink);opacity:.7;margin-top:2px;font-size:12px;font-weight:700;text-decoration:none;display:block}.ribbon{color:#fff;text-shadow:0 1px #00000080;border-radius:12px;margin:-6px -10px 10px;padding:8px;font-size:20px}</style>
+  <script type="module" crossorigin src="./assets/paint-CQJzgjo4.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-P2Xu9kJm.js">
+  <link rel="modulepreload" crossorigin href="./assets/layer-CHPe9y9m.js">
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <button id="gear" title="Settings">&#9881;</button>
+  <div id="panel"><label><input type="checkbox" id="optSelf"> Own trail kills you</label>
+    <label><input type="checkbox" id="optAuto"> Autoplay</label>
+    <label>Skill <input type="range" id="optSkill" min="0" max="1" step="0.05" value="0.5"><b id="optSkillV">0.5</b></label></div>
+  <div class="ov on" id="menu"><div class="card">
+    <h1>Nom Paint</h1>
+    <p>Drag to steer. Leave your land, loop back home: everything inside the loop is yours. Don't let anyone cross your trail!</p>
+    <h3>Difficulty</h3>
+    <div class="row" id="diffRow"><button class="opt" data-d="easy">Easy</button><button class="opt on" data-d="medium">Medium</button><button class="opt" data-d="hard">Hard</button></div>
+    <div class="col" style="margin-top:14px"><button class="big" id="play">Play</button></div>
+    <small id="recs"></small>
+    <small><a href="index.html">&larr; Lab</a></small>
+  </div></div>
+  <div class="ov" id="pause"><div class="card">
+    <h1>Paused</h1>
+    <div class="col"><button class="big" id="resume">Resume</button><button id="pRestart">Restart</button><button id="pQuit">Quit (no reward)</button></div>
+  </div></div>
+  <div class="ov" id="result"><div class="card">
+    <h1 id="rTitle">Time!</h1>
+    <div class="stars" id="rStars"></div>
+    <p id="rInfo"></p>
+    <div class="rew" id="rRew"></div>
+    <div class="col"><button class="big" id="again">Play again</button><button id="rMenu">Menu</button></div>
+  </div></div>
+</div>
+</body>
+</html>

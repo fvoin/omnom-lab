@@ -1,0 +1,131 @@
+{
+ "format": "Frame 1080 u wide (y down). file = path base: <file>.png | <file>_<state>.png | <file>_<state>_<frame>.png (frames>1, from 0). anchor = fraction of w/h at the object position. art:true (node view-src/sync-manifest.mjs pixel) when all PNGs exist; else stub shapes are drawn.",
+ "game": "pixel",
+ "sprites": [
+  {
+   "name": "pixel",
+   "file": "assets/pixel/pixel",
+   "w": 64,
+   "h": 64,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "pop": 2
+   },
+   "fps": 16,
+   "note": "конфетный пиксель с фаской, светлый нейтральный — цвет красит код (tint палитрой картинки); масштаб под W",
+   "art": false
+  },
+  {
+   "name": "nommy",
+   "file": "assets/pixel/nommy",
+   "w": 150,
+   "h": 150,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {
+    "idle": 2,
+    "run": 4,
+    "bite": 2,
+    "happy": 1,
+    "sad": 1
+   },
+   "fps": 10,
+   "note": "набор nommy.* (new10-b §0.9); цвет — tint; число укусов и значок цвета рисует код на животе",
+   "art": false
+  },
+  {
+   "name": "badge",
+   "file": "assets/pixel/badge",
+   "w": 40,
+   "h": 40,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "drop": 1,
+    "star": 1,
+    "leaf": 1,
+    "moon": 1,
+    "heart": 1,
+    "square": 1,
+    "diamond": 1
+   },
+   "note": "значок цвета на животе Номми (различимость без цвета); не красится",
+   "art": false
+  },
+  {
+   "name": "track",
+   "file": "assets/pixel/track",
+   "w": 880,
+   "h": 880,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "slice": [
+    90,
+    90,
+    90,
+    90
+   ],
+   "note": "дорожка-конвейер вокруг картинки (9-срез), по центру пустая",
+   "art": false
+  },
+  {
+   "name": "bench",
+   "file": "assets/pixel/bench",
+   "w": 160,
+   "h": 160,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "warn": 1
+   },
+   "art": false
+  },
+  {
+   "name": "lane_bg",
+   "file": "assets/pixel/lane_bg",
+   "w": 200,
+   "h": 480,
+   "anchor": [
+    0.5,
+    0
+   ],
+   "note": "подложка очереди; верх — у скамеек",
+   "art": false
+  },
+  {
+   "name": "bg_pixel",
+   "file": "assets/pixel/bg_pixel",
+   "w": 1080,
+   "h": 1920,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "art": false
+  },
+  {
+   "name": "btn_pause",
+   "file": "assets/pixel/btn_pause",
+   "w": 150,
+   "h": 150,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "art": false
+  }
+ ]
+}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<link rel="icon" href="data:,">
+<title>Jelly Rush</title>
+<style>:root{--ink:#2a2140;--cream:#fff6e0;--bg:#3a2a63;--act:#ff5fa8}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{background:var(--bg);height:100%;color:var(--ink);overscroll-behavior:none;-webkit-user-select:none;user-select:none;margin:0;font:800 14px/1.25 ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}#stage{position:absolute;inset:0}canvas{touch-action:none;width:100%;height:100%;display:block;position:absolute;top:0;left:0}button{font:inherit;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;border-radius:999px;padding:10px 18px;font-size:16px;font-weight:800;box-shadow:0 3px #00000059}button:active{transform:translateY(2px);box-shadow:0 1px #00000059}button.big{background:var(--act);color:#fff;text-shadow:0 1px 0 var(--ink);padding:12px 26px;font-size:20px}#gear{z-index:6;opacity:.8;width:34px;height:34px;padding:0;font-size:18px;position:absolute;top:8px;right:8px}#panel{background:var(--cream);border:2px solid var(--ink);z-index:6;border-radius:16px;width:260px;padding:10px 12px;display:none;position:absolute;top:48px;right:8px;box-shadow:0 6px 18px #0006}#panel label{align-items:center;gap:8px;margin:6px 0;font-size:13px;display:flex}#panel input[type=range]{flex:1;margin:0}.ov{z-index:5;background:#2a21408c;justify-content:center;align-items:center;display:none;position:absolute;inset:0}.ov.on{display:flex}.card{background:var(--cream);border:3px solid var(--ink);text-align:center;border-radius:24px;width:min(90%,340px);padding:18px 22px 20px;box-shadow:0 6px #00000059}.card h1{color:#a8205f;margin:0 0 6px;font-size:28px}.card p{margin:6px 0 12px;font-size:14px;font-weight:700}.card small{opacity:.7;margin-top:12px;font-weight:700;display:block}.card a{color:#a8205f;text-decoration:none}.card .col{flex-direction:column;align-items:stretch;gap:10px;display:flex}.grid{grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 12px;display:grid}.grid button{border-radius:14px;padding:8px 0 6px;font-size:20px;line-height:1.1}.grid button small{opacity:.75;margin:2px 0 0;font-size:10px;font-weight:700;display:block}.grid button.lock{opacity:.4;cursor:default}.tog{justify-content:center;align-items:center;gap:8px;margin:0 0 6px;font-size:14px;display:flex}.tog button{padding:6px 14px;font-size:14px}.tog button.on{background:#6bd13f}.stars{letter-spacing:4px;margin:4px 0 8px;font-size:44px;line-height:1}.stars span{color:#d9cfe6}.stars span.on{color:#ffc928;-webkit-text-stroke:2px var(--ink)}.rew{color:#a8205f;margin:4px 0 12px;font-size:22px;font-weight:900}.rew s{color:var(--ink);opacity:.7;margin-top:2px;font-size:12px;font-weight:700;text-decoration:none;display:block}</style>
+  <script type="module" crossorigin src="./assets/dash-Bd2zh0QI.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-P2Xu9kJm.js">
+  <link rel="modulepreload" crossorigin href="./assets/layer-CHPe9y9m.js">
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <button id="gear" title="Settings">&#9881;</button>
+  <div id="panel">
+    <label><input type="checkbox" id="allOpen"> All levels open</label>
+    <label><input type="checkbox" id="hbox"> Show hitboxes</label>
+    <label>Speed <input type="range" id="spd" min="0.3" max="1" step="0.05" value="1"><b id="spdv">1</b></label>
+  </div>
+  <div class="ov on" id="menu"><div class="card">
+    <h1>Jelly Rush</h1>
+    <p>Tap to jump, hold to keep jumping.</p>
+    <div class="grid" id="lvls"></div>
+    <div class="tog">Checkpoints <button id="flagsBtn">Off</button></div>
+    <small id="mInfo">Checkpoints = 1 star only.</small>
+    <small><a href="index.html">&larr; Lab</a></small>
+  </div></div>
+  <div class="ov" id="pause"><div class="card">
+    <h1>Paused</h1>
+    <div class="col"><button class="big" id="resume">Resume</button><button id="pRestart">Restart level</button><button id="pQuit">Quit (no reward)</button></div>
+  </div></div>
+  <div class="ov" id="result"><div class="card">
+    <h1 id="rTitle">Level clear!</h1>
+    <div class="stars" id="rStars"></div>
+    <p id="rInfo"></p>
+    <div class="rew" id="rRew"></div>
+    <div class="col"><button class="big" id="next">Next level</button><button id="rAgain">Replay</button><button id="rMenu">Menu</button></div>
+  </div></div>
+</div>
+</body>
+</html>

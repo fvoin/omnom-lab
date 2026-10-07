@@ -1,0 +1,177 @@
+{
+ "slug": "drop",
+ "frame": [
+  1080,
+  1920
+ ],
+ "readme": "Манифест слотов под арт (new10-b §6.7, new7-a §0.2). Кадр 1080x1920 u. w,h — размер в u; anchor — якорь в долях. Спрайт-лист: PNG, строки = состояния в порядке ключей states, столбцы = кадры. Нет файла или have=false — рисуется заглушка того же размера и якоря. Положил PNG рядом — поставь have:true (или открой страницу с ?art=1).",
+ "sprites": [
+  {
+   "name": "ring_tex",
+   "file": "ring_tex.png",
+   "w": 600,
+   "h": 190,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "color": 1,
+    "black": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "текстура сахарного кольца, повторяется по секторам (дуги рисует код); black — со шипами; строки листа = состояния"
+  },
+  {
+   "name": "ball",
+   "file": "ball.png",
+   "w": 80,
+   "h": 80,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "fire": 3
+   },
+   "fps": 12,
+   "have": false,
+   "note": "конфета-шарик; fire — 3 кадра"
+  },
+  {
+   "name": "pole",
+   "file": "pole.png",
+   "w": 140,
+   "h": 140,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "have": false,
+   "note": "палочка, плитка повторяется по высоте"
+  },
+  {
+   "name": "shard",
+   "file": "shard.png",
+   "w": 40,
+   "h": 30,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "a": 1,
+    "b": 1,
+    "c": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "осколок кольца, 3 вида"
+  },
+  {
+   "name": "plate",
+   "file": "plate.png",
+   "w": 700,
+   "h": 120,
+   "anchor": [
+    0.5,
+    0.35
+   ],
+   "states": {},
+   "fps": 0,
+   "have": false,
+   "note": "тарелка внизу; якорь на верхней кромке"
+  },
+  {
+   "name": "heat_bar",
+   "file": "heat_bar.png",
+   "w": 60,
+   "h": 400,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "full": 1
+   },
+   "fps": 0,
+   "have": false,
+   "note": "шкала жара; заливку по высоте рисует код"
+  },
+  {
+   "name": "om",
+   "file": "om.png",
+   "w": 320,
+   "h": 320,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {
+    "idle": 2,
+    "want": 1,
+    "open": 1,
+    "chew": 3,
+    "happy": 1,
+    "sad": 1,
+    "oops": 1
+   },
+   "fps": 6,
+   "have": false,
+   "hot": {
+    "mouth": [
+     0.5,
+     0.653
+    ]
+   },
+   "note": "набор om.* (new7-a §0.3), якорь — низ по центру"
+  },
+  {
+   "name": "bg_drop_0",
+   "file": "bg_drop_0.png",
+   "w": 1080,
+   "h": 1920,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "have": false,
+   "note": "фон, меняется каждые 10 уровней"
+  },
+  {
+   "name": "bg_drop_1",
+   "file": "bg_drop_1.png",
+   "w": 1080,
+   "h": 1920,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "have": false,
+   "note": "фон, меняется каждые 10 уровней"
+  },
+  {
+   "name": "bg_drop_2",
+   "file": "bg_drop_2.png",
+   "w": 1080,
+   "h": 1920,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "have": false,
+   "note": "фон, меняется каждые 10 уровней"
+  }
+ ]
+}
