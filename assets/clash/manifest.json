@@ -4,7 +4,7 @@
  "sprites": [
   {
    "name": "house_s",
-   "file": "assets/clash/house_s",
+   "file": "house_s.png",
    "w": 180,
    "h": 180,
    "anchor": [
@@ -25,7 +25,7 @@
   },
   {
    "name": "house_b",
-   "file": "assets/clash/house_b",
+   "file": "house_b.png",
    "w": 220,
    "h": 220,
    "anchor": [
@@ -46,7 +46,7 @@
   },
   {
    "name": "flag",
-   "file": "assets/clash/flag",
+   "file": "flag.png",
    "w": 50,
    "h": 60,
    "anchor": [
@@ -64,7 +64,7 @@
   },
   {
    "name": "nommy",
-   "file": "assets/clash/nommy",
+   "file": "nommy.png",
    "w": 150,
    "h": 150,
    "anchor": [
@@ -84,7 +84,7 @@
   },
   {
    "name": "arrow",
-   "file": "assets/clash/arrow",
+   "file": "arrow.png",
    "w": 60,
    "h": 200,
    "anchor": [
@@ -100,7 +100,7 @@
   },
   {
    "name": "poof",
-   "file": "assets/clash/poof",
+   "file": "poof.png",
    "w": 40,
    "h": 40,
    "anchor": [
@@ -116,7 +116,7 @@
   },
   {
    "name": "portrait_om",
-   "file": "assets/clash/portrait_om",
+   "file": "portrait_om.png",
    "w": 140,
    "h": 140,
    "anchor": [
@@ -132,7 +132,7 @@
   },
   {
    "name": "portrait_toss",
-   "file": "assets/clash/portrait_toss",
+   "file": "portrait_toss.png",
    "w": 140,
    "h": 140,
    "anchor": [
@@ -148,7 +148,7 @@
   },
   {
    "name": "portrait_boo",
-   "file": "assets/clash/portrait_boo",
+   "file": "portrait_boo.png",
    "w": 140,
    "h": 140,
    "anchor": [
@@ -164,7 +164,7 @@
   },
   {
    "name": "portrait_roto",
-   "file": "assets/clash/portrait_roto",
+   "file": "portrait_roto.png",
    "w": 140,
    "h": 140,
    "anchor": [
@@ -180,7 +180,7 @@
   },
   {
    "name": "power_bar",
-   "file": "assets/clash/power_bar",
+   "file": "power_bar.png",
    "w": 1000,
    "h": 40,
    "anchor": [
@@ -191,25 +191,27 @@
    "art": false
   },
   {
-   "name": "bg_clash",
-   "file": "assets/clash/bg_clash",
-   "w": 1080,
-   "h": 1920,
+   "name": "cover_clash",
+   "file": "cover_clash.png",
+   "w": 1000,
+   "h": 640,
    "anchor": [
     0.5,
     0.5
    ],
+   "note": "обложка стартового экрана (без Ома Нома): Номми команд на траве; 1000 u шириной, высота 540–760 u — обрезка object-fit:cover по центру; пока PNG нет, рисуется заглушка кодом",
    "art": false
   },
   {
-   "name": "btn_pause",
-   "file": "assets/clash/btn_pause",
-   "w": 150,
-   "h": 150,
+   "name": "bg_clash",
+   "file": "bg_clash.png",
+   "w": 1080,
+   "h": 2340,
    "anchor": [
     0.5,
     0.5
    ],
+   "note": "фон «cover»: заполняет экран любой высоты без полос (масштаб по большей из сторон, якорь по центру); поле игры 1080×1920 лежит в центре слота (сверху и снизу по 210 u запаса)",
    "art": false
   }
  ]

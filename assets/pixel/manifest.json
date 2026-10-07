@@ -4,7 +4,7 @@
  "sprites": [
   {
    "name": "pixel",
-   "file": "assets/pixel/pixel",
+   "file": "pixel.png",
    "w": 64,
    "h": 64,
    "anchor": [
@@ -21,7 +21,7 @@
   },
   {
    "name": "nommy",
-   "file": "assets/pixel/nommy",
+   "file": "nommy.png",
    "w": 150,
    "h": 150,
    "anchor": [
@@ -41,7 +41,7 @@
   },
   {
    "name": "badge",
-   "file": "assets/pixel/badge",
+   "file": "badge.png",
    "w": 40,
    "h": 40,
    "anchor": [
@@ -62,7 +62,7 @@
   },
   {
    "name": "track",
-   "file": "assets/pixel/track",
+   "file": "track.png",
    "w": 880,
    "h": 880,
    "anchor": [
@@ -80,7 +80,7 @@
   },
   {
    "name": "bench",
-   "file": "assets/pixel/bench",
+   "file": "bench.png",
    "w": 160,
    "h": 160,
    "anchor": [
@@ -95,7 +95,7 @@
   },
   {
    "name": "lane_bg",
-   "file": "assets/pixel/lane_bg",
+   "file": "lane_bg.png",
    "w": 200,
    "h": 480,
    "anchor": [
@@ -107,24 +107,26 @@
   },
   {
    "name": "bg_pixel",
-   "file": "assets/pixel/bg_pixel",
+   "file": "bg_pixel.png",
    "w": 1080,
-   "h": 1920,
+   "h": 2340,
    "anchor": [
     0.5,
     0.5
    ],
+   "note": "фон «cover»: заполняет экран любой высоты без полос (масштаб по большей из сторон, якорь по центру); поле игры 1080×1920 лежит в центре слота (сверху и снизу по 210 u запаса)",
    "art": false
   },
   {
-   "name": "btn_pause",
-   "file": "assets/pixel/btn_pause",
-   "w": 150,
-   "h": 150,
+   "name": "cover_pixel",
+   "file": "cover_pixel.png",
+   "w": 1000,
+   "h": 640,
    "anchor": [
     0.5,
     0.5
    ],
+   "note": "обложка стартового экрана (без Ома Нома): Номми и картинка из пикселей; 1000 u шириной, высота 540–760 u — обрезка object-fit:cover по центру; пока PNG нет, рисуется заглушка кодом",
    "art": false
   }
  ]

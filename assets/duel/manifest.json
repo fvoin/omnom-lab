@@ -1,9 +1,18 @@
 {
- "format": "Frame 1080 u wide (y down). file = path base without extension: <file>.png | <file>.<state>.png | <file>.<state>.<frame>.png (frames>1, 1-based). anchor = fraction of w/h that sits at the object position. Set ready:true when the PNGs exist: the game then loads them (no 404s for missing art). Without art a stub shape is drawn.",
+ "game": "duel",
+ "format": "Frame 1080 u wide (y down). file = PNG name in assets/duel/ (no states: as is; with states: <stem>_<state>.png, or <stem>_<state>_<frame from 0>.png when frames > 1). anchor = fraction of w/h that sits at the object position. After the PNGs are in the folder: node games/lab/view-src/sync-manifest.mjs duel sets art:true on slots whose files are all there; the game then loads them (no 404s for missing art). Without art a stub shape is drawn. Background = cover, slot 1080x2340.",
+ "field": [
+  1080,
+  1920
+ ],
+ "naming": "без states: file как есть. Со states: <file без .png>_<state>.png, а если кадров больше 1 — <file без .png>_<state>_<кадр с 0>.png",
+ "art": "art:false — рисуется заглушка. После того как файлы положены в эту папку: node games/lab/view-src/sync-manifest.mjs duel (выставит art:true).",
+ "background": "bg_sky — cover, слот 1080×2340, якорь по центру",
+ "codeDrawn": "резинка, прицельные точки, % силы, кнопка паузы (lab-ui) — кодом",
  "sprites": [
   {
    "name": "om",
-   "file": "assets/duel/om",
+   "file": "om.png",
    "w": 170,
    "h": 170,
    "anchor": [
@@ -25,11 +34,11 @@
    },
    "fps": 5,
    "note": "Om Nom, hitbox r 65 u. Exactly 2 arms + 2 legs (D-56). Faces RIGHT; the code mirrors for the right side.",
-   "ready": false
+   "art": false
   },
   {
    "name": "rival_toss",
-   "file": "assets/duel/rival_toss",
+   "file": "rival_toss.png",
    "w": 170,
    "h": 170,
    "anchor": [
@@ -51,11 +60,11 @@
    },
    "fps": 5,
    "note": "Toss, same states as om. Faces RIGHT in the file; code mirrors him (he stands on the right).",
-   "ready": false
+   "art": false
   },
   {
    "name": "jelly_coat_1",
-   "file": "assets/duel/jelly_coat_1",
+   "file": "jelly_coat_1.png",
    "w": 190,
    "h": 190,
    "anchor": [
@@ -67,11 +76,11 @@
    },
    "fps": 6,
    "note": "jelly layer over the fighter after hit 1 (1/3)",
-   "ready": false
+   "art": false
   },
   {
    "name": "jelly_coat_2",
-   "file": "assets/duel/jelly_coat_2",
+   "file": "jelly_coat_2.png",
    "w": 190,
    "h": 190,
    "anchor": [
@@ -83,11 +92,11 @@
    },
    "fps": 6,
    "note": "after hit 2 (2/3)",
-   "ready": false
+   "art": false
   },
   {
    "name": "jelly_coat_3",
-   "file": "assets/duel/jelly_coat_3",
+   "file": "jelly_coat_3.png",
    "w": 190,
    "h": 190,
    "anchor": [
@@ -99,11 +108,11 @@
    },
    "fps": 6,
    "note": "after hit 3 (whole)",
-   "ready": false
+   "art": false
   },
   {
    "name": "sling",
-   "file": "assets/duel/sling",
+   "file": "sling.png",
    "w": 60,
    "h": 90,
    "anchor": [
@@ -111,11 +120,11 @@
     1
    ],
    "note": "slingshot in the hands, fork up; the band is a code line",
-   "ready": false
+   "art": false
   },
   {
    "name": "shot_jelly",
-   "file": "assets/duel/shot_jelly",
+   "file": "shot_jelly.png",
    "w": 40,
    "h": 40,
    "anchor": [
@@ -123,11 +132,11 @@
     0.5
    ],
    "note": "round jelly (physics r 7 units)",
-   "ready": false
+   "art": false
   },
   {
    "name": "shot_triple",
-   "file": "assets/duel/shot_triple",
+   "file": "shot_triple.png",
    "w": 26,
    "h": 26,
    "anchor": [
@@ -135,11 +144,11 @@
     0.5
    ],
    "note": "one of 3 small pellets",
-   "ready": false
+   "art": false
   },
   {
    "name": "shot_bounce",
-   "file": "assets/duel/shot_bounce",
+   "file": "shot_bounce.png",
    "w": 40,
    "h": 40,
    "anchor": [
@@ -147,11 +156,11 @@
     0.5
    ],
    "note": "bouncy jelly",
-   "ready": false
+   "art": false
   },
   {
    "name": "splat_1",
-   "file": "assets/duel/splat_1",
+   "file": "splat_1.png",
    "w": 60,
    "h": 40,
    "anchor": [
@@ -159,33 +168,33 @@
     0.6
    ],
    "note": "blob on the ground; tinted by code? no — art draws the weapon colour; one per weapon is fine, code picks splat_1..3",
-   "ready": false
+   "art": false
   },
   {
    "name": "splat_2",
-   "file": "assets/duel/splat_2",
+   "file": "splat_2.png",
    "w": 75,
    "h": 50,
    "anchor": [
     0.5,
     0.6
    ],
-   "ready": false
+   "art": false
   },
   {
    "name": "splat_3",
-   "file": "assets/duel/splat_3",
+   "file": "splat_3.png",
    "w": 90,
    "h": 60,
    "anchor": [
     0.5,
     0.6
    ],
-   "ready": false
+   "art": false
   },
   {
    "name": "ground_fill",
-   "file": "assets/duel/ground_fill",
+   "file": "ground_fill.png",
    "w": 256,
    "h": 256,
    "anchor": [
@@ -194,11 +203,11 @@
    ],
    "tile": true,
    "note": "seamless tile, fills under the terrain line",
-   "ready": false
+   "art": false
   },
   {
    "name": "ground_edge",
-   "file": "assets/duel/ground_edge",
+   "file": "ground_edge.png",
    "w": 256,
    "h": 64,
    "anchor": [
@@ -207,56 +216,56 @@
    ],
    "tile": true,
    "note": "grass strip along the terrain line; stamped along the curve, centred on the line",
-   "ready": false
+   "art": false
   },
   {
    "name": "bg_sky",
-   "file": "assets/duel/bg_sky",
+   "file": "bg_sky.png",
    "w": 1080,
-   "h": 1920,
+   "h": 2340,
    "anchor": [
-    0,
-    0
+    0.5,
+    0.5
    ],
-   "note": "covers the frame; taller screens crop from the bottom",
-   "ready": false
+   "note": "cover (D-175): scaled to cover the whole visible area around its centre; keep the important part in the middle 1080x1920",
+   "art": false
   },
   {
    "name": "cloud_1",
-   "file": "assets/duel/cloud_1",
+   "file": "cloud_1.png",
    "w": 360,
    "h": 150,
    "anchor": [
     0.5,
     0.5
    ],
-   "ready": false
+   "art": false
   },
   {
    "name": "cloud_2",
-   "file": "assets/duel/cloud_2",
+   "file": "cloud_2.png",
    "w": 280,
    "h": 120,
    "anchor": [
     0.5,
     0.5
    ],
-   "ready": false
+   "art": false
   },
   {
    "name": "cloud_3",
-   "file": "assets/duel/cloud_3",
+   "file": "cloud_3.png",
    "w": 200,
    "h": 90,
    "anchor": [
     0.5,
     0.5
    ],
-   "ready": false
+   "art": false
   },
   {
    "name": "hud_cup",
-   "file": "assets/duel/hud_cup",
+   "file": "hud_cup.png",
    "w": 70,
    "h": 50,
    "anchor": [
@@ -268,11 +277,11 @@
     "full": 1
    },
    "note": "hit cup, 3 per fighter",
-   "ready": false
+   "art": false
   },
   {
    "name": "wind_arrow",
-   "file": "assets/duel/wind_arrow",
+   "file": "wind_arrow.png",
    "w": 160,
    "h": 60,
    "anchor": [
@@ -286,11 +295,11 @@
     "3": 1
    },
    "note": "points RIGHT; code flips it for wind to the left. State = ceil(|wind|), 0 = calm",
-   "ready": false
+   "art": false
   },
   {
    "name": "btn_weapon_jelly",
-   "file": "assets/duel/btn_weapon_jelly",
+   "file": "btn_weapon_jelly.png",
    "w": 300,
    "h": 150,
    "anchor": [
@@ -303,11 +312,11 @@
     "off": 1
    },
    "note": "ammo badge is drawn by code (btn_badge)",
-   "ready": false
+   "art": false
   },
   {
    "name": "btn_weapon_triple",
-   "file": "assets/duel/btn_weapon_triple",
+   "file": "btn_weapon_triple.png",
    "w": 300,
    "h": 150,
    "anchor": [
@@ -319,11 +328,11 @@
     "selected": 1,
     "off": 1
    },
-   "ready": false
+   "art": false
   },
   {
    "name": "btn_weapon_bounce",
-   "file": "assets/duel/btn_weapon_bounce",
+   "file": "btn_weapon_bounce.png",
    "w": 300,
    "h": 150,
    "anchor": [
@@ -335,11 +344,11 @@
     "selected": 1,
     "off": 1
    },
-   "ready": false
+   "art": false
   },
   {
    "name": "hud_face_om",
-   "file": "assets/duel/hud_face_om",
+   "file": "hud_face_om.png",
    "w": 110,
    "h": 110,
    "anchor": [
@@ -348,11 +357,11 @@
    ],
    "extra": true,
    "note": "face in the HUD corner",
-   "ready": false
+   "art": false
   },
   {
    "name": "hud_face_rival_toss",
-   "file": "assets/duel/hud_face_rival_toss",
+   "file": "hud_face_rival_toss.png",
    "w": 110,
    "h": 110,
    "anchor": [
@@ -360,23 +369,11 @@
     0.5
    ],
    "extra": true,
-   "ready": false
-  },
-  {
-   "name": "btn_pause",
-   "file": "assets/duel/btn_pause",
-   "w": 100,
-   "h": 100,
-   "anchor": [
-    0.5,
-    0.5
-   ],
-   "extra": true,
-   "ready": false
+   "art": false
   },
   {
    "name": "btn_badge",
-   "file": "assets/duel/btn_badge",
+   "file": "btn_badge.png",
    "w": 56,
    "h": 56,
    "anchor": [
@@ -385,11 +382,11 @@
    ],
    "extra": true,
    "note": "ammo count bubble on a weapon button",
-   "ready": false
+   "art": false
   },
   {
    "name": "turn_marker",
-   "file": "assets/duel/turn_marker",
+   "file": "turn_marker.png",
    "w": 60,
    "h": 50,
    "anchor": [
@@ -398,11 +395,11 @@
    ],
    "extra": true,
    "note": "arrow over the shooter's head",
-   "ready": false
+   "art": false
   },
   {
    "name": "candy",
-   "file": "assets/duel/candy",
+   "file": "candy.png",
    "w": 70,
    "h": 70,
    "anchor": [
@@ -411,11 +408,11 @@
    ],
    "extra": true,
    "note": "the reward candy flying into the mouth",
-   "ready": false
+   "art": false
   },
   {
    "name": "aim_dot",
-   "file": "assets/duel/aim_dot",
+   "file": "aim_dot.png",
    "w": 22,
    "h": 22,
    "anchor": [
@@ -424,7 +421,7 @@
    ],
    "extra": true,
    "note": "dotted preview dot",
-   "ready": false
+   "art": false
   }
  ]
 }

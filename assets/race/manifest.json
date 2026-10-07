@@ -5,7 +5,7 @@
   1920
  ],
  "unitU": 9,
- "format": "Без states: assets/race/<name>.png. Со states: assets/race/<name>.<state>.png, кадры горизонтальной полосой. Размер файла может быть ×2/×3 от w×h. Нет файла — рисуется заглушка. После добавления файла: `node games/lab/trial-src/manifest.mjs race` (обновит present[]).",
+ "format": "D-175: отдельные PNG по слотам/состояниям/кадрам в assets/race/. Без states: <file>. Со states: <имя>_<state>.png, а если кадров больше одного — <имя>_<state>_<кадр с 0>.png. Размер файла может быть ×2/×3 от w×h. Нет файла — рисуется заглушка. Положил файлы — `node games/lab/view-src/sync-manifest.mjs race` (art:true у слотов, у которых все файлы на месте). Фона-картинки нет: трава и дорога — бесшовные тайлы, закрывают всю область.",
  "sprites": [
   {
    "name": "car_blue",
@@ -19,7 +19,9 @@
     "normal": 1,
     "boost": 1
    },
-   "note": "машинка сверху, нос вверх. blue — игрок 1 (Ом Ном), yellow — игрок 2 в «вдвоём» и Ginger в 1P, red — Toss, purple — Boo; boost — то же с пламенем сзади (пламя может выходить за 270)"
+   "note": "машинка сверху, нос вверх. blue — игрок 1 (Ом Ном), yellow — игрок 2 в «вдвоём» и Ginger в 1P, red — Toss, purple — Boo; boost — то же с пламенем сзади (пламя может выходить за 270)",
+   "file": "car_blue.png",
+   "art": false
   },
   {
    "name": "car_red",
@@ -33,7 +35,9 @@
     "normal": 1,
     "boost": 1
    },
-   "note": "машинка сверху, нос вверх. blue — игрок 1 (Ом Ном), yellow — игрок 2 в «вдвоём» и Ginger в 1P, red — Toss, purple — Boo; boost — то же с пламенем сзади (пламя может выходить за 270)"
+   "note": "машинка сверху, нос вверх. blue — игрок 1 (Ом Ном), yellow — игрок 2 в «вдвоём» и Ginger в 1P, red — Toss, purple — Boo; boost — то же с пламенем сзади (пламя может выходить за 270)",
+   "file": "car_red.png",
+   "art": false
   },
   {
    "name": "car_purple",
@@ -47,7 +51,9 @@
     "normal": 1,
     "boost": 1
    },
-   "note": "машинка сверху, нос вверх. blue — игрок 1 (Ом Ном), yellow — игрок 2 в «вдвоём» и Ginger в 1P, red — Toss, purple — Boo; boost — то же с пламенем сзади (пламя может выходить за 270)"
+   "note": "машинка сверху, нос вверх. blue — игрок 1 (Ом Ном), yellow — игрок 2 в «вдвоём» и Ginger в 1P, red — Toss, purple — Boo; boost — то же с пламенем сзади (пламя может выходить за 270)",
+   "file": "car_purple.png",
+   "art": false
   },
   {
    "name": "car_yellow",
@@ -61,7 +67,9 @@
     "normal": 1,
     "boost": 1
    },
-   "note": "машинка сверху, нос вверх. blue — игрок 1 (Ом Ном), yellow — игрок 2 в «вдвоём» и Ginger в 1P, red — Toss, purple — Boo; boost — то же с пламенем сзади (пламя может выходить за 270)"
+   "note": "машинка сверху, нос вверх. blue — игрок 1 (Ом Ном), yellow — игрок 2 в «вдвоём» и Ginger в 1P, red — Toss, purple — Boo; boost — то же с пламенем сзади (пламя может выходить за 270)",
+   "file": "car_yellow.png",
+   "art": false
   },
   {
    "name": "driver_om",
@@ -76,7 +84,9 @@
     "happy": 1,
     "dizzy": 1
    },
-   "note": "голова Ома Нома сверху (за рулём blue-машинки); рисуется на кабине"
+   "note": "голова Ома Нома сверху (за рулём blue-машинки); рисуется на кабине",
+   "file": "driver_om.png",
+   "art": false
   },
   {
    "name": "driver_toss",
@@ -91,7 +101,9 @@
     "happy": 1,
     "dizzy": 1
    },
-   "note": "голова друга-соперника сверху: toss — red, boo — purple, ginger — yellow"
+   "note": "голова друга-соперника сверху: toss — red, boo — purple, ginger — yellow",
+   "file": "driver_toss.png",
+   "art": false
   },
   {
    "name": "driver_boo",
@@ -106,7 +118,9 @@
     "happy": 1,
     "dizzy": 1
    },
-   "note": "голова друга-соперника сверху: toss — red, boo — purple, ginger — yellow"
+   "note": "голова друга-соперника сверху: toss — red, boo — purple, ginger — yellow",
+   "file": "driver_boo.png",
+   "art": false
   },
   {
    "name": "driver_ginger",
@@ -121,7 +135,9 @@
     "happy": 1,
     "dizzy": 1
    },
-   "note": "голова друга-соперника сверху: toss — red, boo — purple, ginger — yellow"
+   "note": "голова друга-соперника сверху: toss — red, boo — purple, ginger — yellow",
+   "file": "driver_ginger.png",
+   "art": false
   },
   {
    "name": "road",
@@ -131,7 +147,9 @@
     0,
     0
    ],
-   "note": "асфальт, бесшовный тайл"
+   "note": "асфальт, бесшовный тайл",
+   "file": "road.png",
+   "art": false
   },
   {
    "name": "grass",
@@ -141,7 +159,9 @@
     0,
     0
    ],
-   "note": "трава, бесшовный тайл"
+   "note": "трава, бесшовный тайл",
+   "file": "grass.png",
+   "art": false
   },
   {
    "name": "kerb",
@@ -151,7 +171,9 @@
     0,
     0
    ],
-   "note": "бордюр: красно-белая полоса, 32 u поперёк × 64 u вдоль; в заглушке идёт линией по краю трассы"
+   "note": "бордюр: красно-белая полоса, 32 u поперёк × 64 u вдоль; в заглушке идёт линией по краю трассы",
+   "file": "kerb.png",
+   "art": false
   },
   {
    "name": "hedge",
@@ -161,7 +183,9 @@
     0,
     0
    ],
-   "note": "стена-кусты по внешнему краю травы, бесшовная полоса"
+   "note": "стена-кусты по внешнему краю травы, бесшовная полоса",
+   "file": "hedge.png",
+   "art": false
   },
   {
    "name": "bridge",
@@ -171,7 +195,9 @@
     0,
     0
    ],
-   "note": "настил моста (трасса Eight), бесшовный тайл"
+   "note": "настил моста (трасса Eight), бесшовный тайл",
+   "file": "bridge.png",
+   "art": false
   },
   {
    "name": "boost_pad",
@@ -184,7 +210,9 @@
    "states": {
     "pulse": 2
    },
-   "note": "ускоритель: 2 кадра полосой, нос вверх"
+   "note": "ускоритель: 2 кадра (boost_pad_pulse_0.png, _1.png), нос вверх",
+   "file": "boost_pad.png",
+   "art": false
   },
   {
    "name": "start_line",
@@ -194,7 +222,9 @@
     0,
     0
    ],
-   "note": "клетчатая стартовая линия, тайл поперёк дороги"
+   "note": "клетчатая стартовая линия, тайл поперёк дороги",
+   "file": "start_line.png",
+   "art": false
   },
   {
    "name": "prop_tree",
@@ -204,7 +234,9 @@
     0.5,
     0.5
    ],
-   "note": "украшение вне трассы, вид сверху"
+   "note": "украшение вне трассы, вид сверху",
+   "file": "prop_tree.png",
+   "art": false
   },
   {
    "name": "prop_bush",
@@ -214,7 +246,9 @@
     0.5,
     0.5
    ],
-   "note": "украшение вне трассы, вид сверху"
+   "note": "украшение вне трассы, вид сверху",
+   "file": "prop_bush.png",
+   "art": false
   },
   {
    "name": "prop_candy_tree",
@@ -224,7 +258,9 @@
     0.5,
     0.5
    ],
-   "note": "украшение вне трассы, вид сверху"
+   "note": "украшение вне трассы, вид сверху",
+   "file": "prop_candy_tree.png",
+   "art": false
   },
   {
    "name": "prop_rock",
@@ -234,7 +270,9 @@
     0.5,
     0.5
    ],
-   "note": "украшение вне трассы, вид сверху"
+   "note": "украшение вне трассы, вид сверху",
+   "file": "prop_rock.png",
+   "art": false
   },
   {
    "name": "prop_flowers",
@@ -244,7 +282,9 @@
     0.5,
     0.5
    ],
-   "note": "украшение вне трассы, вид сверху"
+   "note": "украшение вне трассы, вид сверху",
+   "file": "prop_flowers.png",
+   "art": false
   },
   {
    "name": "hud_place",
@@ -254,7 +294,9 @@
     0,
     0
    ],
-   "note": "плашка места (текст 1st/2nd… рисуется кодом поверх)"
+   "note": "плашка места (текст 1st/2nd… рисуется кодом поверх)",
+   "file": "hud_place.png",
+   "art": false
   },
   {
    "name": "hud_lap",
@@ -264,7 +306,9 @@
     0,
     0
    ],
-   "note": "плашка круга (текст «Lap 2/3» кодом)"
+   "note": "плашка круга (текст «Lap 2/3» кодом)",
+   "file": "hud_lap.png",
+   "art": false
   },
   {
    "name": "steer_hint",
@@ -278,7 +322,9 @@
     "off": 1,
     "on": 1
    },
-   "note": "стрелка руля, нарисована влево; вправо — зеркалом"
+   "note": "стрелка руля, нарисована влево; вправо — зеркалом",
+   "file": "steer_hint.png",
+   "art": false
   },
   {
    "name": "cup_candy",
@@ -288,8 +334,9 @@
     0.5,
     0.5
    ],
-   "note": "кубок-конфета, летит в рот на финише"
+   "note": "кубок-конфета, летит в рот на финише",
+   "file": "cup_candy.png",
+   "art": false
   }
- ],
- "present": []
+ ]
 }

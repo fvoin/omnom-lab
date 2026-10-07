@@ -5,43 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <link rel="icon" href="data:,">
 <title>Nom Hop</title>
-<style>:root{--ink:#1f3320;--cream:#fff8dc;--cream2:#e9d9a0;--act:#ff5fa8;--act2:#b02a6c;--go:#7bd34a;--go2:#4c9a28;--star:#ffd23f}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;color:var(--ink);overscroll-behavior:none;-webkit-user-select:none;user-select:none;background:#5fb84a;margin:0;font:800 14px/1.25 ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}#stage{touch-action:none;position:absolute;inset:0}canvas{touch-action:none;width:100%;height:100%;display:block;position:absolute;top:0;left:0}button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}.mini{color:#fff;background:#1428148c;border:2px solid #ffffffd9;border-radius:15px;justify-content:center;align-items:center;width:34px;height:30px;padding:0;font-size:16px;font-weight:900;display:flex;position:absolute}#gear{z-index:7;top:8px;right:8px}#panel{border:3px solid var(--ink);z-index:8;background:#fff8dcf7;border-radius:16px;width:min(76vw,260px);padding:8px 12px 10px;display:none;position:absolute;top:46px;right:8px}#panel.on{display:block}#panel label{justify-content:space-between;align-items:center;margin-top:6px;font-size:13px;display:flex}#panel button{border:2px solid var(--ink);background:var(--cream);border-radius:999px;margin-top:8px;padding:4px 12px;font-weight:800}.ov{z-index:5;background:#14321980;justify-content:center;align-items:center;display:none;position:absolute;inset:0}.ov.on{display:flex}.card{background:var(--cream);border:3px solid var(--ink);text-align:center;width:min(92vw,360px);max-height:96vh;box-shadow:0 6px 0 var(--cream2), 0 10px 26px #0006;border-radius:24px;padding:14px 16px 16px;overflow:auto}.card h1{color:#2f7a1a;margin:4px 0 2px;font-size:28px;font-weight:900}.card p{margin:4px 0 8px;font-weight:700}.card small{opacity:.7;margin-top:8px;font-weight:700;display:block}.card a{color:var(--act2);text-decoration:none}.btn{border:3px solid var(--ink);background:var(--act);color:#fff;width:100%;box-shadow:0 4px 0 var(--act2);text-shadow:0 1px #0006;border-radius:999px;margin:8px 0 0;padding:11px 10px;font-size:19px;font-weight:900;display:block}.btn.alt{background:var(--cream);color:var(--ink);box-shadow:0 4px 0 var(--cream2);text-shadow:none;padding:8px 10px;font-size:16px}.btn.endless{background:#6a8cff;padding:9px 10px;font-size:17px;box-shadow:0 4px #3a54b8}.btn:disabled,.lv button:disabled{opacity:.45;cursor:default}.wl{text-align:left;text-transform:uppercase;letter-spacing:.06em;color:#4c7a30;margin:8px 2px 2px;font-size:11px;font-weight:900}.lv{grid-template-columns:repeat(5,1fr);gap:6px;display:grid}.lv button{border:3px solid var(--ink);background:#fff;border-radius:12px;padding:3px 0 2px;font-size:11px;font-weight:800;line-height:1.1}.lv button.cur{background:var(--go);box-shadow:0 3px 0 var(--go2)}.lv b{font-size:16px;display:block}.lv i{letter-spacing:-1px;color:#c89b00;min-height:12px;font-size:10px;font-style:normal;display:block}.stars{letter-spacing:4px;margin:4px 0 8px;font-size:44px;line-height:1}.stars span{color:#d9d2b8}.stars span.on{color:var(--star);-webkit-text-stroke:2px var(--ink)}.rew{color:var(--act2);border-top:2px dashed var(--cream2);margin:6px 0 4px;padding-top:6px;font-size:22px;font-weight:900}.rew s{color:var(--ink);opacity:.7;margin-top:2px;font-size:12px;font-weight:700;text-decoration:none;display:block}.row{gap:8px;display:flex}.row .btn{margin-top:8px}</style>
-  <script type="module" crossorigin src="./assets/hop-CizZW3ph.js"></script>
+<style>:root{--ink:#1f3320;--cream:#fff8dc;--cream2:#e9d9a0;--act:#ff5fa8;--act2:#b02a6c;--go:#7bd34a;--go2:#4c9a28;--star:#ffd23f}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;color:var(--ink);overscroll-behavior:none;-webkit-user-select:none;user-select:none;background:#5fb84a;margin:0;font:800 14px/1.25 ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}#stage{touch-action:none;position:absolute;inset:0}canvas{touch-action:none;width:100%;height:100%;display:block;position:absolute;top:0;left:0}button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}#panel{border:3px solid var(--ink);z-index:30;background:#fff8dcf7;border-radius:16px;width:min(76vw,260px);padding:8px 12px 10px;display:none;position:absolute;top:8px;right:8px}#panel.on{display:block}#panel label{justify-content:space-between;align-items:center;margin-top:6px;font-size:13px;display:flex}#panel button{border:2px solid var(--ink);background:var(--cream);border-radius:999px;margin-top:8px;padding:4px 12px;font-weight:800}</style>
+  <script type="module" crossorigin src="./assets/hop-C_s5z3Iq.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-P2Xu9kJm.js">
+  <link rel="modulepreload" crossorigin href="./assets/lab-ui-DkPH9mq3.js">
   <link rel="modulepreload" crossorigin href="./assets/layer-CHPe9y9m.js">
+  <link rel="stylesheet" crossorigin href="./static/lab-ui-BslfW4e3.css">
 </head>
 <body>
 <div id="stage">
   <canvas id="cv"></canvas>
-  <button class="mini" id="gear" title="Settings">&#9881;</button>
   <div id="panel">
     <label><span>All levels open</span><input type="checkbox" id="allopen"></label>
     <button id="resetSave">Reset progress</button>
   </div>
-  <div class="ov on" id="menu"><div class="card">
-    <h1>Nom Hop</h1>
-    <p>Hop across roads, rivers and rails. Reach the cake!</p>
-    <div id="lv"></div>
-    <button class="btn endless" id="endlessBtn">Endless</button>
-    <small>Tap: hop forward. Swipe: left, right or back.</small>
-    <small id="recs"></small>
-    <small><a href="index.html">&larr; Lab</a></small>
-  </div></div>
-  <div class="ov" id="pause"><div class="card">
-    <h1>Paused</h1>
-    <button class="btn" id="resume">Resume</button>
-    <button class="btn alt" id="pRestart">Restart</button>
-    <button class="btn alt" id="pQuit">Home</button>
-    <small>no candies if you leave</small>
-  </div></div>
-  <div class="ov" id="result"><div class="card">
-    <h1 id="rTitle">Yum!</h1>
-    <div class="stars" id="rStars"></div>
-    <p id="rInfo"></p>
-    <div class="rew" id="rRew"></div>
-    <button class="btn" id="next">Next level</button>
-    <div class="row"><button class="btn alt" id="rRetry">Again</button><button class="btn alt" id="rMenu">Home</button></div>
-  </div></div>
 </div>
 </body>
 </html>

@@ -5,47 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <link rel="icon" href="data:,">
 <title>Om Nom Racers</title>
-<style>:root{--ink:#2a2140;--cream:#fff6e0;--pink:#ff5fa8;--pink2:#b8326f;--grass:#5fae45;--go:#8ccb3e;--go2:#5e9a22;--star:#ffd23f}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;color:var(--ink);-webkit-user-select:none;user-select:none;touch-action:none;background:#2c5a2c;margin:0;font:800 14px/1.25 ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{height:100dvh}#stage{touch-action:none;position:absolute;inset:0}canvas#cv{touch-action:none;width:100%;height:100%;display:block;position:absolute;inset:0}button{font:inherit;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;border-radius:999px;padding:6px 12px;font-weight:800;box-shadow:0 3px #2a214059}button:active{transform:translateY(2px);box-shadow:0 1px #2a214059}#menuBtn{z-index:3;width:36px;height:36px;padding:0;font-size:15px;display:none;position:absolute;top:8px;right:8px}body.race #menuBtn{display:block}body.race.two #menuBtn{margin-top:-18px;top:50%;right:8px}#gear{z-index:7;width:38px;height:38px;padding:0;font-size:20px;position:fixed;bottom:12px;right:8px}body.race #backLink{display:none}body.race.two #gear{margin-top:30px;top:50%;bottom:auto}body.race:not(.two) #gear{top:52px;bottom:auto}#panel{background:var(--cream);border:2px solid var(--ink);z-index:7;border-radius:16px;width:262px;max-height:80dvh;padding:10px 12px;display:none;position:fixed;bottom:56px;right:8px;overflow:auto;box-shadow:0 6px 18px #2a214066}body.race:not(.two) #panel{top:96px;bottom:auto}body.race.two #panel{top:calc(50% + 74px);bottom:auto}#panel .r{grid-template-columns:86px 1fr 38px;align-items:center;gap:6px;margin:6px 0;font-size:12px;display:grid}#panel .c{align-items:center;gap:8px;margin:8px 0;font-size:12px;display:flex}#panel input[type=range]{touch-action:pan-x;width:100%;margin:0}#panel b{text-align:right;font-variant-numeric:tabular-nums}#panel .t{justify-content:space-between;align-items:center;display:flex}#panel .sm{margin-right:4px;padding:2px 10px;font-size:12px}.ov{z-index:5;background:#1e321e9e;justify-content:center;align-items:center;display:none;position:absolute;inset:0}.ov.on{display:flex}.card{background:var(--cream);border:3px solid var(--ink);text-align:center;border-radius:24px;width:min(94%,360px);max-height:98dvh;padding:14px 16px 16px;overflow:auto;box-shadow:0 6px #2a214059}.card h1{color:var(--pink2);letter-spacing:.5px;margin:0 0 2px;font-size:28px}.card p{margin:4px 0 8px;font-size:13px;font-weight:700}.card .col{flex-direction:column;gap:8px;display:flex}.card .row{justify-content:center;gap:8px;display:flex}.card button.big{background:var(--go);color:#fff;border-color:var(--ink);text-shadow:0 1px 0 var(--ink);box-shadow:0 4px 0 var(--go2);padding:10px;font-size:19px}.card button.pink{background:var(--pink);box-shadow:0 4px 0 var(--pink2)}.card button.alt{font-size:15px}.tracks{grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0 8px;display:grid}.tk{border-radius:14px;flex-direction:column;align-items:center;gap:1px;padding:4px 3px 5px;font-size:11px;line-height:1.15;display:flex;position:relative}.tk.sel{background:#ffd23f;box-shadow:0 3px #b88a00}.tk.lock{opacity:.5}.tk canvas{border:2px solid var(--ink);background:#6bbf4a;border-radius:8px;width:48px;height:72px}.tk small{opacity:.8;font-size:10px;font-weight:700}.tk .st{letter-spacing:1px;font-size:12px}#info{min-height:30px;margin:2px 0 6px;font-size:12px}#end .big2{color:var(--pink2);margin:0;font-size:32px;font-weight:900}#end .flip{margin-bottom:10px;transform:rotate(180deg)}#end .flip.off{display:none}#end .stars{letter-spacing:3px;margin:4px 0;font-size:36px;line-height:1}#end .stars span{opacity:.25}#end .stars span.on{opacity:1;color:var(--star);-webkit-text-stroke:2px var(--ink)}#end .rec{color:#c0226a}#end .award b{color:#c4380f;font-size:20px}a.back{color:#fff;z-index:6;text-shadow:0 1px #000;font-size:13px;text-decoration:none;position:absolute;top:10px;left:10px}</style>
-  <script type="module" crossorigin src="./assets/race-C0rG_QOe.js"></script>
+<style>:root{--ink:#2a2140;--cream:#fff6e0;--pink:#ff5fa8;--pink2:#b8326f;--grass:#5fae45;--go:#8ccb3e;--go2:#5e9a22;--star:#ffd23f}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;color:var(--ink);-webkit-user-select:none;user-select:none;touch-action:none;background:#2c5a2c;margin:0;font:800 14px/1.25 ui-rounded,SF Pro Rounded,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}body{height:100dvh}#stage{touch-action:none;position:absolute;inset:0}canvas#cv{touch-action:none;width:100%;height:100%;display:block;position:absolute;inset:0}button{font:inherit;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;border-radius:999px;padding:6px 12px;font-weight:800;box-shadow:0 3px #2a214059}button:active{transform:translateY(2px);box-shadow:0 1px #2a214059}#panel{background:var(--cream);border:2px solid var(--ink);z-index:8;border-radius:16px;width:262px;max-height:80dvh;padding:10px 12px;display:none;position:absolute;top:64px;right:8px;overflow:auto;box-shadow:0 6px 18px #2a214066}#panel .r{grid-template-columns:86px 1fr 38px;align-items:center;gap:6px;margin:6px 0;font-size:12px;display:grid}#panel .c{align-items:center;gap:8px;margin:8px 0;font-size:12px;display:flex}#panel input[type=range]{touch-action:pan-x;width:100%;margin:0}#panel b{text-align:right;font-variant-numeric:tabular-nums}#panel .t{justify-content:space-between;align-items:center;display:flex}#panel .sm{margin-right:4px;padding:2px 10px;font-size:12px}</style>
+  <script type="module" crossorigin src="./assets/race-CcCTz83D.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-P2Xu9kJm.js">
-  <link rel="modulepreload" crossorigin href="./assets/slots-DAtavX4Y.js">
+  <link rel="modulepreload" crossorigin href="./assets/lab-ui-DkPH9mq3.js">
+  <link rel="modulepreload" crossorigin href="./assets/slots-sZlyONQq.js">
+  <link rel="stylesheet" crossorigin href="./static/lab-ui-BslfW4e3.css">
 </head>
 <body>
 <div id="stage">
   <canvas id="cv"></canvas>
-  <div class="ov on" id="start"><div class="card">
-    <h1>Om Nom Racers</h1>
-    <p>Auto gas. Hold left or right to steer. Finish top 2 to unlock the next track.</p>
-    <div class="tracks" id="tracks"></div>
-    <div id="info"></div>
-    <div class="col">
-      <button class="big" id="b1">1 Player</button>
-      <button class="big pink" id="b2">2 Players</button>
-    </div>
-    <p id="candies" style="margin:8px 0 0"></p>
-  </div></div>
-  <div class="ov" id="pause"><div class="card">
-    <h1>Pause</h1>
-    <div class="col">
-      <button class="big" data-a="resume">Resume</button>
-      <button class="alt" data-a="restart">Restart race</button>
-      <button class="alt" data-a="quit">Exit (no reward)</button>
-    </div>
-  </div></div>
-  <div class="ov" id="end"><div class="card">
-    <div class="flip off" id="endFlip"><p class="big2" id="endT2"></p><p id="endS2"></p></div>
-    <p class="big2" id="endT"></p>
-    <div class="stars" id="endStars"></div>
-    <p id="endS"></p>
-    <p class="award" id="endAward"></p>
-    <p id="endRec" class="rec"></p>
-    <div class="row"><button class="big" id="again">Again</button><button class="big pink" id="next">Next</button></div>
-    <div class="row" style="margin-top:8px"><button id="toMenu">Menu</button></div>
-  </div></div>
-  <button id="menuBtn" title="Pause">II</button>
-  <a class="back" id="backLink" href="index.html">&larr; Lab</a>
 </div>
-<button id="gear" title="Settings">&#9881;</button>
 <div id="panel"><div class="t"><b style="text-align:left">Tuning</b><span><button class="sm" id="unl">Unlock all</button><button class="sm" id="wipe">Wipe save</button><button class="sm" id="reset">Reset</button></span></div><div id="sl"></div><div id="ck"></div></div>
 
 </body>
