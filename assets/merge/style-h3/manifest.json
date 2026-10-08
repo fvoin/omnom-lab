@@ -1,0 +1,488 @@
+{
+ "game": "merge",
+ "field": [
+  1080,
+  1920
+ ],
+ "unit": "u (1080 = ширина экрана, y вниз); anchor — доля размера",
+ "naming": "без states: file как есть. Со states: <file без .png>_<state>.png, а если кадров больше 1 — <file без .png>_<state>_<кадр с 0>.png (пример: om_idle_0.png, om_chew_2.png, hud_panel_record.png)",
+ "art": "art:false — рисуется заглушка того же размера и якоря. После того как файлы положены в эту папку: node games/lab/view-src/sync-manifest.mjs merge (выставит art:true). Проверка без sync: открыть страницу с ?art=1.",
+ "codeDrawn": "числа и подписи HUD, «Cakes eaten», всплывающие «+N», конфетти, тряска — кодом, не слоты. Кнопки назад/пауза, экраны старта/паузы/итога — общий модуль lab-ui.",
+ "layout": {
+  "hud": [
+   0,
+   200
+  ],
+  "om": [
+   220,
+   580
+  ],
+  "thought": [
+   700,
+   880
+  ],
+  "ladder": 628,
+  "board": [
+   700,
+   1700
+  ]
+ },
+ "sprites": [
+  {
+   "name": "bg_merge",
+   "file": "bg_merge.png",
+   "w": 1080,
+   "h": 2340,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "фон «cover»: 1080x2340 u, центр = центр экрана; на любом экране масштабируется так, чтобы закрыть его целиком (края могут обрезаться). Важное — в средней части 1080x1920."
+  },
+  {
+   "name": "board",
+   "file": "board.png",
+   "w": 1000,
+   "h": 1000,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "подложка поля 4x4, центр (540,1200)"
+  },
+  {
+   "name": "cell",
+   "file": "cell.png",
+   "w": 230,
+   "h": 230,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "пустая клетка"
+  },
+  {
+   "name": "sweet_1",
+   "file": "sweet_1.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "ступень 1: 1–5 конфеты, 6–11 торты; номер ступени на картинке не нужен"
+  },
+  {
+   "name": "sweet_2",
+   "file": "sweet_2.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "ступень 2: 1–5 конфеты, 6–11 торты; номер ступени на картинке не нужен"
+  },
+  {
+   "name": "sweet_3",
+   "file": "sweet_3.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "ступень 3: 1–5 конфеты, 6–11 торты; номер ступени на картинке не нужен"
+  },
+  {
+   "name": "sweet_4",
+   "file": "sweet_4.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "ступень 4: 1–5 конфеты, 6–11 торты; номер ступени на картинке не нужен"
+  },
+  {
+   "name": "sweet_5",
+   "file": "sweet_5.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "ступень 5: 1–5 конфеты, 6–11 торты; номер ступени на картинке не нужен"
+  },
+  {
+   "name": "sweet_6",
+   "file": "sweet_6.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "ступень 6: 1–5 конфеты, 6–11 торты; номер ступени на картинке не нужен"
+  },
+  {
+   "name": "sweet_7",
+   "file": "sweet_7.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "ступень 7: 1–5 конфеты, 6–11 торты; номер ступени на картинке не нужен"
+  },
+  {
+   "name": "sweet_8",
+   "file": "sweet_8.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "ступень 8: 1–5 конфеты, 6–11 торты; номер ступени на картинке не нужен"
+  },
+  {
+   "name": "sweet_9",
+   "file": "sweet_9.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "ступень 9: 1–5 конфеты, 6–11 торты; номер ступени на картинке не нужен"
+  },
+  {
+   "name": "sweet_10",
+   "file": "sweet_10.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "ступень 10: 1–5 конфеты, 6–11 торты; номер ступени на картинке не нужен"
+  },
+  {
+   "name": "sweet_11",
+   "file": "sweet_11.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "ступень 11: 1–5 конфеты, 6–11 торты; номер ступени на картинке не нужен"
+  },
+  {
+   "name": "thought",
+   "file": "thought.png",
+   "w": 180,
+   "h": 180,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "облачко мысли Ома Нома (в нём — следующая цель, рисуется sweet_N ×0,6)"
+  },
+  {
+   "name": "om",
+   "file": "om.png",
+   "w": 360,
+   "h": 360,
+   "anchor": [
+    0.5,
+    1
+   ],
+   "states": {
+    "idle": 2,
+    "want": 1,
+    "open": 1,
+    "chew": 3,
+    "happy": 1,
+    "sad": 1,
+    "oops": 1
+   },
+   "fps": 8,
+   "art": true,
+   "hot": {
+    "mouth": [
+     0.5,
+     0.59
+    ]
+   },
+   "note": "Ом Ном (§0.3, 2 руки и 2 ноги); якорь — низ по центру; hot.mouth — куда летит торт"
+  },
+  {
+   "name": "hud_panel",
+   "file": "hud_panel.png",
+   "w": 370,
+   "h": 128,
+   "anchor": [
+    0,
+    0
+   ],
+   "states": {
+    "normal": 1,
+    "record": 1
+   },
+   "fps": 0,
+   "art": true,
+   "note": "плашка SCORE / BEST (подпись и число пишет код); record — вспышка нового рекорда (проявляется поверх normal)"
+  },
+  {
+   "name": "ladder_mark",
+   "file": "ladder_mark.png",
+   "w": 104,
+   "h": 104,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "рамка текущей цели в лесенке ступеней"
+  },
+  {
+   "name": "ladder_arrow",
+   "file": "ladder_arrow.png",
+   "w": 24,
+   "h": 36,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "стрелка между ступенями лесенки (смотрит вправо)"
+  },
+  {
+   "name": "hand",
+   "file": "hand.png",
+   "w": 180,
+   "h": 220,
+   "anchor": [
+    0.5,
+    0.2
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "рука-подсказка: кончик пальца в якоре (точка касания), ладонь ниже; кружок-след касания — часть картинки"
+  },
+  {
+   "name": "swipe_arrow",
+   "file": "swipe_arrow.png",
+   "w": 130,
+   "h": 80,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "стрелка свайпа рядом с рукой (смотрит вправо; влево — зеркалит код)"
+  },
+  {
+   "name": "hero_disc",
+   "file": "hero_disc.png",
+   "w": 366,
+   "h": 375,
+   "anchor": [
+    0.5,
+    0.477
+   ],
+   "states": {},
+   "art": true
+  },
+  {
+   "name": "tsweet_1",
+   "file": "tsweet_1.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": true
+  },
+  {
+   "name": "tsweet_2",
+   "file": "tsweet_2.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": true
+  },
+  {
+   "name": "tsweet_3",
+   "file": "tsweet_3.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": true
+  },
+  {
+   "name": "tsweet_4",
+   "file": "tsweet_4.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": true
+  },
+  {
+   "name": "tsweet_5",
+   "file": "tsweet_5.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": true
+  },
+  {
+   "name": "tsweet_6",
+   "file": "tsweet_6.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": true
+  },
+  {
+   "name": "tsweet_7",
+   "file": "tsweet_7.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": true
+  },
+  {
+   "name": "tsweet_8",
+   "file": "tsweet_8.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": true
+  },
+  {
+   "name": "tsweet_9",
+   "file": "tsweet_9.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": true
+  },
+  {
+   "name": "tsweet_10",
+   "file": "tsweet_10.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": true
+  },
+  {
+   "name": "tsweet_11",
+   "file": "tsweet_11.png",
+   "w": 210,
+   "h": 210,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": true
+  }
+ ],
+ "style": "h3"
+}

@@ -1,0 +1,301 @@
+{
+ "field": [
+  1080,
+  1920
+ ],
+ "unit": "u (1080 = ширина экрана, y вниз); anchor — доля размера",
+ "naming": "без states: file как есть. Со states: <file без .png>_<state>.png, а если кадров больше 1 — <file без .png>_<state>_<кадр с 0>.png (пример: om_ride_0.png, om_chew_2.png, pop_play_3.png)",
+ "art": "art:false — рисуется заглушка-фигура того же размера и якоря. После того как файлы положены в эту папку: node games/lab/view-src/sync-manifest.mjs <slug> (выставит art:true)",
+ "game": "sumo",
+ "gameField": "арена Ø900 u в центре (540,960)",
+ "codeDrawn": "кольцо перезарядки, счёт, «3-2-1», «+1», круги-заглушки столкновений — кодом",
+ "sprites": [
+  {
+   "name": "arena_cake",
+   "file": "arena_cake.png",
+   "w": 900,
+   "h": 900,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "normal": 1,
+    "crumble": 3
+   },
+   "fps": 6,
+   "art": true,
+   "note": "торт сверху; сжимается масштабом; crumble — крошащийся край за 600 мс до сжатия"
+  },
+  {
+   "name": "bg_sumo",
+   "file": "bg_sumo.png",
+   "w": 1080,
+   "h": 2340,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "стол вокруг; лишняя высота закрашивается цветом фона"
+  },
+  {
+   "name": "fighter_0",
+   "file": "fighter_0.png",
+   "w": 140,
+   "h": 140,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "idle": 2,
+    "dash": 1,
+    "hit": 1,
+    "fall": 3,
+    "win": 1
+   },
+   "fps": 6,
+   "art": true,
+   "note": "желейный боец сверху: Ом Ном; смотрит вправо, код вращает по направлению взгляда"
+  },
+  {
+   "name": "fighter_1",
+   "file": "fighter_1.png",
+   "w": 140,
+   "h": 140,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "idle": 2,
+    "dash": 1,
+    "hit": 1,
+    "fall": 3,
+    "win": 1
+   },
+   "fps": 6,
+   "art": true,
+   "note": "желейный боец сверху: друг 1 (Тосс); смотрит вправо, код вращает по направлению взгляда"
+  },
+  {
+   "name": "fighter_2",
+   "file": "fighter_2.png",
+   "w": 140,
+   "h": 140,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "idle": 2,
+    "dash": 1,
+    "hit": 1,
+    "fall": 3,
+    "win": 1
+   },
+   "fps": 6,
+   "art": true,
+   "note": "желейный боец сверху: друг 2 (Боо); смотрит вправо, код вращает по направлению взгляда"
+  },
+  {
+   "name": "fighter_3",
+   "file": "fighter_3.png",
+   "w": 140,
+   "h": 140,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "idle": 2,
+    "dash": 1,
+    "hit": 1,
+    "fall": 3,
+    "win": 1
+   },
+   "fps": 6,
+   "art": true,
+   "note": "желейный боец сверху: друг 3 (Джинджер); смотрит вправо, код вращает по направлению взгляда"
+  },
+  {
+   "name": "pointer",
+   "file": "pointer.png",
+   "w": 60,
+   "h": 40,
+   "anchor": [
+    0,
+    0.5
+   ],
+   "states": {
+    "p0": 1,
+    "p1": 1,
+    "p2": 1,
+    "p3": 1
+   },
+   "fps": 0,
+   "art": true,
+   "note": "стрелка взгляда, якорь — основание, 4 цвета"
+  },
+  {
+   "name": "btn_dash_0",
+   "file": "btn_dash_0.png",
+   "w": 220,
+   "h": 220,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "ready": 1,
+    "cooldown": 1,
+    "down": 1
+   },
+   "fps": 0,
+   "art": true,
+   "note": "кнопка игрока 0; кольцо перезарядки рисуется кодом поверх cooldown"
+  },
+  {
+   "name": "btn_dash_1",
+   "file": "btn_dash_1.png",
+   "w": 220,
+   "h": 220,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "ready": 1,
+    "cooldown": 1,
+    "down": 1
+   },
+   "fps": 0,
+   "art": true,
+   "note": "кнопка игрока 1; кольцо перезарядки рисуется кодом поверх cooldown"
+  },
+  {
+   "name": "btn_dash_2",
+   "file": "btn_dash_2.png",
+   "w": 220,
+   "h": 220,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "ready": 1,
+    "cooldown": 1,
+    "down": 1
+   },
+   "fps": 0,
+   "art": true,
+   "note": "кнопка игрока 2; кольцо перезарядки рисуется кодом поверх cooldown"
+  },
+  {
+   "name": "btn_dash_3",
+   "file": "btn_dash_3.png",
+   "w": 220,
+   "h": 220,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "ready": 1,
+    "cooldown": 1,
+    "down": 1
+   },
+   "fps": 0,
+   "art": true,
+   "note": "кнопка игрока 3; кольцо перезарядки рисуется кодом поверх cooldown"
+  },
+  {
+   "name": "bonus_candy",
+   "file": "bonus_candy.png",
+   "w": 80,
+   "h": 80,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true
+  },
+  {
+   "name": "star_hit",
+   "file": "star_hit.png",
+   "w": 100,
+   "h": 100,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "play": 3
+   },
+   "fps": 18,
+   "art": true,
+   "note": "хлопок удара"
+  },
+  {
+   "name": "score_pip",
+   "file": "score_pip.png",
+   "w": 40,
+   "h": 40,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {
+    "empty": 1,
+    "full": 1
+   },
+   "fps": 0,
+   "art": true,
+   "note": "очко у кнопки"
+  },
+  {
+   "name": "candy",
+   "file": "candy.png",
+   "w": 90,
+   "h": 90,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "fps": 0,
+   "art": true,
+   "note": "доп. слот: конфета на финише (летит победителю в рот)"
+  },
+  {
+   "name": "omnom_flung",
+   "file": "omnom_flung.png",
+   "w": 470,
+   "h": 486,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": true
+  },
+  {
+   "name": "omnom_dizzy",
+   "file": "omnom_dizzy.png",
+   "w": 300,
+   "h": 316,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": true
+  }
+ ],
+ "style": "h1"
+}
