@@ -31,7 +31,7 @@
    "name": "bg_sumo",
    "file": "bg_sumo.png",
    "w": 1080,
-   "h": 1920,
+   "h": 2340,
    "anchor": [
     0.5,
     0.5
@@ -271,6 +271,30 @@
    "fps": 0,
    "art": false,
    "note": "доп. слот: конфета на финише (летит победителю в рот)"
+  },
+  {
+   "name": "omnom_flung",
+   "file": "omnom_flung.png",
+   "w": 470,
+   "h": 486,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": false
+  },
+  {
+   "name": "omnom_dizzy",
+   "file": "omnom_dizzy.png",
+   "w": 300,
+   "h": 316,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "states": {},
+   "art": false
   }
  ]
 }
